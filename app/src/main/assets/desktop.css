@@ -1,0 +1,17 @@
+/* Desktop presentation for the Windows WebView2 host. Phone layout remains unchanged. */
+@media (min-width: 900px) {
+ body{padding:24px 32px 40px}.app{max-width:1240px}
+ .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:28px;padding:22px 28px;margin-top:0}
+ .hero-top{margin:0}h1{font-size:1.35rem}.hero-main{justify-content:flex-end;gap:24px}
+ .ring{width:124px;height:124px}.big{font-size:2.25rem}
+ .bar{top:0;padding:16px 0 10px}.bar.stuck{border-radius:0 0 12px 12px}
+ .tabs{gap:12px}.tab{min-height:76px;padding:12px 18px}.tp{font-size:1.35rem}
+ .cat{max-width:680px;margin:14px 0 0 auto;gap:18px}.tools{max-width:680px;margin-left:auto;padding:10px 0 14px}
+ #rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;align-items:start}
+ .row{margin:0;padding:12px;min-width:0}.row.open{grid-column:1/-1}
+ .step{grid-template-columns:42px 64px 42px}.step button,.step input{height:42px}
+ .fab{right:36px;bottom:32px}.toast{bottom:28px}
+ .sheet{display:none;align-items:center;justify-content:center;padding:24px}.sheet.on{display:flex}
+ .back{position:fixed}.pane{position:relative;inset:auto;width:min(620px,calc(100vw - 48px));max-width:620px;max-height:min(86vh,900px);margin:0;padding:24px;border:1px solid var(--line);border-radius:20px}
+}
+@media (min-width:1400px){.app{max-width:1320px}#rows{grid-template-columns:repeat(3,minmax(0,1fr))}.row.open{grid-column:1/-1}}
