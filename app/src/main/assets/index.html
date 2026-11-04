@@ -22,7 +22,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .app{max-width:640px;margin:0 auto}
 .k{font-size:.74rem;color:var(--mut)}
 .ok{color:var(--ok)}.bad{color:var(--bad)}
-
 /* hero */
 .hero{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
 .hero-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
@@ -41,7 +40,6 @@ h1{margin:0;font-size:1.05rem;font-weight:700;text-wrap:balance}
 .hero-side{min-width:0;display:grid;gap:3px}
 .big{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .hero-side .k b{color:var(--tx);font-variant-numeric:tabular-nums}
-
 /* sticky tabs */
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 8px}
 .bar.stuck{border-bottom:1px solid var(--line)}
@@ -56,7 +54,6 @@ h1{margin:0;font-size:1.05rem;font-weight:700;text-wrap:balance}
 .tp{font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
 .tbar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
 .tbar i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
-
 /* category strip + tools */
 .cat{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px;align-items:end;padding:10px 2px 4px}
 .cat b{display:block;font-size:1rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
@@ -67,7 +64,6 @@ select,input.l{text-align:left}
 .tools input{flex:1;min-width:0}
 .chip{padding:0 16px;min-height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:.85rem;white-space:nowrap}
 .chip[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
-
 /* rows */
 .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center;padding:8px 8px 8px 12px;margin-bottom:8px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;background:var(--card)}
 .row.has{border-left-color:var(--ac)}
@@ -85,7 +81,6 @@ select,input.l{text-align:left}
 .edit label{display:grid;gap:4px;font-size:.72rem;color:var(--mut);min-width:0}
 .edit .full{grid-column:1/-1}
 .empty{padding:28px 8px;text-align:center;color:var(--mut);font-size:.9rem}
-
 /* buttons, fab, sheets, toast */
 .btn{min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;padding:0 16px;width:100%}
 .btn.pri{background:var(--ac);border-color:var(--ac);color:#fff}
@@ -148,8 +143,7 @@ input:focus,select:focus{border-color:rgba(145,186,255,.7);background:rgba(255,2
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid rgba(145,186,255,.9);outline-offset:3px}
 @keyframes glass-enter{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes row-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes pane-enter{from{transform:translateY(28px);opacity:.7}to{transform:translateY(0);opacity:1}}
 @media(max-width:420px){.hero{padding:17px}.ring{width:96px;height:96px}.big{font-size:1.8rem}.tab{padding:10px}.tp{font-size:1.12rem}.step{grid-template-columns:38px 48px 38px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 /* Performance pass: preserve the glass look without continuously blurring every list item. */
 .hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(12px) saturate(135%);backdrop-filter:blur(12px) saturate(135%)}
 .tab,.row,.chip,.btn,.icon,.step button,.fab{-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -167,8 +161,7 @@ body::after{display:none}
 .tab:hover,.chip:hover,.btn:hover,.icon:hover,.step button:hover,.fab:hover{transform:none}
 .pane{animation:none}
 @media(max-width:600px){.hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(8px) saturate(125%);backdrop-filter:blur(8px) saturate(125%)}.row{box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 /* Backup controls + alignment and native select popup theme */
 .cat{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;text-align:center}
@@ -187,6 +180,43 @@ select option{background:#182238;color:#f4f7ff}
 .backup-select{display:grid;gap:5px}
 .backup-status{font-size:.78rem;color:var(--mut);line-height:1.45}
 .file-hidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* Light theme corrections: remove dark-only hard-coded glass surfaces. */
+/* Respect the device light appearance as well as the explicit in-app light theme. */
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e8eef8;--card:rgba(255,255,255,.52);--inp:rgba(255,255,255,.82);--line:rgba(105,130,170,.24);--tx:#18243b;--mut:#64738f;--ac:#356fd2;--acs:rgba(65,125,220,.13);--ok:#168a67;--bad:#c94f6b;--hov:rgba(255,255,255,.7);--shade:rgba(28,43,68,.30);color-scheme:light}}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .bar{background:rgba(255,255,255,.76)}}
+:root[data-theme="light"] .bar{background:rgba(255,255,255,.76);border-color:rgba(255,255,255,.9);box-shadow:0 10px 28px rgba(40,65,105,.08)}
+:root[data-theme="light"] .tab{background:rgba(255,255,255,.72);border-color:rgba(105,130,170,.20);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 4px 14px rgba(40,65,105,.05)}
+:root[data-theme="light"] .tab.on{background:linear-gradient(135deg,rgba(89,145,235,.19),rgba(255,255,255,.9));border-color:rgba(53,111,210,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 7px 20px rgba(53,111,210,.10)}
+:root[data-theme="light"] .tbar{background:rgba(65,92,135,.15)}
+:root[data-theme="light"] .pane{background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(237,243,252,.98));border-color:rgba(125,150,190,.24);box-shadow:0 -18px 50px rgba(36,55,88,.18)}
+:root[data-theme="light"] .pane::before{background:linear-gradient(125deg,rgba(255,255,255,.62),transparent 38%,transparent 72%,rgba(95,145,220,.035))}
+:root[data-theme="light"] .back{background:rgba(36,52,78,.30)}
+:root[data-theme="light"] .btn,
+:root[data-theme="light"] .backup-source{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.24);color:var(--tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 12px rgba(40,65,105,.05)}
+:root[data-theme="light"] .btn:hover{background:rgba(240,246,255,.98);border-color:rgba(53,111,210,.34)}
+:root[data-theme="light"] .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#214f9c}
+:root[data-theme="light"] .btn.dng{color:#b52f50;background:rgba(201,79,107,.07);border-color:rgba(201,79,107,.24)}
+:root[data-theme="light"] .icon,
+:root[data-theme="light"] .chip,
+:root[data-theme="light"] .step button{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.25);color:var(--tx)}
+:root[data-theme="light"] .step input,
+:root[data-theme="light"] input,
+:root[data-theme="light"] select{background:rgba(255,255,255,.88);border-color:rgba(105,130,170,.28);color:var(--tx)}
+:root[data-theme="light"] .backup-source{background:rgba(235,242,252,.72)}
+:root[data-theme="light"] .toast{background:rgba(255,255,255,.96);color:#18243b;border-color:rgba(125,150,190,.3)}
+@media (prefers-color-scheme:light){
+ :root:not([data-theme="dark"]) .tab{background:rgba(255,255,255,.72);border-color:rgba(105,130,170,.20)}
+ :root:not([data-theme="dark"]) .tab.on{background:linear-gradient(135deg,rgba(89,145,235,.19),rgba(255,255,255,.9));border-color:rgba(53,111,210,.42)}
+ :root:not([data-theme="dark"]) .pane{background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(237,243,252,.98));border-color:rgba(125,150,190,.24)}
+ :root:not([data-theme="dark"]) .back{background:rgba(36,52,78,.30)}
+ :root:not([data-theme="dark"]) .btn,:root:not([data-theme="dark"]) .backup-source{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.24);color:var(--tx)}
+ :root:not([data-theme="dark"]) .icon,:root:not([data-theme="dark"]) .chip,:root:not([data-theme="dark"]) .step button{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.25);color:var(--tx)}
+ :root:not([data-theme="dark"]) input,:root:not([data-theme="dark"]) select,:root:not([data-theme="dark"]) .step input{background:rgba(255,255,255,.88);border-color:rgba(105,130,170,.28);color:var(--tx)}
+ :root:not([data-theme="dark"]) .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#214f9c}
+ :root:not([data-theme="dark"]) .btn.dng{color:#b52f50;background:rgba(201,79,107,.07);border-color:rgba(201,79,107,.24)}
+}
+
 </style>
 </head>
 <body>
@@ -202,7 +232,6 @@ select option{background:#182238;color:#f4f7ff}
    </div>
   </div>
  </header>
-
  <nav class="bar" id="bar">
   <div class="mini"><span>Score <b id="mfs">0%</b></span><span>Incentive <b id="mti">0</b></span></div>
   <div class="tabs" role="tablist">
@@ -210,7 +239,6 @@ select option{background:#182238;color:#f4f7ff}
    <button class="tab" role="tab" data-g="w"><span class="tn">Audio &amp; Wearables</span><span class="tp" id="wp">0%</span><i class="tbar"><i id="wb"></i></i></button>
   </div>
  </nav>
-
  <main>
   <div class="cat">
    <div><div class="k">Sold value</div><b id="ca">0</b></div>
@@ -224,9 +252,7 @@ select option{background:#182238;color:#f4f7ff}
   <div id="rows"></div>
  </main>
 </div>
-
 <button class="fab" id="fab" aria-label="Add model">+</button>
-
 <div class="sheet" id="sAdd" role="dialog" aria-modal="true" aria-label="Add model">
  <div class="back" data-close="1"></div>
  <div class="pane">
@@ -241,7 +267,6 @@ select option{background:#182238;color:#f4f7ff}
   <button class="btn pri" id="ab">Add model</button>
  </div>
 </div>
-
 <div class="sheet" id="sMenu" role="dialog" aria-modal="true" aria-label="Options">
  <div class="back" data-close="1"></div>
  <div class="pane">
@@ -254,7 +279,6 @@ select option{background:#182238;color:#f4f7ff}
  </div>
 </div>
 
-
 <div class="sheet" id="sBackup" role="dialog" aria-modal="true" aria-label="Backup and Restore">
  <div class="back" data-close="1"></div>
  <div class="pane">
@@ -266,7 +290,7 @@ select option{background:#182238;color:#f4f7ff}
   </section>
   <section class="backup-source">
    <div class="backup-row"><h3>Local backup</h3><span class="k">This device</span></div>
-   <p class="note">Create a JSON backup file on this device, or restore a previously saved Promoter Tracker backup.</p>
+   <p class="note">Download a JSON backup file, or restore one into this browser on this device.</p>
    <div class="backup-row"><button class="btn pri" id="localBackup">Back up locally</button><button class="btn" id="localRestore">Restore locally</button></div>
    <input class="file-hidden" id="restoreFile" type="file" accept=".json,application/json">
   </section>
@@ -274,7 +298,8 @@ select option{background:#182238;color:#f4f7ff}
    <label class="fld" for="backupFrequency">Automatic backup frequency</label>
    <select id="backupFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select>
   </div>
-  <div class="backup-row"><label class="fld" for="autoBackup">Automatic backup (preview setting)</label><input id="autoBackup" type="checkbox" style="width:22px;min-height:22px"></div>
+  <div class="backup-row"><label class="fld" for="autoBackup">Automatic backup (not active in browser preview)</label><input id="autoBackup" type="checkbox" disabled aria-label="Automatic backup is unavailable in browser preview" style="width:22px;min-height:22px"></div>
+  <p class="note">The browser preview can save data on this device and export/import a JSON backup. Scheduled automatic backups and Google Drive sync require the Android app integration.</p>
   <p class="backup-status" id="backupStatus">Last backup: Not yet created</p>
   <button class="btn pri" id="saveBackupSettings">Save backup settings</button>
   <button class="btn" data-close="1">Close</button>
@@ -282,7 +307,6 @@ select option{background:#182238;color:#f4f7ff}
 </div>
 
 <div class="toast" id="toast"><span id="tm"></span><button id="undo">Undo</button></div>
-
 <script>
 const M=[["Mate X7",4999],["Mate 80 Pro",80],["Pura 90s Pro",100],["Pura 90s Pro Max",3999],["Pura 90s Pro Max 256",3499],["Pura 80",60],["Mate XT",150],["Nova 15 Max",1199],["Nova 14i",799],["Matepad 11.5",1299],["Matepad SE 11",774],["Matepad 11.5s",1799]];
 const W=[["GT6 Pro",20],["GT6",699],["Watch Buds",0],["GT7",899],["GT7 Pro",1299],["FIT5",599],["Watch Ultimate",3099],["Bank 11 Pro",249],["Freeclip 2s",749],["Freeclip 2",649],["SE2",74],["SE4",189],["SE3",139]];
@@ -292,14 +316,12 @@ try{const s=JSON.parse(localStorage.getItem("ptt")||"null");if(s&&s.rows){if(s.t
 try{if(localStorage.getItem("ptt_g")==="w")g="w"}catch(e){}
 const $=id=>document.getElementById(id),f=n=>Math.round(n).toLocaleString("en-US"),num=v=>Math.max(0,parseFloat(String(v).replace(/,/g,""))||0);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S))}catch(e){}};
+const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S));return true}catch(e){return false}};
 const subTxt=x=>`RRP ${f(x.r)} · Incentive ${f(x.u||0)}/unit`;
-
 const rowH=(x,i)=>`<div class="row${x.q>0?" has":""}${i===openI?" open":""}" data-i="${i}">
 <button class="main" data-x="1" aria-expanded="${i===openI}" aria-label="Edit ${esc(x.n)}"><span class="nm">${esc(x.n)}</span><span class="sub">${subTxt(x)}</span><span class="sub2"></span></button>
 <div class="step"><button data-s="-1" aria-label="Decrease ${esc(x.n)}">−</button><input data-f="q" inputmode="numeric" value="${x.q}" aria-label="${esc(x.n)} quantity"><button data-s="1" aria-label="Increase ${esc(x.n)}">+</button></div>
 <div class="edit"><label class="full">Model name<input class="l" data-f="n" value="${esc(x.n)}"></label><label>RRP<input data-f="r" inputmode="numeric" value="${f(x.r)}"></label><label>Incentive / unit<input data-f="u" inputmode="numeric" value="${f(x.u||0)}"></label><button class="btn dng full" data-d="1">Delete model</button></div></div>`;
-
 function renderRows(){
  const k=$("q").value.trim().toLowerCase(),only=$("sold").getAttribute("aria-pressed")==="true";
  const h=S.rows.map((x,i)=>x.g===g&&(!k||x.n.toLowerCase().includes(k))&&(!only||x.q>0)?rowH(x,i):"").join("");
@@ -328,7 +350,6 @@ function setTab(k){
 function toast(m,fn){$("tm").textContent=m;undoFn=fn||null;$("undo").hidden=!fn;$("toast").classList.add("on");clearTimeout(tt);tt=setTimeout(hideToast,6000)}
 function hideToast(){$("toast").classList.remove("on");undoFn=null}
 $("undo").onclick=()=>{const fn=undoFn;hideToast();if(fn)fn()};
-
 /* sheets: a hash entry lets the phone's Back button close them */
 function openSheet(id){closeSheet(true);cur=id;$(id).classList.add("on");try{if(location.hash!=="#sheet")location.hash="sheet"}catch(e){}}
 function closeSheet(quiet){if(!cur)return;$(cur).classList.remove("on");cur=null;if(!quiet){try{if(location.hash==="#sheet")history.back()}catch(e){}}}
@@ -337,7 +358,6 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
 document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target.dataset.close)closeSheet()}));
 $("fab").onclick=()=>{$("ag").value=g;openSheet("sAdd");setTimeout(()=>$("an").focus(),60)};
 $("menu").onclick=()=>openSheet("sMenu");
-
 /* rows */
 $("rows").addEventListener("input",e=>{
  const r=e.target.closest(".row"),k=e.target.dataset.f;if(!r||!k)return;
@@ -361,7 +381,6 @@ $("rows").addEventListener("click",e=>{
  else if(b.dataset.s){x.q=Math.max(0,x.q+ +b.dataset.s);r.querySelector('[data-f="q"]').value=x.q;r.classList.toggle("has",x.q>0);sum();save()}
  else if(b.dataset.x){openI=openI===i?-1:i;renderRows()}
 });
-
 /* tabs, target, search, filter */
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setTab(t.dataset.g)));
 $("tg").addEventListener("input",e=>{S[KEY[g]]=num(e.target.value);sum();save()});
@@ -369,7 +388,6 @@ $("tg").addEventListener("blur",e=>e.target.value=f(S[KEY[g]]));
 $("tg").addEventListener("focus",e=>{const t=e.target;setTimeout(()=>t.select(),0)});
 $("q").addEventListener("input",renderRows);
 $("sold").addEventListener("click",e=>{const b=e.currentTarget;b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true");renderRows()});
-
 /* add + clear */
 function add(){
  const n=$("an").value.trim();if(!n){$("an").focus();return}
@@ -387,7 +405,6 @@ $("clr").onclick=()=>{
  toast("Quantities cleared",()=>{S.rows.forEach((x,i)=>{if(i<prev.length)x.q=prev[i]});renderRows();save()});
 };
 
-
 /* Backup & Restore: local JSON export/import; Drive actions remain clearly marked as requiring native setup. */
 const BACKUP_SETTINGS_KEY="ptt_backup_settings";
 function backupPayload(){return {app:"Promoter Tracker",version:1,createdAt:new Date().toISOString(),data:S};}
@@ -396,12 +413,12 @@ function loadBackupSettings(){
  try{
   const p=JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}");
   $("backupFrequency").value=p.frequency||"weekly";
-  $("autoBackup").checked=!!p.enabled;
+  $("autoBackup").checked=false;
   if(p.lastBackup)setBackupStatus(p.lastBackup);
  }catch(e){}
 }
 function saveBackupSettings(){
- const p={frequency:$("backupFrequency").value,enabled:$("autoBackup").checked};
+ const p={frequency:$("backupFrequency").value,enabled:false};
  try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));toast("Backup settings saved on this device");}
  catch(e){toast("Could not save backup settings");}
 }
@@ -421,19 +438,32 @@ function restoreLocalBackup(file){
  if(!file)return;
  const reader=new FileReader();
  reader.onload=()=>{
+  const previous=S;
   try{
    const parsed=JSON.parse(String(reader.result||""));
    const incoming=parsed&&parsed.data?parsed.data:parsed;
-   if(!incoming||!Array.isArray(incoming.rows)||!Number.isFinite(Number(incoming.tm))||!Number.isFinite(Number(incoming.tw)))throw new Error("Invalid backup");
+   if(!incoming||!Array.isArray(incoming.rows)||incoming.rows.length>5000||
+      !Number.isFinite(Number(incoming.tm))||!Number.isFinite(Number(incoming.tw))||
+      !incoming.rows.every(x=>x&&typeof x==="object"&&typeof x.n==="string"&&Number.isFinite(Number(x.r))&&Number.isFinite(Number(x.q)))){
+    throw new Error("Invalid backup structure");
+   }
    if(!confirm("Restore this backup? Your current tracker data will be replaced."))return;
-   S={...incoming,rows:incoming.rows.map(x=>({n:String(x.n||"Model"),r:num(x.r),u:num(x.u),q:num(x.q),g:x.g==="w"?"w":"m"}))};
-   openI=-1;save();setTab(g);setBackupStatus("Restored · "+new Date().toLocaleString());toast("Tracker restored from local backup");
-  }catch(e){toast("That file is not a valid Promoter Tracker backup");}
+   S={...incoming,tm:num(incoming.tm),tw:num(incoming.tw),rows:incoming.rows.map(x=>({n:String(x.n||"Model"),r:num(x.r),u:num(x.u),q:num(x.q),g:x.g==="w"?"w":"m"}))};
+   openI=-1;
+   if(!save())throw new Error("Browser storage is unavailable or full");
+   setTab(g);
+   const stamp=new Date().toLocaleString();
+   setBackupStatus("Restored to this browser · "+stamp);
+   toast("Backup restored and saved on this device");
+  }catch(e){
+   S=previous;
+   toast(e.message==="Browser storage is unavailable or full"?"Restore failed: browser storage is unavailable or full":"That file is not a valid Promoter Tracker backup");
+  }
  };
  reader.onerror=()=>toast("Could not read the selected backup file");
  reader.readAsText(file);
 }
-$("openBackup").onclick=()=>{closeSheet(true);openSheet("sBackup");loadBackupSettings()};
+$("openBackup").onclick=()=>{closeSheet();openSheet("sBackup");loadBackupSettings()};
 $("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
 $("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
 $("localBackup").onclick=downloadLocalBackup;
@@ -445,7 +475,6 @@ $("saveBackupSettings").onclick=saveBackupSettings;
 document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input,select"))document.body.classList.add("typing")});
 document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!a.matches||!a.matches("input,select"))document.body.classList.remove("typing")},60));
 try{new IntersectionObserver(([en])=>$("bar").classList.toggle("stuck",!en.isIntersecting),{threshold:0}).observe($("hero"))}catch(e){}
-
 setTab(g);
 </script>
 </body>
