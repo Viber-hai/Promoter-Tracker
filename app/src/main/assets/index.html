@@ -169,6 +169,24 @@ body::after{display:none}
 @media(max-width:600px){.hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(8px) saturate(125%);backdrop-filter:blur(8px) saturate(125%)}.row{box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
+
+/* Backup controls + alignment and native select popup theme */
+.cat{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;text-align:center}
+.cat>div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;text-align:center}
+.cat .k,.cat label{width:100%;text-align:center}
+.cat b{width:100%;text-align:center}
+.cat input{text-align:center;max-width:100%}
+select{color-scheme:dark}
+select option{background:#182238;color:#f4f7ff}
+:root[data-theme="light"] select{color-scheme:light}
+:root[data-theme="light"] select option{background:#fff;color:#18243b}
+.backup-source{padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.055);display:grid;gap:8px}
+.backup-source h3{font-size:.9rem;margin:0}
+.backup-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.backup-row .btn{width:auto;min-width:120px}
+.backup-select{display:grid;gap:5px}
+.backup-status{font-size:.78rem;color:var(--mut);line-height:1.45}
+.file-hidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
@@ -228,9 +246,37 @@ body::after{display:none}
  <div class="back" data-close="1"></div>
  <div class="pane">
   <h2>Options</h2>
+  <button class="btn" id="openBackup">Backup &amp; Restore</button>
   <button class="btn dng" id="clr">Clear all quantities</button>
   <p class="note">Final score = 60% Handset &amp; Tablet achievement + 40% Audio &amp; Wearables achievement. Each category counts up to 120% and the score up to 110%. Incentive per model = incentive per unit &times; quantity &times; final score.</p>
   <p class="note">Everything you enter saves automatically on this device.</p>
+  <button class="btn" data-close="1">Close</button>
+ </div>
+</div>
+
+
+<div class="sheet" id="sBackup" role="dialog" aria-modal="true" aria-label="Backup and Restore">
+ <div class="back" data-close="1"></div>
+ <div class="pane">
+  <h2>Backup &amp; Restore</h2>
+  <section class="backup-source">
+   <div class="backup-row"><h3>Google Drive</h3><span class="k">Cloud backup</span></div>
+   <p class="note">Connect Google Drive to back up or restore your tracker in the cloud. This preview includes the controls, but Google sign-in and Drive sync need the Android integration.</p>
+   <div class="backup-row"><button class="btn" id="driveConnect">Connect Google Drive</button><button class="btn" id="driveRestore">Restore from Drive</button></div>
+  </section>
+  <section class="backup-source">
+   <div class="backup-row"><h3>Local backup</h3><span class="k">This device</span></div>
+   <p class="note">Create a JSON backup file on this device, or restore a previously saved Promoter Tracker backup.</p>
+   <div class="backup-row"><button class="btn pri" id="localBackup">Back up locally</button><button class="btn" id="localRestore">Restore locally</button></div>
+   <input class="file-hidden" id="restoreFile" type="file" accept=".json,application/json">
+  </section>
+  <div class="backup-select">
+   <label class="fld" for="backupFrequency">Automatic backup frequency</label>
+   <select id="backupFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select>
+  </div>
+  <div class="backup-row"><label class="fld" for="autoBackup">Automatic backup (preview setting)</label><input id="autoBackup" type="checkbox" style="width:22px;min-height:22px"></div>
+  <p class="backup-status" id="backupStatus">Last backup: Not yet created</p>
+  <button class="btn pri" id="saveBackupSettings">Save backup settings</button>
   <button class="btn" data-close="1">Close</button>
  </div>
 </div>
@@ -340,6 +386,60 @@ $("clr").onclick=()=>{
  S.rows.forEach(x=>x.q=0);renderRows();save();
  toast("Quantities cleared",()=>{S.rows.forEach((x,i)=>{if(i<prev.length)x.q=prev[i]});renderRows();save()});
 };
+
+
+/* Backup & Restore: local JSON export/import; Drive actions remain clearly marked as requiring native setup. */
+const BACKUP_SETTINGS_KEY="ptt_backup_settings";
+function backupPayload(){return {app:"Promoter Tracker",version:1,createdAt:new Date().toISOString(),data:S};}
+function setBackupStatus(message){$("backupStatus").textContent="Last backup: "+message;}
+function loadBackupSettings(){
+ try{
+  const p=JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}");
+  $("backupFrequency").value=p.frequency||"weekly";
+  $("autoBackup").checked=!!p.enabled;
+  if(p.lastBackup)setBackupStatus(p.lastBackup);
+ }catch(e){}
+}
+function saveBackupSettings(){
+ const p={frequency:$("backupFrequency").value,enabled:$("autoBackup").checked};
+ try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));toast("Backup settings saved on this device");}
+ catch(e){toast("Could not save backup settings");}
+}
+function downloadLocalBackup(){
+ try{
+  const blob=new Blob([JSON.stringify(backupPayload(),null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="promoter-tracker-backup-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const stamp=new Date().toLocaleString();
+  setBackupStatus("Saved locally · "+stamp);
+  try{const p=JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}");p.lastBackup="Saved locally · "+stamp;localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));}catch(e){}
+  toast("Local backup file created");
+ }catch(e){toast("Could not create local backup");}
+}
+function restoreLocalBackup(file){
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   const parsed=JSON.parse(String(reader.result||""));
+   const incoming=parsed&&parsed.data?parsed.data:parsed;
+   if(!incoming||!Array.isArray(incoming.rows)||!Number.isFinite(Number(incoming.tm))||!Number.isFinite(Number(incoming.tw)))throw new Error("Invalid backup");
+   if(!confirm("Restore this backup? Your current tracker data will be replaced."))return;
+   S={...incoming,rows:incoming.rows.map(x=>({n:String(x.n||"Model"),r:num(x.r),u:num(x.u),q:num(x.q),g:x.g==="w"?"w":"m"}))};
+   openI=-1;save();setTab(g);setBackupStatus("Restored · "+new Date().toLocaleString());toast("Tracker restored from local backup");
+  }catch(e){toast("That file is not a valid Promoter Tracker backup");}
+ };
+ reader.onerror=()=>toast("Could not read the selected backup file");
+ reader.readAsText(file);
+}
+$("openBackup").onclick=()=>{closeSheet();openSheet("sBackup");loadBackupSettings()};
+$("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
+$("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
+$("localBackup").onclick=downloadLocalBackup;
+$("localRestore").onclick=()=>$("restoreFile").click();
+$("restoreFile").addEventListener("change",e=>{restoreLocalBackup(e.target.files&&e.target.files[0]);e.target.value="";});
+$("saveBackupSettings").onclick=saveBackupSettings;
 
 /* keyboard: hide the + button while typing; show compact summary once the hero scrolls away */
 document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input,select"))document.body.classList.add("typing")});
