@@ -3,178 +3,288 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
 <title>Promoter Target Tracker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1424;--card:#171e33;--inp:#0f1424;--line:#2a3350;--tx:#e8ecf8;--mut:#8f9abb;--ac:#4f7cff;--acs:#4f7cff22;--ok:#2fc58a;--bad:#f0627f;--hov:#1c2540;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;color-scheme:light}}
-:root[data-theme="light"]{--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;color-scheme:light}
-*,*::before,*::after{box-sizing:border-box}
-html{font-size:14px;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
-body{margin:0;min-height:100vh;font-family:Sora,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--tx);background:var(--bg)}
+/* Layout: one summary hero, a sticky pair of category tabs, compact rows with big steppers, bottom sheets for add/options. */
+:root{--bg:#0f1424;--card:#171e33;--inp:#0f1424;--line:#2a3350;--tx:#e8ecf8;--mut:#8f9abb;--ac:#4f7cff;--acs:#4f7cff22;--ok:#2fc58a;--bad:#f0627f;--hov:#1c2540;--shade:rgba(0,0,0,.55);color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}}
+:root[data-theme="light"]{--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;font-family:Sora,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.wrap{max-width:1240px;margin:0 auto;padding:16px clamp(10px,2.5vw,24px) 56px}
-h1{margin:0 0 16px;font-size:clamp(1.15rem,2.6vw,1.45rem);font-weight:700}
-h1 small{display:block;font-size:.8rem;font-weight:400;color:var(--mut);margin-top:3px}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
-.grid{display:grid;gap:16px;grid-template-columns:1fr}
-@media (min-width:1000px){.grid{grid-template-columns:320px minmax(0,1fr);align-items:start}.sum{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));grid-template-columns:1fr!important}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px}
-.sum{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr));background:none;border:0}
-@media (max-width:699px){.sum{grid-template-columns:1fr}}
-.sc{padding:14px 16px}
-.sc h2{margin:0 0 10px;font-size:.82rem;font-weight:600;color:var(--mut)}
-.big{font-size:1.55rem;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1}
-.pc{font-size:.8rem;color:var(--mut);margin-left:6px;font-weight:600}
-.bar{height:5px;border-radius:3px;background:var(--line);margin:10px 0;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--ac);width:0;transition:width .4s}
-.ln{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:.82rem}
-.ln span{color:var(--mut)}.ln b{font-variant-numeric:tabular-nums}.ln input{width:8.5em;font-weight:600}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.app{max-width:640px;margin:0 auto}
+.k{font-size:.74rem;color:var(--mut)}
 .ok{color:var(--ok)}.bad{color:var(--bad)}
-input,select{font:inherit;font-size:.85rem;color:var(--tx);background:var(--inp);border:1px solid var(--line);border-radius:7px;padding:6px 8px;min-height:34px;width:100%;font-variant-numeric:tabular-nums;text-align:right}
-select{text-align:left}
-.list{padding:10px 12px 14px;min-width:0}
-.add{display:grid;grid-template-columns:minmax(0,1fr) 150px 80px 80px 70px auto;gap:8px;padding:10px;margin-bottom:10px;border-radius:9px;background:var(--acs);border:1px dashed var(--ac)}
-.add input:first-child{text-align:left}
-.tools{display:flex;gap:8px;margin-bottom:6px}
-.tools input{flex:1 1 160px;text-align:left}
-.btn{font:inherit;font-weight:600;font-size:.8rem;color:var(--tx);background:var(--card);border:1px solid var(--line);border-radius:7px;padding:0 14px;min-height:34px;cursor:pointer;white-space:nowrap}
-.btn:hover{background:var(--hov)}
+
+/* hero */
+.hero{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
+.hero-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+h1{margin:0;font-size:1.05rem;font-weight:700;text-wrap:balance}
+.icon{width:44px;height:44px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:1.4rem;line-height:1;display:grid;place-items:center}
+.hero-main{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:108px;height:108px;flex:none;color:var(--bad)}
+.ring.ok{color:var(--ok)}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9}
+.ring .trk{stroke:var(--line)}
+.ring .val{stroke:currentColor;stroke-linecap:round;stroke-dasharray:282.7;stroke-dashoffset:282.7;transition:stroke-dashoffset .45s}
+.ringtxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--tx)}
+.ringtxt b{font-size:1.35rem;font-variant-numeric:tabular-nums}
+.ringtxt span{font-size:.64rem;color:var(--mut)}
+.hero-side{min-width:0;display:grid;gap:3px}
+.big{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.hero-side .k b{color:var(--tx);font-variant-numeric:tabular-nums}
+
+/* sticky tabs */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 8px}
+.bar.stuck{border-bottom:1px solid var(--line)}
+.mini{display:none;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--mut);padding:0 4px 8px}
+.mini b{color:var(--tx);font-variant-numeric:tabular-nums}
+.bar.stuck .mini{display:flex}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tab{text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card);min-height:68px;display:grid;gap:5px;align-content:center;min-width:0}
+.tab.on{border-color:var(--ac);background:var(--acs)}
+.tn{font-size:.76rem;font-weight:600;color:var(--mut)}
+.tab.on .tn{color:var(--tx)}
+.tp{font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.tbar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.tbar i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
+
+/* category strip + tools */
+.cat{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px;align-items:end;padding:10px 2px 4px}
+.cat b{display:block;font-size:1rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.cat>div{min-width:0}
+input,select{font:inherit;font-size:1rem;color:var(--tx);background:var(--inp);border:1px solid var(--line);border-radius:10px;padding:0 10px;min-height:44px;width:100%;font-variant-numeric:tabular-nums;text-align:right}
+select,input.l{text-align:left}
+.tools{display:flex;gap:8px;padding:8px 0 10px}
+.tools input{flex:1;min-width:0}
+.chip{padding:0 16px;min-height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:.85rem;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
+
+/* rows */
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center;padding:8px 8px 8px 12px;margin-bottom:8px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;background:var(--card)}
+.row.has{border-left-color:var(--ac)}
+.main{background:none;border:0;text-align:left;padding:6px 0;min-width:0;display:grid;gap:2px}
+.nm{font-weight:600;font-size:.98rem;overflow-wrap:anywhere}
+.sub{font-size:.74rem;color:var(--mut)}
+.sub2{font-size:.76rem;color:var(--ac);font-weight:600;font-variant-numeric:tabular-nums}
+.sub2:empty{display:none}
+.step{display:grid;grid-template-columns:44px 54px 44px;gap:4px}
+.step button{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:1.35rem;font-weight:600;line-height:1}
+.step button:active{background:var(--acs);border-color:var(--ac)}
+.step input{height:44px;text-align:center;padding:0;font-weight:700}
+.edit{grid-column:1/-1;display:none;gap:8px;padding:10px 0 4px;margin-top:4px;border-top:1px solid var(--line)}
+.row.open .edit{display:grid;grid-template-columns:1fr 1fr}
+.edit label{display:grid;gap:4px;font-size:.72rem;color:var(--mut);min-width:0}
+.edit .full{grid-column:1/-1}
+.empty{padding:28px 8px;text-align:center;color:var(--mut);font-size:.9rem}
+
+/* buttons, fab, sheets, toast */
+.btn{min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;padding:0 16px;width:100%}
 .btn.pri{background:var(--ac);border-color:var(--ac);color:#fff}
-.sec{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:14px;padding:8px 10px;border-radius:8px;background:var(--hov);border:1px solid var(--line);font-weight:700;font-size:.85rem}
-.sec small{font-weight:600;color:var(--mut);font-size:.78rem}
-table{width:100%;border-collapse:collapse;table-layout:fixed}
-th{padding:7px 6px;font-size:.72rem;font-weight:600;color:var(--mut);text-align:right;border-bottom:1px solid var(--line)}
-th:first-child,td:first-child{text-align:left;padding-left:10px}
-th.c{text-align:center}
-td{padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:.85rem}
-tr.row:hover{background:var(--hov)}
-tr.has input.name{color:var(--ac)}
-input.name{text-align:left;font-weight:600}
-td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
-.step{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;gap:3px}
-.step button{font:inherit;font-size:1rem;font-weight:600;border:1px solid var(--line);border-radius:7px;color:var(--tx);background:var(--card);cursor:pointer;min-height:34px;padding:0}
-.step button:hover{background:var(--acs);border-color:var(--ac)}
-.step input{text-align:center;padding:6px 2px}
-.del{font:inherit;font-size:1.1rem;color:var(--mut);background:none;border:0;border-radius:7px;min-height:34px;width:100%;cursor:pointer}
-.del:hover{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
-.empty{padding:12px 10px;color:var(--mut);font-size:.82rem}
-.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:12px;padding:8px 10px 8px 14px;background:var(--tx);color:var(--bg);border-radius:9px;font-size:.82rem;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.btn.dng{color:var(--bad)}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:2rem;line-height:1;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:8;display:grid;place-items:center}
+.fab:active{transform:scale(.95)}
+body.typing .fab{display:none}
+.sheet{position:fixed;inset:0;z-index:20;display:none}
+.sheet.on{display:block}
+.back{position:absolute;inset:0;background:var(--shade)}
+.pane{position:absolute;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow-y:auto;display:grid;gap:12px}
+.pane h2{margin:0;font-size:1.05rem}
+.fld{display:grid;gap:4px;font-size:.75rem;color:var(--mut);min-width:0}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.note{margin:0;font-size:.8rem;line-height:1.5;color:var(--mut)}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);padding:8px 8px 8px 16px;background:var(--tx);color:var(--bg);border-radius:12px;font-size:.88rem;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .toast.on{display:flex}
-.toast button{font:inherit;font-weight:700;color:var(--ac);background:var(--bg);border:0;border-radius:6px;padding:5px 11px;cursor:pointer;min-height:32px}
-@media (pointer:coarse){input,select,.btn,.step button,.del{min-height:42px}}
-@media (max-width:859px){.add{grid-template-columns:repeat(4,minmax(0,1fr))}.add input:first-child,.add select,.add .btn{grid-column:1/-1}}
-@media (max-width:699px){
-.add{grid-template-columns:repeat(3,minmax(0,1fr))}
-table,tbody{display:block}thead{display:none}
-tr.row{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;padding:12px 8px;border-bottom:1px solid var(--line);position:relative}
-td{display:block;padding:0;border:0;text-align:left!important}
-td::before{content:attr(data-label);display:block;font-size:.68rem;color:var(--mut);margin-bottom:2px}
-td.nm{grid-column:1/-1;padding-right:44px}td.nm::before,td.x::before{display:none}
-td.q{grid-column:1/-1}
-td.x{position:absolute;top:8px;right:6px;width:36px}
-.step{grid-template-columns:42px minmax(0,1fr) 42px}}
+.toast button{font-weight:700;color:var(--ac);background:var(--bg);border:0;border-radius:8px;padding:0 14px;min-height:40px}
+.toast button[hidden]{display:none}
+@media (min-width:700px){.row{padding:10px 12px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<h1>Promoter Target Tracker<small>Enter RRP, incentive per unit and quantity. Your data saves automatically. <span id="sv" class="ok"></span></small></h1>
-<div class="grid">
- <aside class="sum" aria-live="polite">
-  <section class="card sc"><h2>Handset &amp; Tablet</h2>
-   <div><span class="big" id="ma">0</span><span class="pc" id="mp">0%</span></div><div class="bar"><i id="mb"></i></div>
-   <div class="ln"><span>Target</span><input id="im" inputmode="numeric" aria-label="Handset and Tablet target"></div>
-   <div class="ln"><span>Incentive</span><b id="mi">0</b></div></section>
-  <section class="card sc"><h2>Audio &amp; Wearables</h2>
-   <div><span class="big" id="wa">0</span><span class="pc" id="wp">0%</span></div><div class="bar"><i id="wb"></i></div>
-   <div class="ln"><span>Target</span><input id="iw" inputmode="numeric" aria-label="Audio and Wearables target"></div>
-   <div class="ln"><span>Incentive</span><b id="wi">0</b></div></section>
-  <section class="card sc"><h2>Total</h2>
-   <div><span class="big" id="ta">0</span></div><div class="bar" style="visibility:hidden"></div>
-   <div class="ln"><span>Total target</span><b id="tt">0</b></div>
-   <div class="ln"><span>Final score</span><b id="fs">0%</b></div>
-   <div class="ln"><span>Total incentive</span><b id="ti">0</b></div></section>
- </aside>
- <main class="card list">
-  <div class="add">
-   <input id="an" placeholder="New model name" aria-label="New model name">
-   <select id="ag" aria-label="Category"><option value="m">Handset &amp; Tablet</option><option value="w">Audio &amp; Wearables</option></select>
-   <input id="ar" inputmode="numeric" placeholder="RRP" aria-label="New model RRP">
-   <input id="au" inputmode="numeric" placeholder="Incentive" aria-label="New model incentive per unit">
-   <input id="aq" inputmode="numeric" placeholder="Qty" aria-label="New model quantity">
-   <button class="btn pri" id="ab">Add model</button>
+<div class="app">
+ <header class="hero" id="hero">
+  <div class="hero-top"><h1>Promoter Target Tracker</h1><button class="icon" id="menu" aria-label="Options">&#8943;</button></div>
+  <div class="hero-main" aria-live="polite">
+   <div class="ring" id="ring"><svg viewBox="0 0 108 108" aria-hidden="true"><circle class="trk" cx="54" cy="54" r="45"/><circle class="val" id="rv" cx="54" cy="54" r="45"/></svg>
+    <div class="ringtxt"><b id="fs">0%</b><span>Final score</span></div></div>
+   <div class="hero-side">
+    <div class="k">Total incentive</div><div class="big" id="ti">0</div>
+    <div class="k">Sales <b id="ta">0</b> of <b id="tt">0</b></div>
+   </div>
   </div>
-  <div class="tools"><input id="q" type="search" placeholder="Search model" aria-label="Search model"><button class="btn" id="clr">Clear quantities</button></div>
+ </header>
+
+ <nav class="bar" id="bar">
+  <div class="mini"><span>Score <b id="mfs">0%</b></span><span>Incentive <b id="mti">0</b></span></div>
+  <div class="tabs" role="tablist">
+   <button class="tab" role="tab" data-g="m"><span class="tn">Handset &amp; Tablet</span><span class="tp" id="mp">0%</span><i class="tbar"><i id="mb"></i></i></button>
+   <button class="tab" role="tab" data-g="w"><span class="tn">Audio &amp; Wearables</span><span class="tp" id="wp">0%</span><i class="tbar"><i id="wb"></i></i></button>
+  </div>
+ </nav>
+
+ <main>
+  <div class="cat">
+   <div><div class="k">Sold value</div><b id="ca">0</b></div>
+   <div><label class="k" for="tg">Target</label><input id="tg" inputmode="numeric" aria-label="Target for this category"></div>
+   <div><div class="k">Incentive</div><b id="ci">0</b></div>
+  </div>
+  <div class="tools">
+   <input id="q" type="search" class="l" placeholder="Search model" aria-label="Search model">
+   <button class="chip" id="sold" aria-pressed="false">Sold only</button>
+  </div>
   <div id="rows"></div>
  </main>
 </div>
+
+<button class="fab" id="fab" aria-label="Add model">+</button>
+
+<div class="sheet" id="sAdd" role="dialog" aria-modal="true" aria-label="Add model">
+ <div class="back" data-close="1"></div>
+ <div class="pane">
+  <h2>Add model</h2>
+  <label class="fld">Model name<input id="an" class="l" autocomplete="off" placeholder="e.g. Nova 15"></label>
+  <label class="fld">Category<select id="ag"><option value="m">Handset &amp; Tablet</option><option value="w">Audio &amp; Wearables</option></select></label>
+  <div class="three">
+   <label class="fld">RRP<input id="ar" inputmode="numeric" placeholder="0"></label>
+   <label class="fld">Incentive / unit<input id="au" inputmode="numeric" placeholder="0"></label>
+   <label class="fld">Quantity<input id="aq" inputmode="numeric" placeholder="0"></label>
+  </div>
+  <button class="btn pri" id="ab">Add model</button>
+ </div>
 </div>
+
+<div class="sheet" id="sMenu" role="dialog" aria-modal="true" aria-label="Options">
+ <div class="back" data-close="1"></div>
+ <div class="pane">
+  <h2>Options</h2>
+  <button class="btn dng" id="clr">Clear all quantities</button>
+  <p class="note">Final score = 60% Handset &amp; Tablet achievement + 40% Audio &amp; Wearables achievement. Each category counts up to 120% and the score up to 110%. Incentive per model = incentive per unit &times; quantity &times; final score.</p>
+  <p class="note">Everything you enter saves automatically on this device.</p>
+  <button class="btn" data-close="1">Close</button>
+ </div>
+</div>
+
 <div class="toast" id="toast"><span id="tm"></span><button id="undo">Undo</button></div>
+
 <script>
 const M=[["Mate X7",4999],["Mate 80 Pro",80],["Pura 90s Pro",100],["Pura 90s Pro Max",3999],["Pura 90s Pro Max 256",3499],["Pura 80",60],["Mate XT",150],["Nova 15 Max",1199],["Nova 14i",799],["Matepad 11.5",1299],["Matepad SE 11",774],["Matepad 11.5s",1799]];
 const W=[["GT6 Pro",20],["GT6",699],["Watch Buds",0],["GT7",899],["GT7 Pro",1299],["FIT5",599],["Watch Ultimate",3099],["Bank 11 Pro",249],["Freeclip 2s",749],["Freeclip 2",649],["SE2",74],["SE4",189],["SE3",139]];
-const G={m:"Handset & Tablet",w:"Audio & Wearables"};
-let S={tm:510300,tw:340200,rows:[...M.map(([n,r])=>({n,r,u:0,q:0,g:"m"})),...W.map(([n,r])=>({n,r,u:0,q:0,g:"w"}))]},del=null,tt;
+const KEY={m:"tm",w:"tw"};
+let S={tm:510300,tw:340200,rows:[...M.map(([n,r])=>({n,r,u:0,q:0,g:"m"})),...W.map(([n,r])=>({n,r,u:0,q:0,g:"w"}))]},g="m",openI=-1,undoFn=null,tt,cur=null;
 try{const s=JSON.parse(localStorage.getItem("ptt")||"null");if(s&&s.rows){if(s.tm==null){s.tm=Math.round(s.target*s.share/100);s.tw=s.target-s.tm}S=s}}catch(e){}
+try{if(localStorage.getItem("ptt_g")==="w")g="w"}catch(e){}
 const $=id=>document.getElementById(id),f=n=>Math.round(n).toLocaleString("en-US"),num=v=>Math.max(0,parseFloat(String(v).replace(/,/g,""))||0);
-const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let ref=null,st;const sv=m=>{const e=$("sv");if(e)e.textContent=m};
-const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S))}catch(e){}sv(ref?"Saving…":"Saved on this device");if(ref){clearTimeout(st);st=setTimeout(()=>ref.set(JSON.parse(JSON.stringify(S))).then(()=>sv("Saved"),()=>sv("Saved on this device")),700)}};
-(async()=>{try{const[db,u]=await Promise.all([claude.use("db"),claude.use("user")]);if(!db||!u)return;const id=await u.id();if(!id)return;const r=db.doc("data/users/"+id+"/tracker"),s=await r.get();ref=r;if(s.exists){const d=JSON.parse(JSON.stringify(s.data()));if(d.rows&&(d.ts||0)>(S.ts||0)){S=d;try{localStorage.setItem("ptt",JSON.stringify(S))}catch(e){}build()}else if(S.ts)save()}sv("Saved")}catch(e){}})();
-const rowH=(x,i)=>`<tr class="row${x.q>0?" has":""}" data-i="${i}"><td class="nm" data-label="Model"><input class="name" data-f="n" value="${esc(x.n)}" aria-label="Model name"></td><td data-label="RRP"><input data-f="r" inputmode="numeric" value="${f(x.r)}" aria-label="${esc(x.n)} RRP"></td><td data-label="Incentive / unit"><input data-f="u" inputmode="numeric" value="${f(x.u||0)}" aria-label="${esc(x.n)} incentive per unit"></td><td class="q" data-label="Quantity"><div class="step"><button data-s="-1" aria-label="Decrease ${esc(x.n)}">−</button><input data-f="q" inputmode="numeric" value="${x.q}" aria-label="${esc(x.n)} quantity"><button data-s="1" aria-label="Increase ${esc(x.n)}">+</button></div></td><td class="num val" data-label="Value">0</td><td class="num inc" data-label="Incentive">0</td><td class="x"><button class="del" data-d="1" aria-label="Delete ${esc(x.n)}" title="Delete model">×</button></td></tr>`;
-const THEAD='<thead><tr><th>Model</th><th style="width:84px">RRP</th><th style="width:84px">Incentive/unit</th><th class="c" style="width:112px">Quantity</th><th style="width:88px">Value</th><th style="width:88px">Incentive</th><th style="width:36px"></th></tr></thead>';
-function build(){
- const k=$("q").value.trim().toLowerCase();
- $("rows").innerHTML=["m","w"].map(g=>{
-  const h=S.rows.map((x,i)=>x.g==g&&x.n.toLowerCase().includes(k)?rowH(x,i):"").join("");
-  return `<div class="sec"><span>${G[g]}</span><small>Achievement <span id="s${g}">0</span></small></div>`+(h?`<table>${THEAD}<tbody>${h}</tbody></table>`:'<p class="empty">No models in this category.</p>');
- }).join("");
- $("im").value=f(S.tm);$("iw").value=f(S.tw);sum();
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S))}catch(e){}};
+const subTxt=x=>`RRP ${f(x.r)} · Incentive ${f(x.u||0)}/unit`;
+
+const rowH=(x,i)=>`<div class="row${x.q>0?" has":""}${i===openI?" open":""}" data-i="${i}">
+<button class="main" data-x="1" aria-expanded="${i===openI}" aria-label="Edit ${esc(x.n)}"><span class="nm">${esc(x.n)}</span><span class="sub">${subTxt(x)}</span><span class="sub2"></span></button>
+<div class="step"><button data-s="-1" aria-label="Decrease ${esc(x.n)}">−</button><input data-f="q" inputmode="numeric" value="${x.q}" aria-label="${esc(x.n)} quantity"><button data-s="1" aria-label="Increase ${esc(x.n)}">+</button></div>
+<div class="edit"><label class="full">Model name<input class="l" data-f="n" value="${esc(x.n)}"></label><label>RRP<input data-f="r" inputmode="numeric" value="${f(x.r)}"></label><label>Incentive / unit<input data-f="u" inputmode="numeric" value="${f(x.u||0)}"></label><button class="btn dng full" data-d="1">Delete model</button></div></div>`;
+
+function renderRows(){
+ const k=$("q").value.trim().toLowerCase(),only=$("sold").getAttribute("aria-pressed")==="true";
+ const h=S.rows.map((x,i)=>x.g===g&&(!k||x.n.toLowerCase().includes(k))&&(!only||x.q>0)?rowH(x,i):"").join("");
+ $("rows").innerHTML=h||`<p class="empty">${only?"Nothing sold yet in this category.":"No models found. Tap + to add one."}</p>`;
+ sum();
 }
 function sum(){
  const tg={m:S.tm,w:S.tw},a={m:0,w:0},b={m:0,w:0};
  S.rows.forEach(x=>{a[x.g]+=x.r*x.q;b[x.g]+=(x.u||0)*x.q});
- const cp=g=>tg[g]?Math.min(a[g]/tg[g],1.2):0,p=Math.min(.6*cp("m")+.4*cp("w"),1.1);
- document.querySelectorAll("#rows .row").forEach(r=>{const x=S.rows[r.dataset.i];if(x){r.querySelector(".val").textContent=f(x.r*x.q);r.querySelector(".inc").textContent=f((x.u||0)*x.q*p)}});
- for(const g of["m","w"]){
-  $(g+"a").textContent=f(a[g]);$(g+"p").textContent=(cp(g)*100).toFixed(1)+"%";
-  $(g+"b").style.width=Math.min(cp(g),1)*100+"%";$(g+"i").textContent=f(b[g]*p);
-  if($("s"+g))$("s"+g).textContent=f(a[g]);
- }
+ const cp=k=>tg[k]?Math.min(a[k]/tg[k],1.2):0,p=Math.min(.6*cp("m")+.4*cp("w"),1.1);
+ document.querySelectorAll("#rows .row").forEach(r=>{const x=S.rows[r.dataset.i];if(x)r.querySelector(".sub2").textContent=x.q>0?`Sold ${f(x.r*x.q)} · Earn ${f((x.u||0)*x.q*p)}`:""});
+ const pc=(p*100).toFixed(1)+"%";
+ $("fs").textContent=pc;$("mfs").textContent=pc;
+ $("ring").className="ring"+(p>=.8?" ok":"");
+ $("rv").style.strokeDashoffset=282.7*(1-Math.min(p,1));
+ const ti=f((b.m+b.w)*p);$("ti").textContent=ti;$("mti").textContent=ti;
  $("ta").textContent=f(a.m+a.w);$("tt").textContent=f(tg.m+tg.w);
- $("fs").textContent=(p*100).toFixed(1)+"%";$("fs").className=p>=.8?"ok":"bad";
- $("ti").textContent=f((b.m+b.w)*p);
+ for(const k of["m","w"]){$(k+"p").textContent=(cp(k)*100).toFixed(1)+"%";$(k+"b").style.width=Math.min(cp(k),1)*100+"%"}
+ $("ca").textContent=f(a[g]);$("ci").textContent=f(b[g]*p);
 }
-function toast(m){$("tm").textContent=m;$("toast").classList.add("on");clearTimeout(tt);tt=setTimeout(()=>{$("toast").classList.remove("on");del=null},6000)}
+function setTab(k){
+ g=k;openI=-1;try{localStorage.setItem("ptt_g",k)}catch(e){}
+ document.querySelectorAll(".tab").forEach(t=>{const on=t.dataset.g===k;t.classList.toggle("on",on);t.setAttribute("aria-selected",on)});
+ $("tg").value=f(S[KEY[k]]);renderRows();
+}
+function toast(m,fn){$("tm").textContent=m;undoFn=fn||null;$("undo").hidden=!fn;$("toast").classList.add("on");clearTimeout(tt);tt=setTimeout(hideToast,6000)}
+function hideToast(){$("toast").classList.remove("on");undoFn=null}
+$("undo").onclick=()=>{const fn=undoFn;hideToast();if(fn)fn()};
+
+/* sheets: a hash entry lets the phone's Back button close them */
+function openSheet(id){closeSheet(true);cur=id;$(id).classList.add("on");try{if(location.hash!=="#sheet")location.hash="sheet"}catch(e){}}
+function closeSheet(quiet){if(!cur)return;$(cur).classList.remove("on");cur=null;if(!quiet){try{if(location.hash==="#sheet")history.back()}catch(e){}}}
+addEventListener("hashchange",()=>{if(location.hash!=="#sheet"&&cur){$(cur).classList.remove("on");cur=null}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target.dataset.close)closeSheet()}));
+$("fab").onclick=()=>{$("ag").value=g;openSheet("sAdd");setTimeout(()=>$("an").focus(),60)};
+$("menu").onclick=()=>openSheet("sMenu");
+
+/* rows */
 $("rows").addEventListener("input",e=>{
- const r=e.target.closest(".row");if(!r||!e.target.dataset.f)return;
- const x=S.rows[r.dataset.i];x[e.target.dataset.f]=e.target.dataset.f=="n"?e.target.value:num(e.target.value);
- r.classList.toggle("has",x.q>0);sum();save();
+ const r=e.target.closest(".row"),k=e.target.dataset.f;if(!r||!k)return;
+ const x=S.rows[r.dataset.i];x[k]=k==="n"?e.target.value:num(e.target.value);
+ if(k==="q")r.classList.toggle("has",x.q>0);
+ else{r.querySelector(".nm").textContent=x.n||"Model";r.querySelector(".sub").textContent=subTxt(x)}
+ sum();save();
 });
-$("rows").addEventListener("focusout",e=>{const r=e.target.closest(".row");
- if(!r)return;const x=S.rows[r.dataset.i];
- if(e.target.dataset.f=="r")e.target.value=f(x.r);
- if(e.target.dataset.f=="u")e.target.value=f(x.u||0);
- if(e.target.dataset.f=="n"){x.n=x.n.trim()||"Model";e.target.value=x.n;save()}});
+$("rows").addEventListener("focusin",e=>{if(e.target.dataset&&e.target.dataset.f==="q"){const t=e.target;setTimeout(()=>t.select(),0)}});
+$("rows").addEventListener("focusout",e=>{
+ const r=e.target.closest(".row");if(!r)return;const x=S.rows[r.dataset.i],k=e.target.dataset.f;if(!x)return;
+ if(k==="r")e.target.value=f(x.r);
+ if(k==="u")e.target.value=f(x.u||0);
+ if(k==="q")e.target.value=x.q;
+ if(k==="n"){x.n=x.n.trim()||"Model";e.target.value=x.n;r.querySelector(".nm").textContent=x.n;save()}
+});
 $("rows").addEventListener("click",e=>{
- const r=e.target.closest(".row");if(!r)return;const i=+r.dataset.i,x=S.rows[i];
- if(e.target.closest("[data-d]")){del={i,x};S.rows.splice(i,1);build();save();toast(`Deleted ${x.n}`);return}
- const b=e.target.closest("button[data-s]");if(!b)return;
- x.q=Math.max(0,x.q+ +b.dataset.s);r.querySelector('[data-f="q"]').value=x.q;r.classList.toggle("has",x.q>0);sum();save();
+ const r=e.target.closest(".row"),b=e.target.closest("button");if(!r||!b)return;
+ const i=+r.dataset.i,x=S.rows[i];
+ if(b.dataset.d){const rm=S.rows.splice(i,1)[0];openI=-1;renderRows();save();toast(`Deleted ${rm.n}`,()=>{S.rows.splice(i,0,rm);renderRows();save()})}
+ else if(b.dataset.s){x.q=Math.max(0,x.q+ +b.dataset.s);r.querySelector('[data-f="q"]').value=x.q;r.classList.toggle("has",x.q>0);sum();save()}
+ else if(b.dataset.x){openI=openI===i?-1:i;renderRows()}
 });
-$("undo").onclick=()=>{if(!del)return;S.rows.splice(del.i,0,del.x);del=null;$("toast").classList.remove("on");build();save()};
+
+/* tabs, target, search, filter */
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setTab(t.dataset.g)));
+$("tg").addEventListener("input",e=>{S[KEY[g]]=num(e.target.value);sum();save()});
+$("tg").addEventListener("blur",e=>e.target.value=f(S[KEY[g]]));
+$("tg").addEventListener("focus",e=>{const t=e.target;setTimeout(()=>t.select(),0)});
+$("q").addEventListener("input",renderRows);
+$("sold").addEventListener("click",e=>{const b=e.currentTarget;b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true");renderRows()});
+
+/* add + clear */
 function add(){
  const n=$("an").value.trim();if(!n){$("an").focus();return}
- S.rows.unshift({n,r:num($("ar").value),u:num($("au").value),q:num($("aq").value),g:$("ag").value});
- ["an","ar","au","aq"].forEach(i=>$(i).value="");$("q").value="";build();save();$("an").focus();
+ const k=$("ag").value;S.rows.unshift({n,r:num($("ar").value),u:num($("au").value),q:num($("aq").value),g:k});
+ ["an","ar","au","aq"].forEach(i=>$(i).value="");$("q").value="";$("sold").setAttribute("aria-pressed","false");
+ closeSheet();setTab(k);save();toast(`Added ${n}`);
+ $("rows").scrollIntoView({block:"start",behavior:"smooth"});
 }
-$("ab").onclick=add;["an","ar","au","aq"].forEach(i=>$(i).addEventListener("keydown",e=>{if(e.key=="Enter")add()}));
-[["im","tm"],["iw","tw"]].forEach(([i,k])=>{$(i).addEventListener("input",e=>{S[k]=num(e.target.value);sum();save()});$(i).addEventListener("blur",e=>e.target.value=f(S[k]))});
-$("q").addEventListener("input",build);
-$("clr").addEventListener("click",()=>{S.rows.forEach(x=>x.q=0);build();save()});
-build();
+$("ab").onclick=add;
+["an","ar","au","aq"].forEach(i=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")add()}));
+$("clr").onclick=()=>{
+ const prev=S.rows.map(x=>x.q);closeSheet();
+ if(!prev.some(q=>q>0)){toast("No quantities to clear");return}
+ S.rows.forEach(x=>x.q=0);renderRows();save();
+ toast("Quantities cleared",()=>{S.rows.forEach((x,i)=>{if(i<prev.length)x.q=prev[i]});renderRows();save()});
+};
+
+/* keyboard: hide the + button while typing; show compact summary once the hero scrolls away */
+document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input,select"))document.body.classList.add("typing")});
+document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!a.matches||!a.matches("input,select"))document.body.classList.remove("typing")},60));
+try{new IntersectionObserver(([en])=>$("bar").classList.toggle("stuck",!en.isIntersecting),{threshold:0}).observe($("hero"))}catch(e){}
+
+setTab(g);
 </script>
 </body>
 </html>
