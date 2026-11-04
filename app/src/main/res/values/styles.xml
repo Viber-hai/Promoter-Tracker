@@ -1,8 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
 <resources>
-    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.NoActionBar">
-        <item name="android:statusBarColor">#0f1424</item>
-        <item name="android:navigationBarColor">#0f1424</item>
-        <item name="android:windowBackground">#0f1424</item>
-    </style>
+<!--  Light theme (used when the phone is in light mode)  -->
+<style name="AppTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+<item name="android:statusBarColor">#f3f5fa</item>
+<item name="android:navigationBarColor">#f3f5fa</item>
+<item name="android:windowBackground">#f3f5fa</item>
+<item name="android:windowLightStatusBar">true</item>
+<item name="android:windowLightNavigationBar">true</item>
+</style>
 </resources>
