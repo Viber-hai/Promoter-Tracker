@@ -433,7 +433,7 @@ function restoreLocalBackup(file){
  reader.onerror=()=>toast("Could not read the selected backup file");
  reader.readAsText(file);
 }
-$("openBackup").onclick=()=>{closeSheet();openSheet("sBackup");loadBackupSettings()};
+$("openBackup").onclick=()=>{closeSheet(true);openSheet("sBackup");loadBackupSettings()};
 $("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
 $("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
 $("localBackup").onclick=downloadLocalBackup;
