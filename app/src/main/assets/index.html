@@ -149,6 +149,26 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 @keyframes glass-enter{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes row-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes pane-enter{from{transform:translateY(28px);opacity:.7}to{transform:translateY(0);opacity:1}}
 @media(max-width:420px){.hero{padding:17px}.ring{width:96px;height:96px}.big{font-size:1.8rem}.tab{padding:10px}.tp{font-size:1.12rem}.step{grid-template-columns:38px 48px 38px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Performance pass: preserve the glass look without continuously blurring every list item. */
+.hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(12px) saturate(135%);backdrop-filter:blur(12px) saturate(135%)}
+.tab,.row,.chip,.btn,.icon,.step button,.fab{-webkit-backdrop-filter:none;backdrop-filter:none}
+.bar{-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}
+.row{animation:none!important;transition:border-color .18s,background-color .18s,box-shadow .18s;box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+.row::before{display:none}
+.row:hover{transform:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+.row.has{border-left-width:3px}
+.hero{animation:none}
+.ring{filter:none}
+html{scroll-behavior:auto}
+body{background-attachment:scroll}
+body::after{display:none}
+.tab,.chip,.btn,.icon,.step button,.fab{transition:background-color .16s,border-color .16s,opacity .16s}
+.tab:hover,.chip:hover,.btn:hover,.icon:hover,.step button:hover,.fab:hover{transform:none}
+.pane{animation:none}
+@media(max-width:600px){.hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(8px) saturate(125%);backdrop-filter:blur(8px) saturate(125%)}.row{box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
 </style>
 </head>
 <body>
