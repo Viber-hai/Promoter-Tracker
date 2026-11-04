@@ -2,6 +2,7 @@ package com.promoter.tracker;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,7 +20,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         web = new WebView(this);
-        web.setBackgroundColor(Color.parseColor("#0f1424"));
+        boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        web.setBackgroundColor(Color.parseColor(dark ? "#0f1424" : "#f3f5fa"));
         setContentView(web);
 
         WebSettings s = web.getSettings();
