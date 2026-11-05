@@ -465,19 +465,21 @@ async function trySaveFilePicker(blob,name){
  toast("Backup saved to the selected folder");return true;
 }
 async function shareBackupFile(){
+ if(window.AppBackup){
+  const result=String(window.AppBackup.createManualBackup(JSON.stringify(backupPayload(),null,2)));
+  if(result.startsWith("OK|")){recordBackupStatus("Saved on device · "+new Date().toLocaleString());toast("Backup saved on device in "+result.slice(3));}
+  else{toast("Backup failed: "+result.replace(/^ERROR\\|/,""));setBackupStatus("FAILED · "+result.replace(/^ERROR\\|/,""));}
+  return;
+ }
  const {blob,name}=createBackupFile();
  try{
   if(await trySaveFilePicker(blob,name))return;
- }catch(e){if(e.name==="AbortError")return;}
- try{
   const file=new File([blob],name,{type:"application/json"});
-  if(!navigator.share||!navigator.canShare||!navigator.canShare({files:[file]})){
-   toast("Folder picker unavailable. Use Export backup (Downloads) or Copy backup text.");return;
-  }
+  if(!navigator.share||!navigator.canShare||!navigator.canShare({files:[file]})){toast("Folder saving is available in the installed app.");return;}
   await navigator.share({files:[file],title:"Promoter Tracker backup"});
-  recordBackupStatus("Shared / handed to Android · "+new Date().toLocaleString());
-  toast("Backup sent to Android; check your chosen destination");
- }catch(e){if(e.name!=="AbortError")toast("Unable to share. Try Export backup or Copy backup text.");}
+  recordBackupStatus("Shared to device · "+new Date().toLocaleString());
+  toast("Backup shared. Check the destination you selected.");
+ }catch(e){if(e.name!=="AbortError")toast("Unable to save backup: "+e.message);}
 }
 async function downloadLocalBackup(){
  const json=JSON.stringify(backupPayload(),null,2);
