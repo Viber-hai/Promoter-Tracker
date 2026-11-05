@@ -4,38 +4,28 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.webkit.JavascriptInterface;
 
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
-import androidx.work.WorkManager;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
-
 public class AppBackupBridge {
+    private final MainActivity activity;
     private final Context context;
 
-    public AppBackupBridge(Context context) {
-        this.context = context.getApplicationContext();
+    public AppBackupBridge(MainActivity activity) {
+        this.activity = activity;
+        this.context = activity.getApplicationContext();
     }
 
     @JavascriptInterface
     public String saveSnapshot(String json) {
         if (json == null || json.trim().isEmpty()) return "ERROR|No tracker data.";
         if (json.length() > 5 * 1024 * 1024) return "ERROR|Backup is larger than 5 MB.";
-        File target = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.json");
-        File temp = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.tmp");
-        try (FileOutputStream out = new FileOutputStream(temp)) {
-            out.write(json.getBytes(StandardCharsets.UTF_8));
+        java.io.File target = new java.io.File(context.getFilesDir(), "promoter_tracker_backup_snapshot.json");
+        java.io.File temp = new java.io.File(context.getFilesDir(), "promoter_tracker_backup_snapshot.tmp");
+        try (java.io.FileOutputStream out = new java.io.FileOutputStream(temp)) {
+            out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             out.getFD().sync();
             if (target.exists() && !target.delete()) return "ERROR|Could not update the app backup snapshot.";
             if (!temp.renameTo(target)) return "ERROR|Could not finish saving the app backup snapshot.";
             return "OK";
-        } catch (IOException e) {
+        } catch (java.io.IOException e) {
             return "ERROR|" + (e.getMessage() == null ? "Could not save the app backup snapshot." : e.getMessage());
         }
     }
@@ -54,14 +44,31 @@ public class AppBackupBridge {
     }
 
     @JavascriptInterface
+    public void chooseBackupFolder(String kind) {
+        if (!"automatic".equals(kind) && !"manual".equals(kind)) return;
+        activity.runOnUiThread(() -> activity.launchBackupFolderPicker(kind));
+    }
+
+    @JavascriptInterface
+    public String getBackupFolderName(String kind) {
+        if (!"automatic".equals(kind) && !"manual".equals(kind)) kind = "manual";
+        SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
+        return prefs.getString("folder_name_" + kind, BackupStorage.defaultFolderLabel(kind));
+    }
+
+    @JavascriptInterface
     public String setAutoBackup(boolean enabled, String frequency) {
         String safeFrequency = ("daily".equals(frequency) || "weekly".equals(frequency)
                 || "monthly".equals(frequency) || "yearly".equals(frequency)) ? frequency : "weekly";
         SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
+        boolean oldEnabled = prefs.getBoolean(BackupWorker.KEY_ENABLED, false);
+        String oldFrequency = prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly");
+        boolean changed = oldEnabled != enabled || !oldFrequency.equals(safeFrequency);
         prefs.edit().putBoolean(BackupWorker.KEY_ENABLED, enabled)
                 .putString(BackupWorker.KEY_FREQUENCY, safeFrequency).apply();
-        BackupScheduler.configure(context, enabled, safeFrequency);
-        return enabled ? "OK|Automatic device backup enabled for " + safeFrequency + " schedule."
+
+        if (changed) BackupScheduler.configure(context, enabled, safeFrequency);
+        return enabled ? "OK|Automatic device backup enabled for " + safeFrequency + " schedule. First backup is due after the selected interval."
                 : "OK|Automatic device backup disabled.";
     }
 
