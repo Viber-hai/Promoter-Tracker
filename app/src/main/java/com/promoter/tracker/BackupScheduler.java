@@ -10,7 +10,8 @@ import androidx.work.PeriodicWorkRequest;
 import java.util.concurrent.TimeUnit;
 
 final class BackupScheduler {
-    private static final String PERIODIC_NAME = "promoter-tracker-local-auto-backup";
+    private static final String PERIODIC_NAME = "promoter-tracker-local-auto-backup-v2";
+    private static final String LEGACY_NAME = "promoter-tracker-local-auto-backup";
 
     private BackupScheduler() {}
 
@@ -25,31 +26,32 @@ final class BackupScheduler {
     }
 
     private static PeriodicWorkRequest buildRequest(String frequency) {
-        return new PeriodicWorkRequest.Builder(
-                BackupWorker.class, intervalDays(frequency), TimeUnit.DAYS).build();
+        long days = intervalDays(frequency);
+        return new PeriodicWorkRequest.Builder(BackupWorker.class, days, TimeUnit.DAYS)
+                .setInitialDelay(days, TimeUnit.DAYS)
+                .build();
     }
 
-    // Called whenever the app opens/resumes. KEEP prevents restarting the countdown.
     static void ensureScheduled(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
+        WorkManager manager = WorkManager.getInstance(context);
+        // Remove the earlier schedule once, so an old immediate/near-term run cannot remain active.
+        manager.cancelUniqueWork(LEGACY_NAME);
         if (!prefs.getBoolean(BackupWorker.KEY_ENABLED, false)) return;
 
         String frequency = prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly");
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        manager.enqueueUniquePeriodicWork(
                 PERIODIC_NAME, ExistingPeriodicWorkPolicy.KEEP, buildRequest(frequency));
     }
 
-    // Called only when the user explicitly saves the backup settings.
     static void configure(Context context, boolean enabled, String frequency) {
         WorkManager manager = WorkManager.getInstance(context);
-        if (!enabled) {
-            manager.cancelUniqueWork(PERIODIC_NAME);
-            return;
-        }
+        manager.cancelUniqueWork(LEGACY_NAME);
+        manager.cancelUniqueWork(PERIODIC_NAME);
+        if (!enabled) return;
 
-        // Replace only on a deliberate settings save, e.g. when frequency changes.
-        // WorkManager runs the first periodic execution as soon as its scheduling window allows.
+        // No one-time work is queued. The first periodic backup is delayed by the chosen interval.
         manager.enqueueUniquePeriodicWork(
-                PERIODIC_NAME, ExistingPeriodicWorkPolicy.REPLACE, buildRequest(frequency));
+                PERIODIC_NAME, ExistingPeriodicWorkPolicy.KEEP, buildRequest(frequency));
     }
 }
