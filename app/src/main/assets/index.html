@@ -231,6 +231,207 @@ select option{background:#182238;color:#f4f7ff}
 }
 
 </style>
+
+<style id="premium-red-white-glass-final">
+/* Premium red + white liquid-glass theme.
+   Default follows Android/system dark mode; light mode follows system light mode.
+   Keep blur limited to the main surfaces to protect scrolling performance. */
+:root{
+  --bg:#090a0e;
+  --card:rgba(255,255,255,.065);
+  --inp:rgba(255,255,255,.075);
+  --line:rgba(255,255,255,.14);
+  --tx:#f7f7f9;
+  --mut:#a5a7b0;
+  --ac:#c8102e;
+  --acs:rgba(200,16,46,.17);
+  --ok:#54d6a0;
+  --bad:#ff8295;
+  --hov:rgba(255,255,255,.10);
+  --shade:rgba(0,0,0,.68);
+  color-scheme:dark;
+}
+:root[data-theme="dark"]{color-scheme:dark}
+:root[data-theme="light"]{
+  --bg:#f6f7f9;
+  --card:rgba(255,255,255,.76);
+  --inp:rgba(255,255,255,.88);
+  --line:rgba(30,35,45,.12);
+  --tx:#191a1f;
+  --mut:#70737d;
+  --ac:#c8102e;
+  --acs:rgba(200,16,46,.09);
+  --ok:#12845d;
+  --bad:#c8102e;
+  --hov:rgba(255,255,255,.94);
+  --shade:rgba(24,25,31,.32);
+  color-scheme:light;
+}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f7f9;
+    --card:rgba(255,255,255,.76);
+    --inp:rgba(255,255,255,.88);
+    --line:rgba(30,35,45,.12);
+    --tx:#191a1f;
+    --mut:#70737d;
+    --ac:#c8102e;
+    --acs:rgba(200,16,46,.09);
+    --ok:#12845d;
+    --bad:#c8102e;
+    --hov:rgba(255,255,255,.94);
+    --shade:rgba(24,25,31,.32);
+    color-scheme:light;
+  }
+}
+html,body{background-color:var(--bg);color:var(--tx)}
+body{
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(200,16,46,.10),transparent 34%),
+    radial-gradient(ellipse at 94% 18%,rgba(255,255,255,.045),transparent 30%),
+    var(--bg);
+  background-attachment:scroll;
+}
+body::before{background:var(--bg)}
+::selection{background:rgba(200,16,46,.25);color:var(--tx)}
+.hero{
+  background:linear-gradient(135deg,rgba(255,255,255,.105),rgba(255,255,255,.035) 58%,rgba(200,16,46,.075));
+  border-color:var(--line);
+  box-shadow:0 14px 38px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.16);
+  -webkit-backdrop-filter:blur(10px) saturate(135%);
+  backdrop-filter:blur(10px) saturate(135%);
+}
+.hero::before{background:linear-gradient(125deg,rgba(255,255,255,.12),transparent 40%,transparent 72%,rgba(200,16,46,.045))}
+.brand-subtitle{color:var(--ac)}
+.huawei-mark{color:var(--ac)}
+.ring{color:var(--ac)}
+.ring.ok{color:var(--ok)}
+.ring .trk{stroke:var(--line)}
+.ringtxt{color:var(--tx)}
+.big{font-weight:650;letter-spacing:-.045em}
+.bar{
+  background:rgba(15,15,19,.76);
+  border-color:rgba(255,255,255,.09);
+  -webkit-backdrop-filter:blur(10px) saturate(135%);
+  backdrop-filter:blur(10px) saturate(135%);
+}
+:root[data-theme="light"] .bar{background:rgba(255,255,255,.78);border-color:rgba(30,35,45,.08)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .bar{background:rgba(255,255,255,.78);border-color:rgba(30,35,45,.08)}}
+.tab{
+  background:rgba(255,255,255,.045);
+  border-color:var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.09);
+}
+.tab.on{
+  background:linear-gradient(135deg,rgba(200,16,46,.22),rgba(255,255,255,.045));
+  border-color:rgba(225,72,94,.52);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 5px 18px rgba(200,16,46,.09);
+}
+.tn,.tp{color:var(--tx)}
+.tbar{background:var(--line)}
+.tbar i{background:var(--ac);box-shadow:0 0 9px rgba(200,16,46,.28)}
+.cat b{color:var(--tx)}
+input,select,#pasteBackup{
+  color:var(--tx);
+  background:var(--inp);
+  border-color:var(--line);
+  color-scheme:inherit;
+}
+input:focus,select:focus,#pasteBackup:focus{
+  border-color:rgba(200,16,46,.58);
+  box-shadow:0 0 0 3px rgba(200,16,46,.10);
+  outline:0;
+}
+input::placeholder,textarea::placeholder{color:var(--mut);opacity:.78}
+.chip{
+  color:var(--tx);
+  background:var(--card);
+  border-color:var(--line);
+}
+.chip[aria-pressed="true"]{
+  color:#fff;
+  background:var(--ac);
+  border-color:var(--ac);
+}
+.row{
+  background:linear-gradient(125deg,rgba(255,255,255,.075),rgba(255,255,255,.025));
+  border-color:var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.075);
+}
+.row.has{border-left-color:var(--ac)}
+.sub2{color:var(--ac)}
+.step button{
+  color:var(--tx);
+  background:rgba(255,255,255,.055);
+  border-color:var(--line);
+}
+.step button:active{background:var(--acs);border-color:var(--ac)}
+.step input{background:var(--inp);color:var(--tx)}
+.btn{
+  color:var(--tx);
+  background:var(--card);
+  border-color:var(--line);
+}
+.btn.pri{
+  color:#fff;
+  background:linear-gradient(135deg,#dc183b,#b80e2b);
+  border-color:#c8102e;
+  box-shadow:0 7px 18px rgba(200,16,46,.18),inset 0 1px 0 rgba(255,255,255,.20);
+}
+.btn.pri:hover{background:linear-gradient(135deg,#e12646,#c8102e)}
+.btn.dng{color:#ff9aaa;background:rgba(200,16,46,.075);border-color:rgba(200,16,46,.25)}
+.fab{
+  color:#fff;
+  background:linear-gradient(145deg,#e01a3e,#b80e2b);
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 10px 26px rgba(200,16,46,.28),inset 0 1px 0 rgba(255,255,255,.25);
+}
+.sheet .back{background:var(--shade);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+.pane{
+  color:var(--tx);
+  background:linear-gradient(145deg,rgba(38,39,45,.96),rgba(17,18,23,.98));
+  border-color:var(--line);
+  box-shadow:0 -16px 42px rgba(0,0,0,.28);
+  -webkit-backdrop-filter:blur(12px) saturate(130%);
+  backdrop-filter:blur(12px) saturate(130%);
+}
+:root[data-theme="light"] .pane{background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(246,247,249,.98));box-shadow:0 -16px 42px rgba(30,35,45,.13)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]) .pane{background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(246,247,249,.98));box-shadow:0 -16px 42px rgba(30,35,45,.13)}}
+.backup-source{
+  background:rgba(255,255,255,.045);
+  border-color:var(--line);
+}
+.toast{
+  color:var(--tx);
+  background:rgba(35,36,42,.94);
+  border-color:var(--line);
+  -webkit-backdrop-filter:blur(10px) saturate(135%);
+  backdrop-filter:blur(10px) saturate(135%);
+}
+.toast button{color:var(--ac);background:rgba(200,16,46,.10);border-color:rgba(200,16,46,.18)}
+:root[data-theme="light"] .row{background:linear-gradient(125deg,rgba(255,255,255,.94),rgba(255,255,255,.70));box-shadow:inset 0 1px 0 rgba(255,255,255,.95)}
+:root[data-theme="light"] .tab{background:rgba(255,255,255,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.95)}
+:root[data-theme="light"] .tab.on{background:linear-gradient(135deg,rgba(200,16,46,.10),rgba(255,255,255,.96));border-color:rgba(200,16,46,.30)}
+:root[data-theme="light"] .step button,:root[data-theme="light"] .icon,:root[data-theme="light"] .chip{background:rgba(255,255,255,.88);color:var(--tx)}
+:root[data-theme="light"] .btn{background:rgba(255,255,255,.90);color:var(--tx)}
+:root[data-theme="light"] .btn.pri{background:linear-gradient(135deg,#dc183b,#b80e2b);color:#fff}
+:root[data-theme="light"] .btn.dng{color:#b80e2b;background:rgba(200,16,46,.055)}
+:root[data-theme="light"] .backup-source{background:rgba(255,255,255,.72)}
+:root[data-theme="light"] .toast{background:rgba(255,255,255,.96);color:#191a1f;border-color:rgba(30,35,45,.12)}
+@media(prefers-color-scheme:light){
+  :root:not([data-theme="dark"]) .row{background:linear-gradient(125deg,rgba(255,255,255,.94),rgba(255,255,255,.70));box-shadow:inset 0 1px 0 rgba(255,255,255,.95)}
+  :root:not([data-theme="dark"]) .tab{background:rgba(255,255,255,.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.95)}
+  :root:not([data-theme="dark"]) .tab.on{background:linear-gradient(135deg,rgba(200,16,46,.10),rgba(255,255,255,.96));border-color:rgba(200,16,46,.30)}
+  :root:not([data-theme="dark"]) .step button,:root:not([data-theme="dark"]) .icon,:root:not([data-theme="dark"]) .chip{background:rgba(255,255,255,.88);color:var(--tx)}
+  :root:not([data-theme="dark"]) .btn{background:rgba(255,255,255,.90);color:var(--tx)}
+  :root:not([data-theme="dark"]) .btn.pri{background:linear-gradient(135deg,#dc183b,#b80e2b);color:#fff}
+  :root:not([data-theme="dark"]) .btn.dng{color:#b80e2b;background:rgba(200,16,46,.055)}
+  :root:not([data-theme="dark"]) .backup-source{background:rgba(255,255,255,.72)}
+  :root:not([data-theme="dark"]) .toast{background:rgba(255,255,255,.96);color:#191a1f;border-color:rgba(30,35,45,.12)}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
 </head>
 <body>
 <div class="app">
