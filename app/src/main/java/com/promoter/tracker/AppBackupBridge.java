@@ -60,8 +60,8 @@ public class AppBackupBridge {
         SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
         prefs.edit().putBoolean(BackupWorker.KEY_ENABLED, enabled)
                 .putString(BackupWorker.KEY_FREQUENCY, safeFrequency).apply();
-        BackupScheduler.configure(context, enabled, safeFrequency, enabled);
-        return enabled ? "OK|Automatic device backup enabled; first backup queued."
+        BackupScheduler.configure(context, enabled, safeFrequency);
+        return enabled ? "OK|Automatic device backup enabled for " + safeFrequency + " schedule."
                 : "OK|Automatic device backup disabled.";
     }
 
