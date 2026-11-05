@@ -294,19 +294,28 @@ select option{background:#182238;color:#f4f7ff}
   </section>
   <section class="backup-source">
    <div class="backup-row"><h3>Local backup</h3><span class="k">This device</span></div>
-   <p class="note">Download a JSON backup file, or restore one into this browser on this device.</p>
+   <p class="note">Save a JSON backup file to this device, or restore one into the app.</p>
    <div class="backup-row"><button class="btn pri" id="localBackup">Back up locally</button><label class="btn restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".json,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
    <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a previously exported JSON file.</p>
    <div class="backup-row"><button class="btn" id="shareBackup">Save / share to folder</button><button class="btn" id="copyBackup">Copy backup text</button></div>
    <label class="fld" for="pasteBackup">Or paste saved backup JSON here<textarea id="pasteBackup" rows="3" placeholder="Paste JSON backup text here"></textarea></label>
    <button class="btn" id="importPasted">Import pasted backup</button>
   </section>
-  <div class="backup-select">
-   <label class="fld" for="backupFrequency">Automatic backup frequency</label>
-   <select id="backupFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select>
+  <div class="backup-source">
+   <h3>Automatic local backup</h3>
+   <div class="backup-select">
+    <label class="fld" for="backupFrequency">Backup frequency</label>
+    <select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select>
+   </div>
+   <div class="backup-row"><label class="fld" for="autoBackup">Enable automatic backup</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
+   <div class="backup-row"><span class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</span><button class="btn" id="chooseAutomaticFolder">Change folder</button></div>
+   <p class="note">No immediate backup is created when you save settings. The first scheduled backup is due after the selected interval. Android may delay background work for battery management.</p>
   </div>
-  <div class="backup-row"><label class="fld" for="autoBackup">Automatic backup (not active in browser preview)</label><input id="autoBackup" type="checkbox" disabled aria-label="Automatic backup is unavailable in browser preview" style="width:22px;min-height:22px"></div>
-  <p class="note">The browser preview can save data on this device and export/import a JSON backup. Scheduled automatic backups and Google Drive sync require the Android app integration.</p>
+  <div class="backup-source">
+   <h3>Manual local backup</h3>
+   <p class="note">Manual backups run only when you press Back up locally.</p>
+   <div class="backup-row"><span class="note" id="manualFolder">Downloads / Promoter Tracker / Manual Backups</span><button class="btn" id="chooseManualFolder">Change folder</button></div>
+  </div>
   <p class="backup-status" id="backupStatus">Last backup: Not yet created</p>
   <button class="btn pri" id="saveBackupSettings">Save backup settings</button>
   <button class="btn" data-close="1">Close</button>
@@ -323,7 +332,7 @@ try{const s=JSON.parse(localStorage.getItem("ptt")||"null");if(s&&s.rows){if(s.t
 try{if(localStorage.getItem("ptt_g")==="w")g="w"}catch(e){}
 const $=id=>document.getElementById(id),f=n=>Math.round(n).toLocaleString("en-US"),num=v=>Math.max(0,parseFloat(String(v).replace(/,/g,""))||0);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S));return true}catch(e){return false}};
+const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S));syncNativeSnapshot();return true}catch(e){return false}};
 const subTxt=x=>`RRP ${f(x.r)} · Incentive ${f(x.u||0)}/unit`;
 const rowH=(x,i)=>`<div class="row${x.q>0?" has":""}${i===openI?" open":""}" data-i="${i}">
 <button class="main" data-x="1" aria-expanded="${i===openI}" aria-label="Edit ${esc(x.n)}"><span class="nm">${esc(x.n)}</span><span class="sub">${subTxt(x)}</span><span class="sub2"></span></button>
@@ -419,21 +428,39 @@ function setBackupStatus(message){$("backupStatus").textContent="Last backup: "+
 function loadBackupSettings(){
  try{
   const p=JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}");
-  $("backupFrequency").value=p.frequency||"weekly";
-  $("autoBackup").checked=false;
-  if(p.lastBackup)setBackupStatus(p.lastBackup);
+  const native=window.AppBackup;
+  $("backupFrequency").value=(native&&native.getAutoBackupFrequency())||p.frequency||"weekly";
+  $("autoBackup").checked=native?!!native.isAutoBackupEnabled():!!p.enabled;
+  if(native){$("automaticFolder").textContent=native.getBackupFolderName("automatic");$("manualFolder").textContent=native.getBackupFolderName("manual");}
+  const last=native&&native.getLastBackupStatus?native.getLastBackupStatus():p.lastBackup;
+  if(last)setBackupStatus(last);
  }catch(e){}
 }
 function saveBackupSettings(){
- const old=readBackupSettings();
- const p={...old,frequency:$("backupFrequency").value,enabled:false};
- try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));toast("Backup preferences saved (automatic backup unavailable)");}
- catch(e){toast("Could not save backup settings");}
+ const old=readBackupSettings(),enabled=$("autoBackup").checked,frequency=$("backupFrequency").value;
+ const p={...old,frequency,enabled};
+ try{
+  localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));
+  if(window.AppBackup){
+   const result=window.AppBackup.setAutoBackup(enabled,frequency);
+   if(String(result).startsWith("ERROR|")){toast(String(result).slice(6));return;}
+   toast(enabled?"Automatic device backup enabled ("+frequency+"). First backup after selected interval.":"Automatic device backup disabled.");
+  }else{
+   toast(enabled?"Automatic backup is available in the installed app only.":"Backup preferences saved.");
+  }
+ }catch(e){toast("Could not save backup settings: "+e.message);}
 }
 function readBackupSettings(){try{return JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}")}catch(e){return {}}}
 function recordBackupStatus(message){
  setBackupStatus(message);
  try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify({...readBackupSettings(),lastBackup:message}))}catch(e){}
+}
+function syncNativeSnapshot(){
+ if(!window.AppBackup)return;
+ try{
+  const result=String(window.AppBackup.saveSnapshot(JSON.stringify(backupPayload())));
+  if(result.startsWith("ERROR|"))console.warn(result);
+ }catch(e){console.warn("App snapshot sync failed",e);}
 }
 function createBackupFile(){
  const blob=new Blob([JSON.stringify(backupPayload(),null,2)],{type:"application/json"});
@@ -448,35 +475,37 @@ async function trySaveFilePicker(blob,name){
  toast("Backup saved to the selected folder");return true;
 }
 async function shareBackupFile(){
+ if(window.AppBackup){
+  const result=String(window.AppBackup.createManualBackup(JSON.stringify(backupPayload(),null,2)));
+  if(result.startsWith("OK|")){recordBackupStatus("Saved on device · "+new Date().toLocaleString());toast("Backup saved on device in "+result.slice(3));}
+  else{toast("Backup failed: "+result.replace(/^ERROR\\|/,""));setBackupStatus("FAILED · "+result.replace(/^ERROR\\|/,""));}
+  return;
+ }
  const {blob,name}=createBackupFile();
  try{
   if(await trySaveFilePicker(blob,name))return;
- }catch(e){if(e.name==="AbortError")return;}
- try{
   const file=new File([blob],name,{type:"application/json"});
-  if(!navigator.share||!navigator.canShare||!navigator.canShare({files:[file]})){
-   toast("Folder picker unavailable. Use Export backup (Downloads) or Copy backup text.");return;
-  }
+  if(!navigator.share||!navigator.canShare||!navigator.canShare({files:[file]})){toast("Folder saving is available in the installed app.");return;}
   await navigator.share({files:[file],title:"Promoter Tracker backup"});
-  recordBackupStatus("Shared / handed to Android · "+new Date().toLocaleString());
-  toast("Backup sent to Android; check your chosen destination");
- }catch(e){if(e.name!=="AbortError")toast("Unable to share. Try Export backup or Copy backup text.");}
+  recordBackupStatus("Shared to device · "+new Date().toLocaleString());
+  toast("Backup shared. Check the destination you selected.");
+ }catch(e){if(e.name!=="AbortError")toast("Unable to save backup: "+e.message);}
 }
 async function downloadLocalBackup(){
+ const json=JSON.stringify(backupPayload(),null,2);
+ if(window.AppBackup){
+  try{
+   const result=String(window.AppBackup.createManualBackup(json));
+   if(result.startsWith("OK|")){recordBackupStatus("Saved on device · "+new Date().toLocaleString());toast("Backup saved on device in "+result.slice(3));}
+   else{toast("Backup failed: "+result.replace(/^ERROR\\|/,""));setBackupStatus("FAILED · "+result.replace(/^ERROR\\|/,""));}
+  }catch(e){toast("Device backup failed: "+e.message);setBackupStatus("FAILED · "+e.message);}
+  return;
+ }
  const {blob,name}=createBackupFile();
  try{
   if(await trySaveFilePicker(blob,name))return;
- }catch(e){if(e.name==="AbortError")return;}
- let url;
- try{
-  url=URL.createObjectURL(blob);
-  const a=document.createElement("a");a.href=url;a.download=name;a.style.display="none";
-  document.body.appendChild(a);a.click();a.remove();
-  // A browser's download click cannot prove the OS saved the file.
-  toast("Download requested. Check Downloads; if missing use Save / share to folder.");
-  setBackupStatus("Download requested · "+new Date().toLocaleString()+" (verify file in Downloads)");
- }catch(e){toast("Download unsupported here. Try Save / share or Copy backup text.");}
- finally{if(url)setTimeout(()=>URL.revokeObjectURL(url),60000);}
+  toast("Device folder saving is available in the installed app. Use your device's Save dialog here.");
+ }catch(e){toast("Could not save backup: "+e.message);}
 }
 async function copyBackupText(){
  const data=JSON.stringify(backupPayload(),null,2);
@@ -505,11 +534,11 @@ function restoreBackupText(text){
  try{
   // Persist first; don't change live state if storage rejects the import.
   localStorage.setItem("ptt",JSON.stringify({...next,ts:Date.now()}));
-  S=next;openI=-1;setTab(g);
+  S=next;syncNativeSnapshot();openI=-1;setTab(g);
   recordBackupStatus("Imported from local backup · "+new Date().toLocaleString());
-  $("restoreStatus").textContent="Success: backup imported and saved to this browser.";
+  $("restoreStatus").textContent="Success: backup imported and saved in this app.";
   toast("Backup imported successfully");
- }catch(e){S=previous;$("restoreStatus").textContent="Import failed: browser storage blocked or full. Existing data unchanged.";toast("Import failed: browser storage blocked or full. Data unchanged.");}
+ }catch(e){S=previous;$("restoreStatus").textContent="Import failed: app storage blocked or full. Existing data unchanged.";toast("Import failed: browser storage blocked or full. Data unchanged.");}
 }
 async function restoreLocalBackup(file){
  if(!file){$("restoreStatus").textContent="No file selected. Choose a JSON backup.";return;}
@@ -534,7 +563,11 @@ $("importPasted").onclick=()=>restoreBackupText($("pasteBackup").value.trim());
 $("restoreFile").addEventListener("pointerdown",()=>{$("restoreStatus").textContent="Opening Android file picker… If nothing opens, use Import pasted backup.";});
 $("restoreFile").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];restoreLocalBackup(file);e.target.value="";});
 $("restoreFile").addEventListener("cancel",()=>{$("restoreStatus").textContent="File selection cancelled or unavailable. Try Import pasted backup.";});
-$("saveBackupSettings").onclick=saveBackupSettings;
+ $("saveBackupSettings").onclick=saveBackupSettings;
+$("chooseAutomaticFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.chooseBackupFolder("automatic");else toast("Folder selection is available in the installed app.");};
+$("chooseManualFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.chooseBackupFolder("manual");else toast("Folder selection is available in the installed app.");};
+window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automaticFolder":"manualFolder");if(el)el.textContent=name;toast((kind==="automatic"?"Automatic":"Manual")+" backup folder updated.");};
+
 
 /* keyboard: hide the + button while typing; show compact summary once the hero scrolls away */
 document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input,select"))document.body.classList.add("typing")});
