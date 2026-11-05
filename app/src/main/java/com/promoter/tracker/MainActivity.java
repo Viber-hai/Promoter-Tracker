@@ -16,7 +16,6 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
-
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private WebView web;
     private ValueCallback<Uri[]> filePathCallback;
@@ -24,7 +23,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         web = new WebView(this);
         boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
         web.setBackgroundColor(Color.parseColor(dark ? "#0f1424" : "#f3f5fa"));
@@ -34,26 +32,21 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
+        s.setAllowContentAccess(true);
         s.setTextZoom(100);
+        web.addJavascriptInterface(new AppBackupBridge(this), "AppBackup");
+        BackupScheduler.ensureScheduled(this);
 
-        // Required for HTML <input type="file"> to open Android's native picker.
         web.setWebChromeClient(new WebChromeClient() {
             @Override
-            public boolean onShowFileChooser(WebView webView,
-                    ValueCallback<Uri[]> filePathCallback,
-                    FileChooserParams fileChooserParams) {
-                if (MainActivity.this.filePathCallback != null) {
-                    MainActivity.this.filePathCallback.onReceiveValue(null);
-                }
-                MainActivity.this.filePathCallback = filePathCallback;
-
-                Intent intent;
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (filePathCallback != null) filePathCallback.onReceiveValue(null);
+                filePathCallback = callback;
                 try {
-                    intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType("*/*");
-                    intent.putExtra(Intent.EXTRA_MIME_TYPES,
-                            new String[]{"application/json", "text/plain", "application/octet-stream"});
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "text/plain", "application/octet-stream"});
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     startActivityForResult(intent, FILE_CHOOSER_REQUEST);
                     return true;
@@ -64,11 +57,9 @@ public class MainActivity extends Activity {
                         fallback.setType("*/*");
                         startActivityForResult(fallback, FILE_CHOOSER_REQUEST);
                         return true;
-                    } catch (Exception fallbackError) {
-                        MainActivity.this.filePathCallback = null;
-                        Toast.makeText(MainActivity.this,
-                                "No file picker is available on this device.",
-                                Toast.LENGTH_LONG).show();
+                    } catch (Exception ignored) {
+                        filePathCallback = null;
+                        Toast.makeText(MainActivity.this, "No file picker is available.", Toast.LENGTH_LONG).show();
                         return false;
                     }
                 }
@@ -79,64 +70,38 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri u = request.getUrl();
-                if ("file".equals(u.getScheme()) || "https".equals(u.getScheme())
-                        && "appassets.androidplatform.net".equals(u.getHost())) return false;
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, u));
-                } catch (ActivityNotFoundException e) {
-                    Toast.makeText(MainActivity.this, "No app can open this link.", Toast.LENGTH_SHORT).show();
-                }
+                if ("file".equals(u.getScheme()) || ("https".equals(u.getScheme()) && "appassets.androidplatform.net".equals(u.getHost()))) return false;
+                try { startActivity(new Intent(Intent.ACTION_VIEW, u)); }
+                catch (ActivityNotFoundException e) { Toast.makeText(MainActivity.this, "No app can open this link.", Toast.LENGTH_SHORT).show(); }
                 return true;
             }
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                view.evaluateJavascript("if(window.syncNativeSnapshot){window.syncNativeSnapshot();}", null);
+            }
         });
-
         web.loadUrl("file:///android_asset/index.html");
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == FILE_CHOOSER_REQUEST) {
-            if (filePathCallback == null) return;
-            Uri[] results = null;
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                Uri uri = data.getData();
-                if (uri != null) results = new Uri[]{uri};
-            }
-            filePathCallback.onReceiveValue(results);
+        if (requestCode == FILE_CHOOSER_REQUEST && filePathCallback != null) {
+            Uri[] result = null;
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) result = new Uri[]{data.getData()};
+            filePathCallback.onReceiveValue(result);
             filePathCallback = null;
         }
     }
 
     @Override
     protected void onDestroy() {
-        if (filePathCallback != null) {
-            filePathCallback.onReceiveValue(null);
-            filePathCallback = null;
-        }
-        if (web != null) {
-            web.stopLoading();
-            web.destroy();
-            web = null;
-        }
+        if (filePathCallback != null) { filePathCallback.onReceiveValue(null); filePathCallback = null; }
+        if (web != null) { web.removeJavascriptInterface("AppBackup"); web.stopLoading(); web.destroy(); web = null; }
         super.onDestroy();
     }
-
-    @Override
-    public void onBackPressed() {
-        if (web != null && web.canGoBack()) web.goBack();
-        else super.onBackPressed();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (web != null) web.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (web != null) web.onResume();
-    }
+    @Override public void onBackPressed() { if (web != null && web.canGoBack()) web.goBack(); else super.onBackPressed(); }
+    @Override protected void onPause() { super.onPause(); if (web != null) web.onPause(); }
+    @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); BackupScheduler.ensureScheduled(this); }
 }
