@@ -1,426 +1,510 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark light">
-<title>Promoter Target Tracker</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f7fa">
+<title>Promoter Tracker — Liquid Glass V10 Exclusive Panels</title>
 <style>
-/* Layout: one summary hero, a sticky pair of category tabs, compact rows with big steppers, bottom sheets for add/options. */
-:root{--bg:#0f1424;--card:#171e33;--inp:#0f1424;--line:#2a3350;--tx:#e8ecf8;--mut:#8f9abb;--ac:#4f7cff;--acs:#4f7cff22;--ok:#2fc58a;--bad:#f0627f;--hov:#1c2540;--shade:rgba(0,0,0,.55);color-scheme:dark}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}}
-:root[data-theme="light"]{--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}
-*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{font-size:16px;-webkit-text-size-adjust:100%}
-body{margin:0;min-height:100vh;font-family:Sora,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.app{max-width:640px;margin:0 auto}
-.k{font-size:.74rem;color:var(--mut)}
-.ok{color:var(--ok)}.bad{color:var(--bad)}
-/* hero */
-.hero{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
-.hero-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
-h1{margin:0;font-size:1.05rem;font-weight:700;text-wrap:balance}
-.icon{width:44px;height:44px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:1.4rem;line-height:1;display:grid;place-items:center}
-.hero-main{display:flex;align-items:center;gap:18px}
-.ring{position:relative;width:108px;height:108px;flex:none;color:var(--bad)}
-.ring.ok{color:var(--ok)}
-.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:9}
-.ring .trk{stroke:var(--line)}
-.ring .val{stroke:currentColor;stroke-linecap:round;stroke-dasharray:282.7;stroke-dashoffset:282.7;transition:stroke-dashoffset .45s}
-.ringtxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--tx)}
-.ringtxt b{font-size:1.35rem;font-variant-numeric:tabular-nums}
-.ringtxt span{font-size:.64rem;color:var(--mut)}
-.hero-side{min-width:0;display:grid;gap:3px}
-.big{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.hero-side .k b{color:var(--tx);font-variant-numeric:tabular-nums}
-/* sticky tabs */
-.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 8px}
-.bar.stuck{border-bottom:1px solid var(--line)}
-.mini{display:none;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--mut);padding:0 4px 8px}
-.mini b{color:var(--tx);font-variant-numeric:tabular-nums}
-.bar.stuck .mini{display:flex}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tab{text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card);min-height:68px;display:grid;gap:5px;align-content:center;min-width:0}
-.tab.on{border-color:var(--ac);background:var(--acs)}
-.tn{font-size:.76rem;font-weight:600;color:var(--mut)}
-.tab.on .tn{color:var(--tx)}
-.tp{font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.tbar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
-.tbar i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
-/* category strip + tools */
-.cat{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px;align-items:end;padding:10px 2px 4px}
-.cat b{display:block;font-size:1rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.cat>div{min-width:0}
-input,select{font:inherit;font-size:1rem;color:var(--tx);background:var(--inp);border:1px solid var(--line);border-radius:10px;padding:0 10px;min-height:44px;width:100%;font-variant-numeric:tabular-nums;text-align:right}
-select,input.l{text-align:left}
-.tools{display:flex;gap:8px;padding:8px 0 10px}
-.tools input{flex:1;min-width:0}
-.chip{padding:0 16px;min-height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:.85rem;white-space:nowrap}
-.chip[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
-/* rows */
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center;padding:8px 8px 8px 12px;margin-bottom:8px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;background:var(--card)}
-.row.has{border-left-color:var(--ac)}
-.main{background:none;border:0;text-align:left;padding:6px 0;min-width:0;display:grid;gap:2px}
-.nm{font-weight:600;font-size:.98rem;overflow-wrap:anywhere}
-.sub{font-size:.74rem;color:var(--mut)}
-.sub2{font-size:.76rem;color:var(--ac);font-weight:600;font-variant-numeric:tabular-nums}
-.sub2:empty{display:none}
-.step{display:grid;grid-template-columns:44px 54px 44px;gap:4px}
-.step button{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:1.35rem;font-weight:600;line-height:1}
-.step button:active{background:var(--acs);border-color:var(--ac)}
-.step input{height:44px;text-align:center;padding:0;font-weight:700}
-.edit{grid-column:1/-1;display:none;gap:8px;padding:10px 0 4px;margin-top:4px;border-top:1px solid var(--line)}
-.row.open .edit{display:grid;grid-template-columns:1fr 1fr}
-.edit label{display:grid;gap:4px;font-size:.72rem;color:var(--mut);min-width:0}
-.edit .full{grid-column:1/-1}
-.empty{padding:28px 8px;text-align:center;color:var(--mut);font-size:.9rem}
-/* buttons, fab, sheets, toast */
-.btn{min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;padding:0 16px;width:100%}
-.btn.pri{background:var(--ac);border-color:var(--ac);color:#fff}
-.btn.dng{color:var(--bad)}
-.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:2rem;line-height:1;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:8;display:grid;place-items:center}
-.fab:active{transform:scale(.95)}
-body.typing .fab{display:none}
-.sheet{position:fixed;inset:0;z-index:20;display:none}
-.sheet.on{display:block}
-.back{position:absolute;inset:0;background:var(--shade)}
-.pane{position:absolute;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow-y:auto;display:grid;gap:12px}
-.pane h2{margin:0;font-size:1.05rem}
-.fld{display:grid;gap:4px;font-size:.75rem;color:var(--mut);min-width:0}
-.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.note{margin:0;font-size:.8rem;line-height:1.5;color:var(--mut)}
-.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);padding:8px 8px 8px 16px;background:var(--tx);color:var(--bg);border-radius:12px;font-size:.88rem;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.3)}
-.toast.on{display:flex}
-.toast button{font-weight:700;color:var(--ac);background:var(--bg);border:0;border-radius:8px;padding:0 14px;min-height:40px}
-.toast button[hidden]{display:none}
-@media (min-width:700px){.row{padding:10px 12px}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
-</style>
-<style id="liquid-glass-overhaul">
-:root{--bg:#080d19;--card:rgba(255,255,255,.075);--inp:rgba(255,255,255,.065);--line:rgba(220,235,255,.16);--tx:#f4f7ff;--mut:#9eacc7;--ac:#91baff;--acs:rgba(125,177,255,.16);--ok:#62e6b2;--bad:#ff829b;--hov:rgba(255,255,255,.12);--shade:rgba(3,8,20,.68);color-scheme:dark}
-:root[data-theme="light"]{--bg:#e8eef8;--card:rgba(255,255,255,.52);--inp:rgba(255,255,255,.42);--line:rgba(255,255,255,.72);--tx:#18243b;--mut:#64738f;--ac:#356fd2;--acs:rgba(65,125,220,.13);--ok:#168a67;--bad:#c94f6b;--hov:rgba(255,255,255,.7);--shade:rgba(28,43,68,.35);color-scheme:light}
-html{background:var(--bg);scroll-behavior:smooth}
-body{background:radial-gradient(ellipse at 12% 8%,rgba(71,119,224,.27),transparent 34%),radial-gradient(ellipse at 88% 20%,rgba(133,91,218,.20),transparent 31%),radial-gradient(ellipse at 52% 92%,rgba(47,181,188,.13),transparent 38%),var(--bg);background-attachment:fixed}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.25;background-image:radial-gradient(rgba(255,255,255,.2) .6px,transparent .6px);background-size:5px 5px;mask-image:linear-gradient(to bottom,black,transparent 75%)}
-.app{max-width:660px;padding-top:10px}
-.hero,.tab,.row,.pane,.chip,.btn,.icon,.step button,.fab,.toast{-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%)}
-.hero{margin-top:8px;padding:20px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,.045) 55%,rgba(120,160,255,.08));box-shadow:0 18px 55px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.22);position:relative;overflow:hidden;animation:glass-enter .7s cubic-bezier(.2,.8,.2,1) both}
-.hero::before,.row::before,.pane::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,rgba(255,255,255,.13),transparent 35%,transparent 70%,rgba(255,255,255,.045))}
-.hero-top{position:relative}h1{font-size:1.12rem;letter-spacing:-.035em}
-.icon{width:42px;height:42px;border-radius:15px;background:rgba(255,255,255,.075);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.18);transition:transform .25s,background .25s,border-color .25s}
-.icon:hover{background:rgba(255,255,255,.17);transform:translateY(-2px)}
-.ring{filter:drop-shadow(0 0 12px currentColor)}.ring .val{transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)}.big{letter-spacing:-.055em;font-size:2.1rem}
-.bar{background:rgba(8,13,25,.48);backdrop-filter:blur(24px) saturate(170%);border-radius:20px;padding:12px 8px 9px;margin:10px -8px 0;border:1px solid transparent;transition:border-color .3s,box-shadow .3s}
-.bar.stuck{border-color:var(--line);box-shadow:0 12px 35px rgba(0,0,0,.15)}
-.tabs{gap:9px}.tab{position:relative;overflow:hidden;text-align:left;padding:12px 13px;border-radius:17px;border:1px solid var(--line);background:rgba(255,255,255,.055);box-shadow:inset 0 1px 0 rgba(255,255,255,.13);transition:transform .25s,border-color .25s,background .25s,box-shadow .25s}
-.tab:hover{transform:translateY(-2px);background:rgba(255,255,255,.10)}.tab.on{border-color:rgba(145,186,255,.62);background:linear-gradient(135deg,rgba(112,163,255,.22),rgba(255,255,255,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 24px rgba(69,126,221,.12)}
-.tn{letter-spacing:.005em}.tp{font-size:1.28rem;letter-spacing:-.04em}.tbar{background:rgba(255,255,255,.12);height:5px}.tbar i{border-radius:8px;box-shadow:0 0 12px rgba(130,180,255,.55)}.cat{padding-top:15px}.cat b{letter-spacing:-.035em}
-input,select{background:rgba(255,255,255,.065);border:1px solid var(--line);border-radius:14px;box-shadow:inset 0 1px 2px rgba(0,0,0,.08);transition:border-color .2s,background .2s,box-shadow .2s}
-input:focus,select:focus{border-color:rgba(145,186,255,.7);background:rgba(255,255,255,.11);box-shadow:0 0 0 4px rgba(105,157,244,.12);outline:0}
-.tools{gap:9px}.chip{border:1px solid var(--line);background:rgba(255,255,255,.055);border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.14);transition:transform .2s,background .2s,border-color .2s}
-.chip:hover{transform:translateY(-1px);background:rgba(255,255,255,.13)}.chip[aria-pressed="true"]{background:rgba(115,165,255,.2);border-color:rgba(145,186,255,.55);color:var(--tx)}
-.row{position:relative;overflow:hidden;isolation:isolate;padding:10px 10px 10px 14px;margin-bottom:10px;border:1px solid var(--line);border-radius:19px;background:linear-gradient(120deg,rgba(255,255,255,.095),rgba(255,255,255,.045));box-shadow:0 8px 25px rgba(0,0,0,.10),inset 0 1px 0 rgba(255,255,255,.13);transition:transform .25s,border-color .25s,background .25s,box-shadow .25s;animation:row-enter .45s cubic-bezier(.2,.8,.2,1) both}
-.row:nth-child(2){animation-delay:.025s}.row:nth-child(3){animation-delay:.05s}.row:nth-child(4){animation-delay:.075s}.row:nth-child(5){animation-delay:.1s}
-.row:hover{transform:translateY(-2px);border-color:rgba(190,215,255,.32);box-shadow:0 12px 30px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.18)}.row.has{border-left:3px solid rgba(111,181,255,.8);padding-left:12px}.main{position:relative;z-index:1}.nm{letter-spacing:-.02em}
-.step{position:relative;z-index:1;gap:5px;grid-template-columns:42px 52px 42px}.step button{height:42px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.065);font-size:1.3rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.15);transition:transform .18s,background .18s,border-color .18s}
-.step button:hover{background:rgba(255,255,255,.15);border-color:rgba(175,205,255,.45);transform:scale(1.04)}.step button:active{transform:scale(.92);background:rgba(120,170,255,.22)}.step input{height:42px;border-radius:13px;background:rgba(255,255,255,.055)}.edit{position:relative;z-index:1;border-color:var(--line)}
-.btn{position:relative;overflow:hidden;min-height:48px;border-radius:15px;border:1px solid var(--line);background:rgba(255,255,255,.065);box-shadow:inset 0 1px 0 rgba(255,255,255,.16);transition:transform .2s,background .2s,border-color .2s,box-shadow .2s}
-.btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.14);border-color:rgba(190,215,255,.4)}.btn:active{transform:scale(.985)}
-.btn.pri{color:var(--tx);background:rgba(115,165,255,.17);border-color:rgba(145,186,255,.48);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 6px 20px rgba(70,130,230,.12)}.btn.pri:hover{background:rgba(115,165,255,.26)}
-.btn.dng{color:#ff9bad;background:rgba(255,105,135,.07);border-color:rgba(255,130,155,.25)}
-.fab{right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:22px;border:1px solid rgba(205,225,255,.34);color:var(--tx);font-size:2rem;background:linear-gradient(145deg,rgba(139,184,255,.32),rgba(255,255,255,.10));box-shadow:0 12px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .25s,box-shadow .25s,background .25s}
-.fab:hover{transform:translateY(-4px) rotate(4deg);box-shadow:0 18px 38px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.4)}.fab:active{transform:scale(.92)}
-.sheet{opacity:0;transition:opacity .28s ease;pointer-events:none}.sheet.on{display:block;opacity:1;pointer-events:auto}.back{background:rgba(2,7,18,.55);backdrop-filter:blur(8px)}
-.pane{background:linear-gradient(145deg,rgba(36,49,76,.88),rgba(15,23,41,.91));border:1px solid rgba(220,235,255,.2);border-bottom:0;border-radius:28px 28px 0 0;box-shadow:0 -20px 60px rgba(0,0,0,.3);padding-top:24px;animation:pane-enter .35s cubic-bezier(.2,.8,.2,1) both}
-.pane h2{letter-spacing:-.035em}.toast{background:rgba(240,246,255,.88);color:#15223a;border:1px solid rgba(255,255,255,.6);border-radius:17px;box-shadow:0 12px 35px rgba(0,0,0,.22);backdrop-filter:blur(20px)}.toast button{background:rgba(75,125,220,.12);border:1px solid rgba(75,125,220,.18)}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid rgba(145,186,255,.9);outline-offset:3px}
-@keyframes glass-enter{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes row-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes pane-enter{from{transform:translateY(28px);opacity:.7}to{transform:translateY(0);opacity:1}}
-@media(max-width:420px){.hero{padding:17px}.ring{width:96px;height:96px}.big{font-size:1.8rem}.tab{padding:10px}.tp{font-size:1.12rem}.step{grid-template-columns:38px 48px 38px}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-/* Performance pass: preserve the glass look without continuously blurring every list item. */
-.hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(12px) saturate(135%);backdrop-filter:blur(12px) saturate(135%)}
-.tab,.row,.chip,.btn,.icon,.step button,.fab{-webkit-backdrop-filter:none;backdrop-filter:none}
-.bar{-webkit-backdrop-filter:blur(10px) saturate(130%);backdrop-filter:blur(10px) saturate(130%)}
-.row{animation:none!important;transition:border-color .18s,background-color .18s,box-shadow .18s;box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
-.row::before{display:none}
-.row:hover{transform:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
-.row.has{border-left-width:3px}
-.hero{animation:none}
-.ring{filter:none}
-html{scroll-behavior:auto}
-body{background-attachment:scroll}
-body::after{display:none}
-.tab,.chip,.btn,.icon,.step button,.fab{transition:background-color .16s,border-color .16s,opacity .16s}
-.tab:hover,.chip:hover,.btn:hover,.icon:hover,.step button:hover,.fab:hover{transform:none}
-.pane{animation:none}
-@media(max-width:600px){.hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(8px) saturate(125%);backdrop-filter:blur(8px) saturate(125%)}.row{box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+:root{
+  color-scheme:light dark;
+  --red:#c8102e;--red2:#ed5269;--ink:#202027;--muted:#777985;
+  --bg:#f4f4f7;--glass:rgba(255,255,255,.72);--glass-strong:rgba(255,255,255,.91);
+  --line:rgba(255,255,255,.94);--surface:rgba(255,255,255,.72);--soft:rgba(35,35,45,.055);
+  --field:#fff;--shadow:0 14px 36px rgba(42,20,28,.075),inset 0 1px 0 rgba(255,255,255,.9);
+  --danger:#c52b3e;--good:#16875a;
+}
+@media(prefers-color-scheme:dark){
+ :root{
+  --ink:#f3f3f6;--muted:#a5a6b0;--bg:#101116;--glass:rgba(31,32,41,.72);
+  --glass-strong:rgba(29,30,38,.94);--line:rgba(255,255,255,.12);
+  --surface:rgba(255,255,255,.065);--soft:rgba(255,255,255,.075);--field:#20212a;
+  --shadow:0 14px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.07);
+  --danger:#ff7789;--good:#61d5a0;
+ }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+ margin:0;min-height:100vh;padding:env(safe-area-inset-top) 14px calc(132px + env(safe-area-inset-bottom));
+ color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+ background:radial-gradient(ellipse at 4% 3%,rgba(200,16,46,.13),transparent 28rem),
+ radial-gradient(ellipse at 96% 34%,rgba(255,255,255,.82),transparent 25rem),
+ linear-gradient(145deg,var(--bg),var(--bg));
+}
+@media(prefers-color-scheme:dark){
+ body{background:radial-gradient(ellipse at 3% 2%,rgba(200,16,46,.19),transparent 28rem),radial-gradient(ellipse at 100% 30%,rgba(115,70,83,.10),transparent 26rem),linear-gradient(145deg,#101116,#171820 60%,#101116)}
+}
+button,input,select{font:inherit}button{cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--red2);outline-offset:2px}
+.app{width:min(100%,560px);margin:auto}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:25px;box-shadow:var(--shadow);backdrop-filter:blur(14px) saturate(1.18);-webkit-backdrop-filter:blur(14px) saturate(1.18)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 17px}
+.brand{display:flex;align-items:center;gap:11px}.mark{width:42px;height:42px;border-radius:15px;display:grid;place-items:center;color:#fff;font-weight:900;letter-spacing:-1px;background:linear-gradient(145deg,#ef6579,#ad0828);box-shadow:0 8px 20px #c8102e35,inset 0 1px 1px #ffffff88}
+.mark svg{display:block;width:42px;height:42px;filter:drop-shadow(0 3px 5px rgba(200,16,46,.12))}.brand b{font-size:16px;letter-spacing:-.45px}.brand small{display:block;margin-top:3px;color:var(--muted);font-size:9px;letter-spacing:1.5px;font-weight:800}
+.icon{width:42px;height:42px;border:1px solid var(--line);border-radius:15px;background:var(--glass);box-shadow:0 7px 18px #1e14190d;font-size:22px}
+.hero{position:relative;overflow:hidden;padding:20px 18px 17px;background:linear-gradient(125deg,var(--glass-strong),var(--glass) 70%)}
+.hero:after{content:"";position:absolute;width:210px;height:210px;right:-100px;top:-125px;border-radius:50%;background:radial-gradient(circle,rgba(200,16,46,.17),transparent 70%);pointer-events:none}
+.hero>*{position:relative;z-index:1}.herohead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.eyebrow{color:var(--red2);font-size:9px;font-weight:850;letter-spacing:1.55px}
+.hero h1{font-size:21px;line-height:1.12;letter-spacing:-.75px;margin:7px 0 0}
+.tag{white-space:nowrap;border-radius:99px;padding:7px 9px;background:rgba(200,16,46,.09);border:1px solid rgba(200,16,46,.20);color:var(--red2);font-size:8px;font-weight:850;letter-spacing:.65px}
+.hero-main{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;gap:16px;margin-top:20px}
+.ring{width:104px;height:104px;flex:none;position:relative}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:8}.ring .track{stroke:rgba(200,16,46,.15)}.ring .value{stroke:var(--red2);stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;transition:stroke-dashoffset .25s ease}
+.ringtext{position:absolute;inset:0;display:grid;align-content:center;text-align:center}.ringtext b{font-size:24px;font-weight:950;letter-spacing:-1px}.ringtext span{font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.5px}
+.label{font-size:10px;color:var(--muted);font-weight:650}.sales-number{font-size:25px;font-weight:800;letter-spacing:-1px;margin:3px 0 5px}
+.sub{font-size:10px;color:var(--muted);line-height:1.55}.sub b{color:var(--ink);font-weight:700}
+.incentive-line{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.incentive-label{font-size:10px;color:var(--muted);font-weight:650}
+.money{font-size:18px;font-weight:650;letter-spacing:-.35px;transition:filter .18s ease;display:inline-block;border:0;padding:0;background:transparent;color:var(--ink);font-family:inherit;cursor:pointer;text-align:left}
+.money.concealed{filter:blur(6px);user-select:none;-webkit-user-select:none}
+.money:focus-visible{outline:2px solid var(--red2);outline-offset:4px;border-radius:5px}
+.incentive-toggle{touch-action:manipulation}
+.stats{display:flex;gap:8px;margin-top:17px}.stat{flex:1;min-width:0;padding:10px 11px;border-radius:15px;background:var(--surface);border:1px solid var(--line)}
+.stat small{display:block;font-size:8px;color:var(--muted);font-weight:800;margin-bottom:5px;letter-spacing:.35px}.stat b{font-size:13px;font-weight:750}
+.heading{display:flex;justify-content:space-between;align-items:end;margin:22px 2px 11px}
+.heading h2{font-size:15px;letter-spacing:-.35px;margin:0;font-weight:820}.heading p{font-size:9px;color:var(--muted);margin:4px 0 0}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cat{text-align:left;padding:12px;border-radius:19px;border:1px solid var(--line);background:var(--glass);box-shadow:0 8px 20px rgba(25,20,30,.045);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.cat.active{background:var(--glass-strong);border-color:rgba(200,16,46,.42);box-shadow:0 9px 23px rgba(200,16,46,.10)}
+.catrow{display:flex;align-items:center;justify-content:space-between;min-height:32px}.caticon{width:29px;height:29px;border-radius:10px;display:grid;place-items:center;color:var(--red2);background:rgba(200,16,46,.10);font-size:16px}
+.pct{color:var(--red2);font-weight:950;font-size:20px;letter-spacing:-.8px;line-height:1}.catname{font-size:10px;font-weight:850;line-height:1.3;margin-top:8px;min-height:26px}
+.target{font-size:8px;color:var(--muted);margin-top:5px}.cat-sales{font-size:9px;color:var(--muted);margin-top:5px}.achievement-note{font-size:8px;color:var(--red2);font-weight:850;margin-top:5px;min-height:11px}
+.track{height:6px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:8px}.fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),var(--red2));width:0%;transition:width .2s ease}
 
-/* Accessible native Android file-picker overlay and pasted-JSON fallback. */
-.restore-trigger{position:relative;display:grid;place-items:center;cursor:pointer;text-align:center}
-.restore-trigger input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:pointer;font-size:0}
-#pasteBackup{width:100%;min-height:88px;resize:vertical;text-align:left;font:13px/1.5 monospace;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--tx);background:var(--inp)}
-/* Backup controls + alignment and native select popup theme */
-.cat{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;text-align:center}
-.cat>div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;text-align:center}
-.cat .k,.cat label{width:100%;text-align:center}
-.cat b{width:100%;text-align:center}
-.cat input{text-align:center;max-width:100%}
-select{color-scheme:dark}
-select option{background:#182238;color:#f4f7ff}
-:root[data-theme="light"] select{color-scheme:light}
-:root[data-theme="light"] select option{background:#fff;color:#18243b}
-.backup-source{padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.055);display:grid;gap:8px}
-.backup-source h3{font-size:.9rem;margin:0}
-.backup-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.backup-row .btn{width:auto;min-width:120px}
-.backup-select{display:grid;gap:5px}
-.backup-status{font-size:.78rem;color:var(--mut);line-height:1.45}
-.file-hidden{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 
-/* Light theme corrections: remove dark-only hard-coded glass surfaces. */
-/* Respect the device light appearance as well as the explicit in-app light theme. */
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e8eef8;--card:rgba(255,255,255,.52);--inp:rgba(255,255,255,.82);--line:rgba(105,130,170,.24);--tx:#18243b;--mut:#64738f;--ac:#356fd2;--acs:rgba(65,125,220,.13);--ok:#168a67;--bad:#c94f6b;--hov:rgba(255,255,255,.7);--shade:rgba(28,43,68,.30);color-scheme:light}}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .bar{background:rgba(255,255,255,.76)}}
-:root[data-theme="light"] .bar{background:rgba(255,255,255,.76);border-color:rgba(255,255,255,.9);box-shadow:0 10px 28px rgba(40,65,105,.08)}
-:root[data-theme="light"] .tab{background:rgba(255,255,255,.72);border-color:rgba(105,130,170,.20);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 4px 14px rgba(40,65,105,.05)}
-:root[data-theme="light"] .tab.on{background:linear-gradient(135deg,rgba(89,145,235,.19),rgba(255,255,255,.9));border-color:rgba(53,111,210,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 7px 20px rgba(53,111,210,.10)}
-:root[data-theme="light"] .tbar{background:rgba(65,92,135,.15)}
-:root[data-theme="light"] .pane{background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(237,243,252,.98));border-color:rgba(125,150,190,.24);box-shadow:0 -18px 50px rgba(36,55,88,.18)}
-:root[data-theme="light"] .pane::before{background:linear-gradient(125deg,rgba(255,255,255,.62),transparent 38%,transparent 72%,rgba(95,145,220,.035))}
-:root[data-theme="light"] .back{background:rgba(36,52,78,.30)}
-:root[data-theme="light"] .btn,
-:root[data-theme="light"] .backup-source{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.24);color:var(--tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 12px rgba(40,65,105,.05)}
-:root[data-theme="light"] .btn:hover{background:rgba(240,246,255,.98);border-color:rgba(53,111,210,.34)}
-:root[data-theme="light"] .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#214f9c}
-:root[data-theme="light"] .btn.dng{color:#b52f50;background:rgba(201,79,107,.07);border-color:rgba(201,79,107,.24)}
-:root[data-theme="light"] .icon,
-:root[data-theme="light"] .chip,
-:root[data-theme="light"] .step button{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.25);color:var(--tx)}
-:root[data-theme="light"] .step input,
-:root[data-theme="light"] input,
-:root[data-theme="light"] select{background:rgba(255,255,255,.88);border-color:rgba(105,130,170,.28);color:var(--tx)}
-:root[data-theme="light"] .backup-source{background:rgba(235,242,252,.72)}
-:root[data-theme="light"] .toast{background:rgba(255,255,255,.96);color:#18243b;border-color:rgba(125,150,190,.3)}
-@media (prefers-color-scheme:light){
- :root:not([data-theme="dark"]) .tab{background:rgba(255,255,255,.72);border-color:rgba(105,130,170,.20)}
- :root:not([data-theme="dark"]) .tab.on{background:linear-gradient(135deg,rgba(89,145,235,.19),rgba(255,255,255,.9));border-color:rgba(53,111,210,.42)}
- :root:not([data-theme="dark"]) .pane{background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(237,243,252,.98));border-color:rgba(125,150,190,.24)}
- :root:not([data-theme="dark"]) .back{background:rgba(36,52,78,.30)}
- :root:not([data-theme="dark"]) .btn,:root:not([data-theme="dark"]) .backup-source{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.24);color:var(--tx)}
- :root:not([data-theme="dark"]) .icon,:root:not([data-theme="dark"]) .chip,:root:not([data-theme="dark"]) .step button{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.25);color:var(--tx)}
- :root:not([data-theme="dark"]) input,:root:not([data-theme="dark"]) select,:root:not([data-theme="dark"]) .step input{background:rgba(255,255,255,.88);border-color:rgba(105,130,170,.28);color:var(--tx)}
- :root:not([data-theme="dark"]) .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#214f9c}
- :root:not([data-theme="dark"]) .btn.dng{color:#b52f50;background:rgba(201,79,107,.07);border-color:rgba(201,79,107,.24)}
+.tools{display:flex;gap:8px;margin-bottom:10px}.searchwrap{position:relative;flex:1;min-width:0}.searchwrap span{position:absolute;left:12px;top:10px;color:var(--muted);font-size:18px}
+.search{width:100%;height:42px;border:1px solid var(--line);border-radius:14px;background:var(--glass);padding:0 10px 0 35px;outline:none;color:var(--ink);box-shadow:0 6px 15px rgba(25,20,30,.035)}
+.filter{border:1px solid var(--line);border-radius:14px;padding:0 11px;background:var(--glass);font-size:9px;font-weight:800;color:var(--muted)}
+.filter.active{color:var(--red2);background:rgba(200,16,46,.10);border-color:rgba(200,16,46,.30)}
+.list{padding-bottom:12px;display:grid;gap:8px}.model{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--glass);box-shadow:0 7px 17px rgba(25,20,30,.035);content-visibility:auto;contain-intrinsic-size:100px}
+.model.sold{background:var(--glass-strong)}.model-main{display:block;width:100%;min-width:0;padding:0;border:0;background:transparent;text-align:left;color:inherit;cursor:pointer}.model-top{display:flex;align-items:center;gap:7px;min-width:0}
+.modelname{font-size:12px;font-weight:820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta,.detailtext{font-size:8px;color:var(--muted);margin-top:4px}
+.stepper{display:flex;align-items:center;gap:6px;padding:4px;border-radius:12px;background:var(--soft);border:1px solid var(--line);align-self:center}
+.stepper button{width:27px;height:27px;border:0;border-radius:9px;background:var(--glass-strong);box-shadow:0 2px 6px rgba(20,20,25,.08);font-size:17px;color:var(--ink)}
+.stepper .plus{background:linear-gradient(145deg,#e64b64,#b80b2b);color:#fff;box-shadow:0 4px 9px #c8102e35}
+.stepper .qty-edit{min-width:29px;height:29px;padding:0 4px;border:1px solid var(--line);border-radius:9px;background:var(--glass-strong);color:var(--red2);font-size:13px;font-weight:950;text-align:center;font-variant-numeric:tabular-nums}.stepper .qty-manual{width:54px;height:29px;padding:0 4px;border:1px solid rgba(200,16,46,.42);border-radius:9px;background:var(--field);color:var(--ink);font-size:13px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;outline:none}
+.details{display:none;grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;gap:9px;grid-template-columns:1fr 1fr}
+.model.open .details{display:grid}.details label{font-size:8px;color:var(--muted);font-weight:750;display:grid;gap:5px}
+.details input{width:100%;height:36px;border:1px solid var(--line);border-radius:10px;padding:0 9px;background:var(--field);color:var(--ink)}
+.detail-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}.detail-note{font-size:8px;color:var(--muted)}
+.delete-model{border:1px solid rgba(197,43,62,.28);border-radius:10px;background:rgba(197,43,62,.09);color:var(--danger);font-size:9px;font-weight:850;padding:8px 11px}
+.empty{padding:24px;text-align:center;color:var(--muted);font-size:11px}
+.foot{text-align:center;color:var(--muted);font-size:8px;margin:16px 0 4px;opacity:.8}
+.fab{position:fixed;transition:opacity .18s ease,transform .18s ease;z-index:10;touch-action:manipulation;pointer-events:auto;right:max(20px,calc((100vw - 560px)/2 + 10px));bottom:calc(112px + env(safe-area-inset-bottom));width:53px;height:53px;border:0;border-radius:18px;color:#fff;font-size:28px;background:linear-gradient(145deg,#e84d65,#b20827);box-shadow:0 10px 23px #c8102e40}
+.fab.at-page-end{opacity:0;pointer-events:none;transform:translateY(10px) scale(.92)}
+.sticky-summary{position:fixed;z-index:6;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 18px),560px);padding:10px 12px 9px;border:1px solid var(--line);border-radius:20px;background:var(--glass-strong);box-shadow:0 10px 35px rgba(15,12,20,.17),inset 0 1px 0 rgba(255,255,255,.25);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2)}
+.summary-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.summary-title{font-size:8px;font-weight:900;letter-spacing:1px;color:var(--muted)}
+.summary-percent{font-size:17px;font-weight:950;letter-spacing:-.5px;color:var(--red2)}
+.summary-track{height:4px;border-radius:99px;background:var(--soft);overflow:hidden;margin-bottom:8px}.summary-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:99px}
+.summary-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.summary-metric{min-width:0;border-right:1px solid var(--line);padding-right:6px}.summary-metric:last-child{border:0}
+.summary-metric small{display:block;font-size:7px;color:var(--muted);font-weight:850;letter-spacing:.5px;margin-bottom:3px}
+.summary-metric b{display:block;font-size:11px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.summary-incentive{display:flex;align-items:center;gap:5px}.summary-incentive .money{font-size:11px;font-weight:650}
+.sheet{position:fixed;inset:0;z-index:15;display:none;align-items:end;justify-content:center;padding:12px;background:rgba(15,12,18,.40);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sheet.show{display:flex}.panel{width:min(100%,510px);max-height:84vh;overflow:auto;border-radius:25px;padding:19px;background:var(--glass-strong);border:1px solid var(--line);box-shadow:0 24px 65px rgba(0,0,0,.28)}
+.grip{width:38px;height:4px;border-radius:99px;background:var(--muted);opacity:.35;margin:-7px auto 16px}
+.panel h2{font-size:18px;margin:0 0 14px;letter-spacing:-.45px}
+.field{display:grid;gap:5px;margin-bottom:11px;font-size:9px;color:var(--muted);font-weight:800}
+.field input,.field select{height:42px;border:1px solid var(--line);border-radius:12px;background:var(--field);padding:0 11px;color:var(--ink)}
+.fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.primary,.secondary,.danger-btn{width:100%;min-height:43px;border-radius:13px;font-size:11px;font-weight:850}
+.primary{border:0;color:#fff;background:linear-gradient(110deg,#d51b3b,#ad0928);box-shadow:0 7px 17px #c8102e2a}
+.secondary{margin-top:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.danger-btn{margin-top:8px;border:1px solid rgba(197,43,62,.28);background:rgba(197,43,62,.08);color:var(--danger)}
+.helper{font-size:9px;line-height:1.5;color:var(--muted);margin:10px 2px}
+.toast{position:fixed;z-index:30;left:50%;bottom:calc(125px + env(safe-area-inset-bottom));transform:translate(-50%,12px);opacity:0;pointer-events:none;background:#252329;color:#fff;padding:10px 14px;border-radius:99px;font-size:10px;font-weight:750;transition:opacity .16s,transform .16s;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.hidden-file{display:none}
+@media(min-width:700px){body{padding-top:20px}.hero{padding:23px}.hero-main{grid-template-columns:112px minmax(0,1fr)}.ring{width:112px;height:112px}}
+@media(max-width:360px){body{padding-left:9px;padding-right:9px}.hero{padding:17px 14px}.hero-main{grid-template-columns:88px minmax(0,1fr);gap:12px}.ring{width:88px;height:88px}.sales-number{font-size:22px}.tag{font-size:7px;padding:6px}.sticky-summary{width:calc(100% - 12px);padding:9px}.summary-metric b{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+ 
+
+/* Light-mode readability correction: Backup & Restore only. */
+@media(prefers-color-scheme:light){
+ #sBackup .panel{background:#f8f8fb;border-color:#d1d2da}
+ #sBackup .backup-source{background:#fff;border-color:#d2d3dc}
+ #sBackup .backup-source h3{color:#202027}
+ #sBackup .note,#sBackup .backup-status{color:#555762}
+ #sBackup .field{color:#454752}
+ #sBackup .secondary,#sBackup .restore-trigger{
+  background:#f0f0f4;border-color:#c6c7d1;color:#202027;
+ }
+ #sBackup #pasteBackup{background:#fff;border-color:#c6c7d1;color:#202027}
+ #sBackup #pasteBackup::placeholder{color:#777985;opacity:1}
 }
 
+/* Native Android backup controls retained inside the approved V10 panels. */
+.backup-source{padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);display:grid;gap:8px;margin:10px 0}
+.backup-source h3{font-size:11px;margin:0;color:var(--ink)}
+.backup-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.backup-row .secondary,.backup-row .primary{width:auto;flex:1;min-width:0;padding:0 8px;font-size:9px}
+.backup-status,.note{font-size:8px;line-height:1.5;color:var(--muted)}
+.backup-select{display:grid;gap:4px}
+.restore-trigger{position:relative;display:grid;place-items:center;cursor:pointer;text-align:center}
+.restore-trigger input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:pointer;font-size:0}
+#pasteBackup{width:100%;min-height:88px;resize:vertical;text-align:left;font:10px/1.5 ui-monospace,monospace;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--ink);background:var(--field)}
+#pasteBackup:focus{border-color:rgba(200,16,46,.48);box-shadow:0 0 0 3px rgba(200,16,46,.09);outline:0}
 </style>
 </head>
 <body>
 <div class="app">
- <header class="hero" id="hero">
-  <div class="hero-top"><h1>Promoter Target Tracker</h1><button class="icon" id="menu" aria-label="Options">&#8943;</button></div>
-  <div class="hero-main" aria-live="polite">
-   <div class="ring" id="ring"><svg viewBox="0 0 108 108" aria-hidden="true"><circle class="trk" cx="54" cy="54" r="45"/><circle class="val" id="rv" cx="54" cy="54" r="45"/></svg>
-    <div class="ringtxt"><b id="fs">0%</b><span>Final score</span></div></div>
-   <div class="hero-side">
-    <div class="k">Total incentive</div><div class="big" id="ti">0</div>
-    <div class="k">Sales <b id="ta">0</b> of <b id="tt">0</b></div>
-   </div>
-  </div>
+ <header class="top">
+  <div class="brand"><div class="mark" role="img" aria-label="Huawei logo"><svg viewBox="0 0 48 48" aria-hidden="true"><g fill="#C8102E"><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(45 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(90 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(135 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(180 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(225 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(270 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(315 24 24)"/></g></svg></div><div><b>Promoter Tracker</b><small>PERFORMANCE OVERVIEW · SYSTEM THEME</small></div></div>
+  <button class="icon" id="menu" type="button" aria-label="Open quick actions" aria-haspopup="dialog">⋯</button>
  </header>
- <nav class="bar" id="bar">
-  <div class="mini"><span>Score <b id="mfs">0%</b></span><span>Incentive <b id="mti">0</b></span></div>
-  <div class="tabs" role="tablist">
-   <button class="tab" role="tab" data-g="m"><span class="tn">Handset &amp; Tablet</span><span class="tp" id="mp">0%</span><i class="tbar"><i id="mb"></i></i></button>
-   <button class="tab" role="tab" data-g="w"><span class="tn">Audio &amp; Wearables</span><span class="tp" id="wp">0%</span><i class="tbar"><i id="wb"></i></i></button>
-  </div>
- </nav>
- <main>
-  <div class="cat">
-   <div><div class="k">Sold value</div><b id="ca">0</b></div>
-   <div><label class="k" for="tg">Target</label><input id="tg" inputmode="numeric" aria-label="Target for this category"></div>
-   <div><div class="k">Incentive</div><b id="ci">0</b></div>
-  </div>
-  <div class="tools">
-   <input id="q" type="search" class="l" placeholder="Search model" aria-label="Search model">
-   <button class="chip" id="sold" aria-pressed="false">Sold only</button>
-  </div>
-  <div id="rows"></div>
- </main>
-</div>
-<button class="fab" id="fab" aria-label="Add model">+</button>
-<div class="sheet" id="sAdd" role="dialog" aria-modal="true" aria-label="Add model">
- <div class="back" data-close="1"></div>
- <div class="pane">
-  <h2>Add model</h2>
-  <label class="fld">Model name<input id="an" class="l" autocomplete="off" placeholder="e.g. Nova 15"></label>
-  <label class="fld">Category<select id="ag"><option value="m">Handset &amp; Tablet</option><option value="w">Audio &amp; Wearables</option></select></label>
-  <div class="three">
-   <label class="fld">RRP<input id="ar" inputmode="numeric" placeholder="0"></label>
-   <label class="fld">Incentive / unit<input id="au" inputmode="numeric" placeholder="0"></label>
-   <label class="fld">Quantity<input id="aq" inputmode="numeric" placeholder="0"></label>
-  </div>
-  <button class="btn pri" id="ab">Add model</button>
- </div>
-</div>
-<div class="sheet" id="sMenu" role="dialog" aria-modal="true" aria-label="Options">
- <div class="back" data-close="1"></div>
- <div class="pane">
-  <h2>Options</h2>
-  <button class="btn" id="openBackup">Backup &amp; Restore</button>
-  <button class="btn dng" id="clr">Clear all quantities</button>
-  <p class="note">Final score = 60% Handset &amp; Tablet achievement + 40% Audio &amp; Wearables achievement. Each category counts up to 120% and the score up to 110%. Incentive per model = incentive per unit &times; quantity &times; final score.</p>
-  <p class="note">Everything you enter saves automatically on this device.</p>
-  <button class="btn" data-close="1">Close</button>
- </div>
-</div>
 
-<div class="sheet" id="sBackup" role="dialog" aria-modal="true" aria-label="Backup and Restore">
- <div class="back" data-close="1"></div>
- <div class="pane">
-  <h2>Backup &amp; Restore</h2>
-  <section class="backup-source">
-   <div class="backup-row"><h3>Google Drive</h3><span class="k">Cloud backup</span></div>
-   <p class="note">Connect Google Drive to back up or restore your tracker in the cloud. This preview includes the controls, but Google sign-in and Drive sync need the Android integration.</p>
-   <div class="backup-row"><button class="btn" id="driveConnect">Connect Google Drive</button><button class="btn" id="driveRestore">Restore from Drive</button></div>
-  </section>
-  <section class="backup-source">
-   <div class="backup-row"><h3>Local backup</h3><span class="k">This device</span></div>
-   <p class="note">Save a JSON backup file to this device, or restore one into the app.</p>
-   <div class="backup-row"><button class="btn pri" id="localBackup">Back up locally</button><label class="btn restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".json,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
-   <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a previously exported JSON file.</p>
-   <div class="backup-row"><button class="btn" id="shareBackup">Save / share to folder</button><button class="btn" id="copyBackup">Copy backup text</button></div>
-   <label class="fld" for="pasteBackup">Or paste saved backup JSON here<textarea id="pasteBackup" rows="3" placeholder="Paste JSON backup text here"></textarea></label>
-   <button class="btn" id="importPasted">Import pasted backup</button>
-  </section>
-  <div class="backup-source">
-   <h3>Automatic local backup</h3>
-   <div class="backup-select">
-    <label class="fld" for="backupFrequency">Backup frequency</label>
-    <select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select>
+ <section class="hero glass">
+  <div class="herohead">
+   <div><div class="eyebrow">PERFORMANCE OVERVIEW</div><h1>Your progress,<br>at a glance.</h1></div>
+   <span class="tag">LOCAL PREVIEW V10</span>
+  </div>
+  <div class="hero-main">
+   <div class="ring"><svg viewBox="0 0 112 112" aria-hidden="true"><circle class="track" cx="56" cy="56" r="46"/><circle class="value" id="ring" cx="56" cy="56" r="46"/></svg><div class="ringtext"><b id="score">0%</b><span>INCENTIVE SCORE</span></div></div>
+   <div>
+    <div class="label">Total sales</div><div class="sales-number" id="salesTotal">0</div>
+    <div class="sub">Target <b id="targetTotal">850,500</b> · <b id="remaining">850,500</b> remaining</div>
+    <div class="incentive-line"><span class="incentive-label">Total incentive</span><button class="money concealed incentive-toggle" id="heroIncentive" type="button" data-incentive-toggle aria-label="Tap to reveal total incentive">0</button></div>
    </div>
-   <div class="backup-row"><label class="fld" for="autoBackup">Enable automatic backup</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
-   <div class="backup-row"><span class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</span><button class="btn" id="chooseAutomaticFolder">Change folder</button></div>
-   <p class="note">No immediate backup is created when you save settings. The first scheduled backup is due after the selected interval. Android may delay background work for battery management.</p>
   </div>
-  <div class="backup-source">
-   <h3>Manual local backup</h3>
-   <p class="note">Manual backups run only when you press Back up locally.</p>
-   <div class="backup-row"><span class="note" id="manualFolder">Downloads / Promoter Tracker / Manual Backups</span><button class="btn" id="chooseManualFolder">Change folder</button></div>
+  <div class="stats">
+   <div class="stat"><small>HANDSET &amp; TABLET SALES</small><b id="handsetSales">0</b></div>
+   <div class="stat"><small>AUDIO &amp; WEARABLES SALES</small><b id="wearSales">0</b></div>
   </div>
-  <p class="backup-status" id="backupStatus">Last backup: Not yet created</p>
-  <button class="btn pri" id="saveBackupSettings">Save backup settings</button>
-  <button class="btn" data-close="1">Close</button>
+ </section>
+
+ <div class="heading"><div><h2>Sales categories</h2><p>Actual category progress · maximum 120% counted per category</p></div></div>
+ <section class="cats">
+  <button class="cat active" data-cat="m">
+   <div class="catrow"><span class="caticon" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10 18.2h4"/></svg></span><span class="pct" id="mPct">0%</span></div>
+   <div class="catname">Handset &amp; Tablet</div><div class="target">Target · <span id="mTarget">510,300</span></div>
+   <div class="cat-sales">Sales · <span id="mSales">0</span></div><div class="track"><div class="fill" id="mFill"></div></div><div class="achievement-note" id="mAchievement">0% of target achieved</div>
+  </button>
+  <button class="cat" data-cat="w">
+   <div class="catrow"><span class="caticon" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2.5h6l1 4H8l1-4ZM8 17.5h8l-1 4H9l-1-4Z"/><rect x="5.5" y="6.5" width="13" height="11" rx="3"/></svg></span><span class="pct" id="wPct">0%</span></div>
+   <div class="catname">Audio &amp; Wearables</div><div class="target">Target · <span id="wTarget">340,200</span></div>
+   <div class="cat-sales">Sales · <span id="wSales">0</span></div><div class="track"><div class="fill" id="wFill"></div></div><div class="achievement-note" id="wAchievement">0% of target achieved</div>
+  </button>
+ </section>
+
+ 
+
+ <div class="heading"><div><h2 id="listTitle">Handset &amp; Tablet</h2><p>Tap a model to open its details · tap its quantity to enter a value</p></div></div>
+ <div class="tools">
+  <div class="searchwrap"><span>⌕</span><input class="search" id="search" placeholder="Search models..." type="search" aria-label="Search models"></div>
+  <button class="filter" id="sold">Sold only</button>
+ </div>
+ <main class="list" id="models"></main>
+</div>
+
+<button class="fab" id="add" type="button" aria-label="Add a model" title="Add a model">+</button>
+
+<div class="sticky-summary" aria-label="Always visible performance summary">
+ <div class="summary-top"><span class="summary-title">COUNTED INCENTIVE SCORE · STAYS VISIBLE</span><span class="summary-percent" id="stickyPct">0%</span></div>
+ <div class="summary-track"><span id="stickyFill"></span></div>
+ <div class="summary-metrics">
+  <div class="summary-metric"><small>TOTAL SALES</small><b id="stickySales">0</b></div>
+  <div class="summary-metric"><small>UNITS SOLD</small><b id="stickyUnits">0</b></div>
+  <div class="summary-metric"><small>TOTAL INCENTIVE</small><div class="summary-incentive"><button class="money concealed incentive-toggle" id="stickyIncentive" type="button" data-incentive-toggle aria-label="Tap to reveal total incentive">0</button></div></div>
  </div>
 </div>
 
-<div class="toast" id="toast"><span id="tm"></span><button id="undo">Undo</button></div>
+<div class="sheet" id="addSheet"><div class="panel"><div class="grip"></div><h2>Add a model</h2>
+ <label class="field">Model name<input id="newName" placeholder="e.g. New handset" maxlength="70"></label>
+ <label class="field">Category<select id="newCat"><option value="m">Handset &amp; Tablet</option><option value="w">Audio &amp; Wearables</option></select></label>
+ <div class="fieldrow"><label class="field">RRP / sales value<input id="newRrp" type="number" min="0" step="0.01" placeholder="0"></label><label class="field">Incentive per unit (AED)<input id="newInc" type="number" min="0" step="0.01" placeholder="0"></label></div>
+ <button class="primary" id="save">Add model</button><button class="secondary" data-close>Cancel</button>
+</div></div>
+
+<div class="sheet" id="menuSheet" role="dialog" aria-modal="true" aria-label="Quick actions"><div class="panel"><div class="grip"></div><h2>Quick actions</h2>
+  <button class="secondary" id="openOptions" type="button">Data &amp; Options</button>
+  <button class="secondary" id="openBackup" type="button">Backup &amp; Restore</button>
+  <button class="secondary" data-close type="button">Close</button>
+ </div></div>
+ <div class="sheet" id="optionsSheet" role="dialog" aria-modal="true" aria-label="Data and options"><div class="panel"><div class="grip"></div><h2>Data &amp; Options</h2>
+  <button class="primary" id="clr" type="button">Clear all quantities</button>
+  <button class="danger-btn" id="reset" type="button">Reset model list</button>
+  <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Incentive score uses the official 60/40 category weighting and achievement caps.</p>
+  <button class="secondary" data-close type="button">Close</button>
+ </div></div>
+ <div class="sheet" id="sBackup"><div class="panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
+ <section class="backup-source">
+  <div class="backup-row"><h3>Google Drive</h3><span class="backup-status">Cloud backup</span></div>
+  <p class="note">Connect Google Drive to back up or restore your tracker in the cloud. Google sign-in and Drive sync require the Android integration.</p>
+  <div class="backup-row"><button class="secondary" id="driveConnect">Connect Google Drive</button><button class="secondary" id="driveRestore">Restore from Drive</button></div>
+ </section>
+ <section class="backup-source">
+  <div class="backup-row"><h3>Local backup</h3><span class="backup-status">This device</span></div>
+  <p class="note">Save a JSON backup file to this device, or restore a previously saved backup.</p>
+  <div class="backup-row"><button class="primary" id="localBackup">Back up locally</button><label class="secondary restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".json,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
+  <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a previously exported JSON file.</p>
+  <div class="backup-row"><button class="secondary" id="shareBackup">Save / share to folder</button><button class="secondary" id="copyBackup">Copy backup text</button></div>
+  <label class="field" for="pasteBackup">Or paste saved backup JSON here<textarea id="pasteBackup" rows="3" placeholder="Paste JSON backup text here"></textarea></label>
+  <button class="secondary" id="importPasted">Import pasted backup</button>
+ </section>
+ <section class="backup-source">
+  <h3>Automatic local backup</h3>
+  <div class="backup-select"><label class="field" for="backupFrequency">Backup frequency</label>
+   <select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select>
+  </div>
+  <div class="backup-row"><label class="field" for="autoBackup">Enable automatic backup</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
+  <div class="backup-row"><span class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</span><button class="secondary" id="chooseAutomaticFolder">Change folder</button></div>
+  <p class="note">The first scheduled backup is due after the selected interval. Android may delay background work for battery management.</p>
+ </section>
+ <section class="backup-source">
+  <h3>Manual local backup</h3>
+  <p class="note">Manual backups run only when you press Back up locally.</p>
+  <div class="backup-row"><span class="note" id="manualFolder">Downloads / Promoter Tracker / Manual Backups</span><button class="secondary" id="chooseManualFolder">Change folder</button></div>
+ </section>
+ <p class="backup-status" id="backupStatus">Last backup: Not yet created</p>
+ <button class="primary" id="saveBackupSettings">Save backup settings</button>
+ <button class="secondary" data-close>Close</button>
+</div></div>
+<div class="toast" id="toast" role="status">Saved</div>
+
 <script>
+"use strict";
+const STORAGE_KEY="ptt";
 const M=[["Mate X7",4999],["Mate 80 Pro",80],["Pura 90s Pro",100],["Pura 90s Pro Max",3999],["Pura 90s Pro Max 256",3499],["Pura 80",60],["Mate XT",150],["Nova 15 Max",1199],["Nova 14i",799],["Matepad 11.5",1299],["Matepad SE 11",774],["Matepad 11.5s",1799]];
 const W=[["GT6 Pro",20],["GT6",699],["Watch Buds",0],["GT7",899],["GT7 Pro",1299],["FIT5",599],["Watch Ultimate",3099],["Bank 11 Pro",249],["Freeclip 2s",749],["Freeclip 2",649],["SE2",74],["SE4",189],["SE3",139]];
+const INITIAL=[{"id":"m1","n":"Mate X7","r":4999,"u":0,"q":0,"g":"m"},{"id":"m2","n":"Mate 80 Pro","r":80,"u":0,"q":0,"g":"m"},{"id":"m3","n":"Pura 90s Pro","r":100,"u":0,"q":0,"g":"m"},{"id":"m4","n":"Pura 90s Pro Max","r":3999,"u":0,"q":0,"g":"m"},{"id":"m5","n":"Pura 90s Pro Max 256","r":3499,"u":0,"q":0,"g":"m"},{"id":"m6","n":"Pura 80","r":60,"u":0,"q":0,"g":"m"},{"id":"m7","n":"Mate XT","r":150,"u":0,"q":0,"g":"m"},{"id":"m8","n":"Nova 15 Max","r":1199,"u":0,"q":0,"g":"m"},{"id":"m9","n":"Nova 14i","r":799,"u":0,"q":0,"g":"m"},{"id":"m10","n":"Matepad 11.5","r":1299,"u":0,"q":0,"g":"m"},{"id":"m11","n":"Matepad SE 11","r":774,"u":0,"q":0,"g":"m"},{"id":"m12","n":"Matepad 11.5s","r":1799,"u":0,"q":0,"g":"m"},{"id":"w1","n":"GT6 Pro","r":20,"u":0,"q":0,"g":"w"},{"id":"w2","n":"GT6","r":699,"u":0,"q":0,"g":"w"},{"id":"w3","n":"Watch Buds","r":0,"u":0,"q":0,"g":"w"},{"id":"w4","n":"GT7","r":899,"u":0,"q":0,"g":"w"},{"id":"w5","n":"GT7 Pro","r":1299,"u":0,"q":0,"g":"w"},{"id":"w6","n":"FIT5","r":599,"u":0,"q":0,"g":"w"},{"id":"w7","n":"Watch Ultimate","r":3099,"u":0,"q":0,"g":"w"},{"id":"w8","n":"Bank 11 Pro","r":249,"u":0,"q":0,"g":"w"},{"id":"w9","n":"Freeclip 2s","r":749,"u":0,"q":0,"g":"w"},{"id":"w10","n":"Freeclip 2","r":649,"u":0,"q":0,"g":"w"},{"id":"w11","n":"SE2","r":74,"u":0,"q":0,"g":"w"},{"id":"w12","n":"SE4","r":189,"u":0,"q":0,"g":"w"},{"id":"w13","n":"SE3","r":139,"u":0,"q":0,"g":"w"}];
 const KEY={m:"tm",w:"tw"};
-let S={tm:510300,tw:340200,rows:[...M.map(([n,r])=>({n,r,u:0,q:0,g:"m"})),...W.map(([n,r])=>({n,r,u:0,q:0,g:"w"}))]},g="m",openI=-1,undoFn=null,tt,cur=null;
-try{const s=JSON.parse(localStorage.getItem("ptt")||"null");if(s&&s.rows){if(s.tm==null){s.tm=Math.round(s.target*s.share/100);s.tw=s.target-s.tm}S=s}}catch(e){}
-try{if(localStorage.getItem("ptt_g")==="w")g="w"}catch(e){}
-const $=id=>document.getElementById(id),f=n=>Math.round(n).toLocaleString("en-US"),num=v=>Math.max(0,parseFloat(String(v).replace(/,/g,""))||0);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S));syncNativeSnapshot();return true}catch(e){return false}};
-const subTxt=x=>`RRP ${f(x.r)} · Incentive ${f(x.u||0)}/unit`;
-const rowH=(x,i)=>`<div class="row${x.q>0?" has":""}${i===openI?" open":""}" data-i="${i}">
-<button class="main" data-x="1" aria-expanded="${i===openI}" aria-label="Edit ${esc(x.n)}"><span class="nm">${esc(x.n)}</span><span class="sub">${subTxt(x)}</span><span class="sub2"></span></button>
-<div class="step"><button data-s="-1" aria-label="Decrease ${esc(x.n)}">−</button><input data-f="q" inputmode="numeric" value="${x.q}" aria-label="${esc(x.n)} quantity"><button data-s="1" aria-label="Increase ${esc(x.n)}">+</button></div>
-<div class="edit"><label class="full">Model name<input class="l" data-f="n" value="${esc(x.n)}"></label><label>RRP<input data-f="r" inputmode="numeric" value="${f(x.r)}"></label><label>Incentive / unit<input data-f="u" inputmode="numeric" value="${f(x.u||0)}"></label><button class="btn dng full" data-d="1">Delete model</button></div></div>`;
-function renderRows(){
- const k=$("q").value.trim().toLowerCase(),only=$("sold").getAttribute("aria-pressed")==="true";
- const h=S.rows.map((x,i)=>x.g===g&&(!k||x.n.toLowerCase().includes(k))&&(!only||x.q>0)?rowH(x,i):"").join("");
- $("rows").innerHTML=h||`<p class="empty">${only?"Nothing sold yet in this category.":"No models found. Tap + to add one."}</p>`;
- sum();
-}
-function sum(){
- const tg={m:S.tm,w:S.tw},a={m:0,w:0},b={m:0,w:0};
- S.rows.forEach(x=>{a[x.g]+=x.r*x.q;b[x.g]+=(x.u||0)*x.q});
- const cp=k=>tg[k]?Math.min(a[k]/tg[k],1.2):0,p=Math.min(.6*cp("m")+.4*cp("w"),1.1);
- document.querySelectorAll("#rows .row").forEach(r=>{const x=S.rows[r.dataset.i];if(x)r.querySelector(".sub2").textContent=x.q>0?`Sold ${f(x.r*x.q)} · Earn ${f((x.u||0)*x.q*p)}`:""});
- const pc=(p*100).toFixed(1)+"%";
- $("fs").textContent=pc;$("mfs").textContent=pc;
- $("ring").className="ring"+(p>=.8?" ok":"");
- $("rv").style.strokeDashoffset=282.7*(1-Math.min(p,1));
- const ti=f((b.m+b.w)*p);$("ti").textContent=ti;$("mti").textContent=ti;
- $("ta").textContent=f(a.m+a.w);$("tt").textContent=f(tg.m+tg.w);
- for(const k of["m","w"]){$(k+"p").textContent=(cp(k)*100).toFixed(1)+"%";$(k+"b").style.width=Math.min(cp(k),1)*100+"%"}
- $("ca").textContent=f(a[g]);$("ci").textContent=f(b[g]*p);
-}
-function setTab(k){
- g=k;openI=-1;try{localStorage.setItem("ptt_g",k)}catch(e){}
- document.querySelectorAll(".tab").forEach(t=>{const on=t.dataset.g===k;t.classList.toggle("on",on);t.setAttribute("aria-selected",on)});
- $("tg").value=f(S[KEY[k]]);renderRows();
-}
-function toast(m,fn){$("tm").textContent=m;undoFn=fn||null;$("undo").hidden=!fn;$("toast").classList.add("on");clearTimeout(tt);tt=setTimeout(hideToast,6000)}
-function hideToast(){$("toast").classList.remove("on");undoFn=null}
-$("undo").onclick=()=>{const fn=undoFn;hideToast();if(fn)fn()};
-/* sheets: a hash entry lets the phone's Back button close them */
-function openSheet(id){closeSheet(true);cur=id;$(id).classList.add("on");try{if(location.hash!=="#sheet")location.hash="sheet"}catch(e){}}
-function closeSheet(quiet){if(!cur)return;$(cur).classList.remove("on");cur=null;if(!quiet){try{if(location.hash==="#sheet")history.back()}catch(e){}}}
-addEventListener("hashchange",()=>{if(location.hash!=="#sheet"&&cur){$(cur).classList.remove("on");cur=null}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
-document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target.dataset.close)closeSheet()}));
-$("fab").onclick=()=>{$("ag").value=g;openSheet("sAdd");setTimeout(()=>$("an").focus(),60)};
-$("menu").onclick=()=>openSheet("sMenu");
-/* rows */
-$("rows").addEventListener("input",e=>{
- const r=e.target.closest(".row"),k=e.target.dataset.f;if(!r||!k)return;
- const x=S.rows[r.dataset.i];x[k]=k==="n"?e.target.value:(k==="q"?Math.floor(num(e.target.value)):num(e.target.value));
- if(k==="q")r.classList.toggle("has",x.q>0);
- else{r.querySelector(".nm").textContent=x.n||"Model";r.querySelector(".sub").textContent=subTxt(x)}
- sum();save();
-});
-$("rows").addEventListener("focusin",e=>{if(e.target.dataset&&e.target.dataset.f==="q"){const t=e.target;setTimeout(()=>t.select(),0)}});
-$("rows").addEventListener("focusout",e=>{
- const r=e.target.closest(".row");if(!r)return;const x=S.rows[r.dataset.i],k=e.target.dataset.f;if(!x)return;
- if(k==="r")e.target.value=f(x.r);
- if(k==="u")e.target.value=f(x.u||0);
- if(k==="q")e.target.value=x.q;
- if(k==="n"){x.n=x.n.trim()||"Model";e.target.value=x.n;r.querySelector(".nm").textContent=x.n;save()}
-});
-$("rows").addEventListener("click",e=>{
- const r=e.target.closest(".row"),b=e.target.closest("button");if(!r||!b)return;
- const i=+r.dataset.i,x=S.rows[i];
- if(b.dataset.d){const rm=S.rows.splice(i,1)[0];openI=-1;renderRows();save();toast(`Deleted ${rm.n}`,()=>{S.rows.splice(i,0,rm);renderRows();save()})}
- else if(b.dataset.s){x.q=Math.max(0,x.q+ +b.dataset.s);r.querySelector('[data-f="q"]').value=x.q;r.classList.toggle("has",x.q>0);sum();save()}
- else if(b.dataset.x){openI=openI===i?-1:i;renderRows()}
-});
-/* tabs, target, search, filter */
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setTab(t.dataset.g)));
-$("tg").addEventListener("input",e=>{S[KEY[g]]=num(e.target.value);sum();save()});
-$("tg").addEventListener("blur",e=>e.target.value=f(S[KEY[g]]));
-$("tg").addEventListener("focus",e=>{const t=e.target;setTimeout(()=>t.select(),0)});
-$("q").addEventListener("input",renderRows);
-$("sold").addEventListener("click",e=>{const b=e.currentTarget;b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true");renderRows()});
-/* add + clear */
-function add(){
- const n=$("an").value.trim();if(!n){$("an").focus();return}
- const k=$("ag").value;S.rows.unshift({n,r:num($("ar").value),u:num($("au").value),q:Math.floor(num($("aq").value)),g:k});
- ["an","ar","au","aq"].forEach(i=>$(i).value="");$("q").value="";$("sold").setAttribute("aria-pressed","false");
- closeSheet();setTab(k);save();toast(`Added ${n}`);
- $("rows").scrollIntoView({block:"start",behavior:"smooth"});
-}
-$("ab").onclick=add;
-["an","ar","au","aq"].forEach(i=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")add()}));
-$("clr").onclick=()=>{
- const prev=S.rows.map(x=>x.q);closeSheet();
- if(!prev.some(q=>q>0)){toast("No quantities to clear");return}
- S.rows.forEach(x=>x.q=0);renderRows();save();
- toast("Quantities cleared",()=>{S.rows.forEach((x,i)=>{if(i<prev.length)x.q=prev[i]});renderRows();save()});
+const INCENTIVE_RULES={
+ mobileWeight:0.60,wearableWeight:0.40,categoryAchievementCap:120,
+ totalAchievementCap:110,minimumAchievement:80,kpiPackageAED:600,
+ maximumPayoutAED:10000
 };
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2});
+const fmtAED=n=>"AED "+fmt(n);
+const safeNum=v=>Math.max(0,Number(v)||0);
+const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function loadState(){
+ try{
+  const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+  if(parsed&&Array.isArray(parsed.rows)){
+   return {
+    tm:safeNum(parsed.tm??510300)||510300,
+    tw:safeNum(parsed.tw??340200)||340200,
+    rows:parsed.rows.map((m,i)=>({id:String(m.id||("restored-"+i)),n:String(m.n||"Untitled model").slice(0,70),r:safeNum(m.r),u:safeNum(m.u),q:Math.floor(safeNum(m.q)),g:m.g==="w"?"w":"m"})),
+    ts:parsed.ts||Date.now()
+   };
+  }
+  const preview=JSON.parse(localStorage.getItem("promoter-tracker-liquid-glass-preview-v2")||"null");
+  if(preview&&Array.isArray(preview.models)){
+   return {tm:510300,tw:340200,rows:preview.models.map((m,i)=>({id:String(m.id||("migrated-"+i)),n:String(m.n||"Untitled model").slice(0,70),r:safeNum(m.r),u:safeNum(m.u),q:Math.floor(safeNum(m.q)),g:m.g==="w"?"w":"m"}))};
+  }
+ }catch(e){}
+ return {tm:510300,tw:340200,rows:INITIAL.map(x=>({...x}))};
+}
+let S=loadState();
+let data=S.rows.map((m,i)=>({...m,id:String(m.id||("model-"+i))}));
+let cat="m",g="m",only=false,incentiveVisible=false,toastTimer=null,expandedId=null,openI=-1;
+const TARGETS={m:S.tm,w:S.tw};
+function saveData(){
+ S.rows=data.map(m=>({id:m.id,n:m.n,r:m.r,u:m.u,q:m.q,g:m.g}));
+ S.ts=Date.now();
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));syncNativeSnapshot();}
+ catch(e){toast("Storage unavailable — create a backup");}
+}
+function totals(){
+ const t={sales:0,perUnitIncentive:0,incentive:0,units:0,m:{sales:0,units:0,incentive:0},w:{sales:0,units:0,incentive:0}};
+ for(const m of data){
+  const sales=m.r*m.q,inc=m.u*m.q;
+  t.sales+=sales;t.perUnitIncentive+=inc;t.units+=m.q;
+  t[m.g].sales+=sales;t[m.g].incentive+=inc;t[m.g].units+=m.q;
+ }
+ // Keep visible sales progress uncapped so actual achievement above 100% remains visible.
+ t.progress=TARGETS.m+TARGETS.w>0?t.sales/(TARGETS.m+TARGETS.w)*100:0;
 
+ // Official rules: cap each category at 120%, apply 60/40 weighting, then cap total at 110%.
+ const mobileRaw=TARGETS.m>0?t.m.sales/TARGETS.m*100:0;
+ const wearableRaw=TARGETS.w>0?t.w.sales/TARGETS.w*100:0;
+ const mobileUsed=Math.min(INCENTIVE_RULES.categoryAchievementCap,mobileRaw);
+ const wearableUsed=Math.min(INCENTIVE_RULES.categoryAchievementCap,wearableRaw);
+ const mobileWeighted=mobileUsed*INCENTIVE_RULES.mobileWeight;
+ const wearableWeighted=wearableUsed*INCENTIVE_RULES.wearableWeight;
+ const weightedBeforeTotalCap=mobileWeighted+wearableWeighted;
+ const achievementUsed=Math.min(INCENTIVE_RULES.totalAchievementCap,weightedBeforeTotalCap);
+ const eligible=achievementUsed>=INCENTIVE_RULES.minimumAchievement;
+ const amountBeforeCap=eligible
+  ?(INCENTIVE_RULES.kpiPackageAED+t.perUnitIncentive)*(achievementUsed/100)
+  :0;
+ t.incentive=Math.min(INCENTIVE_RULES.maximumPayoutAED,amountBeforeCap);
+ t.calculation={
+  mobileRaw,mobileUsed,mobileWeighted,
+  wearableRaw,wearableUsed,wearableWeighted,
+  weightedBeforeTotalCap,achievementUsed,eligible,
+  amountBeforeCap,perUnitIncentive:t.perUnitIncentive,
+  kpiPackageAED:INCENTIVE_RULES.kpiPackageAED,
+  payoutCapApplied:amountBeforeCap>INCENTIVE_RULES.maximumPayoutAED,
+  maximumPayoutAED:INCENTIVE_RULES.maximumPayoutAED
+ };
+ return t;
+}
+function pct(n,target){return target?(n/target*100):0;}
+function toast(message){
+ $("toast").textContent=message;$("toast").classList.add("show");
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),1700);
+}
+function updateIncentiveVisibility(){
+ document.querySelectorAll("[data-incentive-toggle]").forEach(el=>{
+  el.classList.toggle("concealed",!incentiveVisible);
+  el.setAttribute("aria-label",incentiveVisible?"Tap to hide total incentive":"Tap to reveal total incentive");
+ });
+}
+function updateDashboard(){
+ const t=totals(),target=TARGETS.m+TARGETS.w,overall=t.calculation.achievementUsed,ringProgress=Math.min(100,Math.max(0,overall)),remaining=Math.max(0,target-t.sales);
+ $("salesTotal").textContent=fmt(t.sales);$("targetTotal").textContent=fmt(target);$("remaining").textContent=fmt(remaining);
+ $("heroIncentive").textContent=fmtAED(t.incentive);$("stickyIncentive").textContent=fmtAED(t.incentive);
+ $("handsetSales").textContent=fmt(t.m.sales);$("wearSales").textContent=fmt(t.w.sales);
+ $("score").textContent=overall.toFixed(1)+"%";$("stickyPct").textContent=overall.toFixed(1)+"%";
+ // The headline and sticky score show the official weighted score, capped at 110%. Category cards retain actual achievement.
+ $("ring").style.strokeDashoffset=String(289-(289*ringProgress/100));
+ $("stickyFill").style.width=Math.min(100,Math.max(0,overall))+"%";
+ $("stickySales").textContent=fmt(t.sales);$("stickyUnits").textContent=fmt(t.units);
+ for(const key of ["m","w"]){
+  const progress=pct(t[key].sales,TARGETS[key]),visualProgress=Math.min(100,Math.max(0,progress));
+  $(key+"Pct").textContent=progress.toFixed(1)+"%";
+  $(key+"Target").textContent=fmt(TARGETS[key]);
+  $(key+"Sales").textContent=fmt(t[key].sales);
+  $(key+"Fill").style.width=visualProgress+"%";
+  $(key+"Achievement").textContent=progress>INCENTIVE_RULES.categoryAchievementCap
+   ?(progress.toFixed(1)+"% actual · 120% counted for incentive")
+   :(progress.toFixed(1)+"% of target achieved");
+ }
+
+ updateIncentiveVisibility();
+}
+function render(){
+ const query=$("search").value.toLowerCase().trim();
+ const rows=data.map((m,i)=>({...m,index:i})).filter(m=>m.g===cat&&(!query||m.n.toLowerCase().includes(query))&&(!only||m.q>0));
+ $("models").innerHTML=rows.length?rows.map(m=>`
+  <article class="model ${m.q>0?"sold":""} ${expandedId===m.id?"open":""}" data-index="${m.index}">
+   <button class="model-main" type="button" data-action="toggle" aria-expanded="${expandedId===m.id}">
+    <div class="model-top"><div class="modelname" title="${escapeHTML(m.n)}">${escapeHTML(m.n)}</div></div>
+    <div class="meta">RRP ${fmt(m.r)} · Incentive ${fmt(m.u)} / unit</div>
+    <div class="detailtext">${m.q?`Sales ${fmt(m.r*m.q)} · Units sold ${m.q}`:"No sales recorded yet"}</div>
+   </button>
+   <div class="stepper"><button data-action="step" data-step="-1" aria-label="Decrease ${escapeHTML(m.n)} quantity">−</button><button class="qty-edit" data-action="edit-quantity" type="button" aria-label="Tap to enter quantity manually for ${escapeHTML(m.n)}">${m.q}</button><button class="plus" data-action="step" data-step="1" aria-label="Increase ${escapeHTML(m.n)} quantity">+</button></div>
+   <div class="details">
+    <label>RRP / sales value<input data-field="r" type="number" min="0" step="0.01" value="${m.r}" aria-label="RRP for ${escapeHTML(m.n)}"></label>
+    <label>Incentive per unit (AED)<input data-field="u" type="number" min="0" step="0.01" value="${m.u}" aria-label="Incentive per unit for ${escapeHTML(m.n)}"></label>
+    <div class="detail-actions"><span class="detail-note">Changes save automatically on this browser.</span><button class="delete-model" data-action="delete" type="button">Delete model</button></div>
+   </div>
+  </article>`).join(""):'<div class="glass empty">No models found in this category.</div>';
+ updateDashboard();
+ updateFabVisibility();
+}
+function setCategory(next){
+ cat=next;g=next;
+ document.querySelectorAll(".cat").forEach(b=>b.classList.toggle("active",b.dataset.cat===cat));
+ $("listTitle").textContent=cat==="m"?"Handset & Tablet":"Audio & Wearables";
+ render();
+}
+function setTab(next){setCategory(next);}
+function renderRows(){render();}
+function updateFabVisibility(){
+ const fab=$("add");
+ if(!fab)return;
+ const root=document.documentElement;
+ const scrollable=root.scrollHeight>window.innerHeight+120;
+ const atEnd=scrollable&&(window.scrollY+window.innerHeight>=root.scrollHeight-28);
+ fab.classList.toggle("at-page-end",atEnd);
+ fab.setAttribute("aria-hidden",atEnd?"true":"false");
+ fab.disabled=atEnd;
+}
+window.addEventListener("scroll",updateFabVisibility,{passive:true});
+window.addEventListener("resize",updateFabVisibility);
+function openSheet(id){
+ // Keep the Add Model form and Data & Options panel mutually exclusive.
+ document.querySelectorAll(".sheet.show").forEach(sheet=>{
+  if(sheet.id!==id) sheet.classList.remove("show");
+ });
+ const target=$(id);
+ if(target) target.classList.add("show");
+}
+function closeSheet(sheet){
+ if(sheet){sheet.classList.remove("show");return;}
+ document.querySelectorAll(".sheet.show").forEach(x=>x.classList.remove("show"));
+}
+document.querySelectorAll(".cat").forEach(b=>b.addEventListener("click",()=>setCategory(b.dataset.cat)));
+$("search").addEventListener("input",render);
+$("sold").addEventListener("click",()=>{only=!only;$("sold").classList.toggle("active",only);render();});
+document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventListener("click",()=>{
+ incentiveVisible=!incentiveVisible;
+ updateIncentiveVisibility();
+}));
+$("models").addEventListener("click",e=>{
+ const card=e.target.closest(".model");if(!card)return;
+ const index=Number(card.dataset.index),m=data[index],action=e.target.closest("[data-action]")?.dataset.action;
+ if(action==="step"){
+  m.q=Math.max(0,m.q+Number(e.target.closest("[data-action]").dataset.step));saveData();render();toast("Quantity saved");return;
+ }
+ if(action==="edit-quantity"){
+  const stepper=e.target.closest(".stepper");
+  stepper.innerHTML=`<button data-action="step" data-step="-1" aria-label="Decrease ${escapeHTML(m.n)} quantity">−</button><input class="qty-manual" type="number" min="0" step="1" inputmode="numeric" value="${m.q}" aria-label="Enter quantity for ${escapeHTML(m.n)}"><button class="plus" data-action="step" data-step="1" aria-label="Increase ${escapeHTML(m.n)} quantity">+</button>`;
+  const input=stepper.querySelector(".qty-manual");input.focus();input.select();return;
+ }
+ if(action==="toggle"){
+  expandedId=expandedId===m.id?null:m.id;render();return;
+ }
+ if(action==="delete"){
+  if(confirm(`Delete "${m.n}" and its recorded quantity from this preview? This cannot be undone unless you have a backup.`)){
+   if(expandedId===m.id)expandedId=null;
+   data.splice(index,1);saveData();render();toast("Model deleted");
+  }
+ }
+});
+function commitManualQuantity(input){
+ const card=input.closest(".model");if(!card||!input.isConnected)return;
+ const m=data[Number(card.dataset.index)];
+ const next=Math.floor(safeNum(input.value));
+ m.q=next;saveData();render();toast("Manual quantity saved");
+}
+$("models").addEventListener("keydown",e=>{
+ if(!e.target.classList.contains("qty-manual"))return;
+ if(e.key==="Enter"){e.preventDefault();e.target.blur();}
+ if(e.key==="Escape"){e.preventDefault();render();}
+});
+$("models").addEventListener("change",e=>{
+ if(e.target.classList.contains("qty-manual")){commitManualQuantity(e.target);return;}
+ const card=e.target.closest(".model"),field=e.target.dataset.field;if(!card||!field)return;
+ const m=data[Number(card.dataset.index)];
+ m[field]=safeNum(e.target.value);
+ saveData();render();toast(field==="r"?"RRP saved":"Incentive saved");
+});
+$("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
+$("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
+$("openOptions").addEventListener("click",()=>{closeSheet($("menuSheet"));openSheet("optionsSheet");});
+document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeSheet(b.closest(".sheet"))));
+document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheet(s);}));
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"){
+  const open=document.querySelector(".sheet.show");
+  if(open) closeSheet(open);
+ }
+});
+$("save").addEventListener("click",()=>{
+ const name=$("newName").value.trim();if(!name){$("newName").focus();return;}
+ data.unshift({id:"model-"+Date.now(),n:name.slice(0,70),r:safeNum($("newRrp").value),u:safeNum($("newInc").value),q:0,g:$("newCat").value});
+ setCategory($("newCat").value);saveData();closeSheet($("addSheet"));
+ ["newName","newRrp","newInc"].forEach(id=>$(id).value="");toast("Model added and saved");
+});
+$("clr").addEventListener("click",()=>{
+ if(!data.some(m=>m.q>0)){toast("No quantities to clear");return;}
+ if(!confirm("Clear all recorded quantities? Your model list and RRP values will remain."))return;
+ data.forEach(m=>m.q=0);expandedId=null;saveData();render();closeSheet($("optionsSheet"));toast("All quantities cleared");
+});
+$("reset").addEventListener("click",()=>{
+ if(!confirm("Reset the tracker to its original model list and clear all quantities? Current custom models and quantities will be replaced."))return;
+ data=INITIAL.map(x=>({...x}));expandedId=null;saveData();setCategory("m");closeSheet($("optionsSheet"));toast("Model list reset");
+});
 /* Backup & Restore: local JSON export/import; Drive actions remain clearly marked as requiring native setup. */
 const BACKUP_SETTINGS_KEY="ptt_backup_settings";
 function backupPayload(){return {app:"Promoter Tracker",version:1,createdAt:new Date().toISOString(),data:S};}
@@ -534,7 +618,10 @@ function restoreBackupText(text){
  try{
   // Persist first; don't change live state if storage rejects the import.
   localStorage.setItem("ptt",JSON.stringify({...next,ts:Date.now()}));
-  S=next;syncNativeSnapshot();openI=-1;setTab(g);
+  S={...next,ts:Date.now()};
+  data=S.rows.map((x,i)=>({...x,id:String(x.id||("restored-"+i))}));
+  TARGETS.m=S.tm;TARGETS.w=S.tw;
+  syncNativeSnapshot();openI=-1;expandedId=null;setTab(g);
   recordBackupStatus("Imported from local backup · "+new Date().toLocaleString());
   $("restoreStatus").textContent="Success: backup imported and saved in this app.";
   toast("Backup imported successfully");
@@ -551,7 +638,7 @@ async function restoreLocalBackup(file){
   restoreBackupText(text);
  }catch(e){$("restoreStatus").textContent="File read failed. Try pasting backup JSON instead.";toast("Cannot read this file. Try opening it and pasting its JSON text.");}
 }
-$("openBackup").onclick=()=>{openSheet("sBackup");loadBackupSettings()};
+$("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 $("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
 $("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
 $("localBackup").onclick=downloadLocalBackup;
@@ -569,11 +656,9 @@ $("chooseManualFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.choose
 window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automaticFolder":"manualFolder");if(el)el.textContent=name;toast((kind==="automatic"?"Automatic":"Manual")+" backup folder updated.");};
 
 
-/* keyboard: hide the + button while typing; show compact summary once the hero scrolls away */
-document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input,select"))document.body.classList.add("typing")});
-document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!a.matches||!a.matches("input,select"))document.body.classList.remove("typing")},60));
-try{new IntersectionObserver(([en])=>$("bar").classList.toggle("stuck",!en.isIntersecting),{threshold:0}).observe($("hero"))}catch(e){}
-setTab(g);
+
+render();
+updateFabVisibility();
 </script>
 </body>
 </html>
