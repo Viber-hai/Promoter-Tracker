@@ -10,9 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 /* Layout: one summary hero, a sticky pair of category tabs, compact rows with big steppers, bottom sheets for add/options. */
-:root{--bg:#0f1424;--card:#171e33;--inp:#0f1424;--line:#2a3350;--tx:#e8ecf8;--mut:#8f9abb;--ac:#4f7cff;--acs:#4f7cff22;--ok:#2fc58a;--bad:#f0627f;--hov:#1c2540;--shade:rgba(0,0,0,.55);color-scheme:dark}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}}
-:root[data-theme="light"]{--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}
+:root{--bg:#0f1424;--card:#171e33;--inp:#0f1424;--line:#2a3350;--tx:#e8ecf8;--mut:#8f9abb;--ac:#C8102E;--acs:#C8102E22;--ok:#2fc58a;--bad:#f0627f;--hov:#1c2540;--shade:rgba(0,0,0,.55);color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#C8102E;--acs:#C8102E18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}}
+:root[data-theme="light"]{--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#C8102E;--acs:#C8102E18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:16px;-webkit-text-size-adjust:100%}
 body{margin:0;min-height:100vh;font-family:Sora,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
@@ -102,6 +102,15 @@ body.typing .fab{display:none}
 .toast button[hidden]{display:none}
 @media (min-width:700px){.row{padding:10px 12px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* Premium Huawei-inspired red, black and white identity */
+.brand-lockup{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-title{min-width:0}
+.brand-title h1{color:var(--tx);letter-spacing:-.025em}
+.brand-subtitle{display:block;margin-top:3px;font-size:.58rem;font-weight:800;letter-spacing:.17em;color:var(--bad)}
+.huawei-mark{display:flex;align-items:center;gap:4px;padding-left:10px;border-left:1px solid var(--line);color:#C8102E;flex:none}
+.huawei-mark svg{width:22px;height:22px;display:block}
+.huawei-mark span{font-size:.57rem;font-weight:800;letter-spacing:.08em;color:var(--tx)}
+@media(max-width:380px){.huawei-mark span{display:none}.brand-lockup{gap:8px}.huawei-mark{padding-left:7px}}
 </style>
 <style id="liquid-glass-overhaul">
 :root{--bg:#080d19;--card:rgba(255,255,255,.075);--inp:rgba(255,255,255,.065);--line:rgba(220,235,255,.16);--tx:#f4f7ff;--mut:#9eacc7;--ac:#91baff;--acs:rgba(125,177,255,.16);--ok:#62e6b2;--bad:#ff829b;--hov:rgba(255,255,255,.12);--shade:rgba(3,8,20,.68);color-scheme:dark}
@@ -199,7 +208,7 @@ select option{background:#182238;color:#f4f7ff}
 :root[data-theme="light"] .btn,
 :root[data-theme="light"] .backup-source{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.24);color:var(--tx);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 12px rgba(40,65,105,.05)}
 :root[data-theme="light"] .btn:hover{background:rgba(240,246,255,.98);border-color:rgba(53,111,210,.34)}
-:root[data-theme="light"] .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#214f9c}
+:root[data-theme="light"] .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#9F0D25}
 :root[data-theme="light"] .btn.dng{color:#b52f50;background:rgba(201,79,107,.07);border-color:rgba(201,79,107,.24)}
 :root[data-theme="light"] .icon,
 :root[data-theme="light"] .chip,
@@ -217,7 +226,7 @@ select option{background:#182238;color:#f4f7ff}
  :root:not([data-theme="dark"]) .btn,:root:not([data-theme="dark"]) .backup-source{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.24);color:var(--tx)}
  :root:not([data-theme="dark"]) .icon,:root:not([data-theme="dark"]) .chip,:root:not([data-theme="dark"]) .step button{background:rgba(255,255,255,.82);border-color:rgba(105,130,170,.25);color:var(--tx)}
  :root:not([data-theme="dark"]) input,:root:not([data-theme="dark"]) select,:root:not([data-theme="dark"]) .step input{background:rgba(255,255,255,.88);border-color:rgba(105,130,170,.28);color:var(--tx)}
- :root:not([data-theme="dark"]) .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#214f9c}
+ :root:not([data-theme="dark"]) .btn.pri{background:rgba(53,111,210,.13);border-color:rgba(53,111,210,.34);color:#9F0D25}
  :root:not([data-theme="dark"]) .btn.dng{color:#b52f50;background:rgba(201,79,107,.07);border-color:rgba(201,79,107,.24)}
 }
 
@@ -226,7 +235,7 @@ select option{background:#182238;color:#f4f7ff}
 <body>
 <div class="app">
  <header class="hero" id="hero">
-  <div class="hero-top"><h1>Promoter Target Tracker</h1><button class="icon" id="menu" aria-label="Options">&#8943;</button></div>
+  <div class="hero-top"><div class="brand-lockup"><div class="brand-title"><h1>Promoter Target Tracker</h1><span class="brand-subtitle">PROMOTER TRACKER</span></div><div class="huawei-mark" aria-label="Huawei"><svg viewBox="0 0 24 24" role="img" aria-hidden="true"><path fill="currentColor" d="M3.67 6.14S1.82 7.91 1.72 9.78v.35c.08 1.51 1.22 2.4 1.22 2.4 1.83 1.79 6.26 4.04 7.3 4.55 0 0 .06.03.1-.01l.02-.04v-.04C7.52 10.8 3.67 6.14 3.67 6.14zM9.65 18.6c-.02-.08-.1-.08-.1-.08l-7.38.26c.8 1.43 2.15 2.53 3.56 2.2.96-.25 3.16-1.78 3.88-2.3.06-.05.04-.09.04-.09zm.08-.78C6.49 15.63.21 12.28.21 12.28c-.15.46-.2.9-.21 1.3v.07c0 1.07.4 1.82.4 1.82.8 1.69 2.34 2.2 2.34 2.2.7.3 1.4.31 1.4.31.12.02 4.4 0 5.54 0 .05 0 .08-.05.08-.05v-.06c0-.03-.03-.05-.03-.05zM9.06 3.19a3.42 3.42 0 00-2.57 3.15v.41c.03.6.16 1.05.16 1.05.66 2.9 3.86 7.65 4.55 8.65.05.05.1.03.1.03a.1.1 0 00.06-.1c1.06-10.6-1.11-13.42-1.11-13.42-.32.02-1.19.23-1.19.23zm8.299 2.27s-.49-1.8-2.44-2.28c0 0-.57-.14-1.17-.22 0 0-2.18 2.81-1.12 13.43.01.07.06.08.06.08.07.03.1-.03.1-.03.72-1.03 3.9-5.76 4.55-8.64 0 0 .36-1.4.02-2.34zm-2.92 13.07s-.07 0-.09.05c0 0-.01.07.03.1.7.51 2.85 2 3.88 2.3 0 0 .16.05.43.06h.14c.69-.02 1.9-.37 3-2.26l-7.4-.25zm7.83-8.41c.14-2.06-1.94-3.97-1.94-3.98 0 0-3.85 4.66-6.67 10.8 0 0-.03.08.02.13l.04.01h.06c1.06-.53 5.46-2.77 7.28-4.54 0 0 1.15-.93 1.21-2.42zm1.52 2.14s-6.28 3.37-9.52 5.55c0 0-.05.04-.03.11 0 0 .03.06.07.06 1.16 0 5.56 0 5.67-.02 0 0 .57-.02 1.27-.29 0 0 1.56-.5 2.37-2.27 0 0 .73-1.45.17-3.14z"/></svg><span>HUAWEI</span></div></div><button class="icon" id="menu" aria-label="Options">&#8943;</button></div>
   <div class="hero-main" aria-live="polite">
    <div class="ring" id="ring"><svg viewBox="0 0 108 108" aria-hidden="true"><circle class="trk" cx="54" cy="54" r="45"/><circle class="val" id="rv" cx="54" cy="54" r="45"/></svg>
     <div class="ringtxt"><b id="fs">0%</b><span>Final score</span></div></div>
