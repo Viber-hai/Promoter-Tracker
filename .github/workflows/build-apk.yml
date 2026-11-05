@@ -44,6 +44,13 @@ jobs:
           set -euo pipefail
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/promoter-tracker-release.jks"
           test -s "$RUNNER_TEMP/promoter-tracker-release.jks"
+          keytool -list -v \
+            -keystore "$RUNNER_TEMP/promoter-tracker-release.jks" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" > "$RUNNER_TEMP/release-certificate.txt"
+          grep -q "SHA256:" "$RUNNER_TEMP/release-certificate.txt"
+          echo "Release keystore and requested alias verified."
+          grep "SHA256:" "$RUNNER_TEMP/release-certificate.txt"
 
       - name: Build permanently signed APK
         env:
@@ -52,6 +59,15 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle assembleRelease --no-daemon
+
+      - name: Verify APK signature
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk/release -maxdepth 1 -name '*.apk' -print -quit)"
+          test -n "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
 
       - uses: actions/upload-artifact@v4
         with:
