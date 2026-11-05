@@ -42,7 +42,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .glass{background:var(--glass);border:1px solid var(--line);border-radius:25px;box-shadow:var(--shadow);backdrop-filter:blur(14px) saturate(1.18);-webkit-backdrop-filter:blur(14px) saturate(1.18)}
 .top{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 17px}
 .brand{display:flex;align-items:center;gap:11px}.mark{width:42px;height:42px;border-radius:15px;display:grid;place-items:center;color:#fff;font-weight:900;letter-spacing:-1px;background:linear-gradient(145deg,#ef6579,#ad0828);box-shadow:0 8px 20px #c8102e35,inset 0 1px 1px #ffffff88}
-.brand b{font-size:16px;letter-spacing:-.45px}.brand small{display:block;margin-top:3px;color:var(--muted);font-size:9px;letter-spacing:1.5px;font-weight:800}
+.mark svg{display:block;width:42px;height:42px;filter:drop-shadow(0 3px 5px rgba(200,16,46,.12))}.brand b{font-size:16px;letter-spacing:-.45px}.brand small{display:block;margin-top:3px;color:var(--muted);font-size:9px;letter-spacing:1.5px;font-weight:800}
 .icon{width:42px;height:42px;border:1px solid var(--line);border-radius:15px;background:var(--glass);box-shadow:0 7px 18px #1e14190d;font-size:22px}
 .hero{position:relative;overflow:hidden;padding:20px 18px 17px;background:linear-gradient(125deg,var(--glass-strong),var(--glass) 70%)}
 .hero:after{content:"";position:absolute;width:210px;height:210px;right:-100px;top:-125px;border-radius:50%;background:radial-gradient(circle,rgba(200,16,46,.17),transparent 70%);pointer-events:none}
@@ -93,7 +93,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .delete-model{border:1px solid rgba(197,43,62,.28);border-radius:10px;background:rgba(197,43,62,.09);color:var(--danger);font-size:9px;font-weight:850;padding:8px 11px}
 .empty{padding:24px;text-align:center;color:var(--muted);font-size:11px}
 .foot{text-align:center;color:var(--muted);font-size:8px;margin:16px 0 4px;opacity:.8}
-.fab{position:fixed;transition:opacity .18s ease,transform .18s ease;z-index:5;right:max(20px,calc((100vw - 560px)/2 + 10px));bottom:calc(112px + env(safe-area-inset-bottom));width:53px;height:53px;border:0;border-radius:18px;color:#fff;font-size:28px;background:linear-gradient(145deg,#e84d65,#b20827);box-shadow:0 10px 23px #c8102e40}
+.fab{position:fixed;transition:opacity .18s ease,transform .18s ease;z-index:10;touch-action:manipulation;pointer-events:auto;right:max(20px,calc((100vw - 560px)/2 + 10px));bottom:calc(112px + env(safe-area-inset-bottom));width:53px;height:53px;border:0;border-radius:18px;color:#fff;font-size:28px;background:linear-gradient(145deg,#e84d65,#b20827);box-shadow:0 10px 23px #c8102e40}
 .fab.at-page-end{opacity:0;pointer-events:none;transform:translateY(10px) scale(.92)}
 .sticky-summary{position:fixed;z-index:6;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 18px),560px);padding:10px 12px 9px;border:1px solid var(--line);border-radius:20px;background:var(--glass-strong);box-shadow:0 10px 35px rgba(15,12,20,.17),inset 0 1px 0 rgba(255,255,255,.25);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2)}
 .summary-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
@@ -140,8 +140,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <body>
 <div class="app">
  <header class="top">
-  <div class="brand"><div class="mark">PT</div><div><b>Promoter Tracker</b><small>PERFORMANCE OVERVIEW · SYSTEM THEME</small></div></div>
-  <button class="icon" id="menu" aria-label="Data and options menu">⋯</button>
+  <div class="brand"><div class="mark" role="img" aria-label="Huawei logo"><svg viewBox="0 0 48 48" aria-hidden="true"><g fill="#C8102E"><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(45 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(90 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(135 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(180 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(225 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(270 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(315 24 24)"/></g></svg></div><div><b>Promoter Tracker</b><small>PERFORMANCE OVERVIEW · SYSTEM THEME</small></div></div>
+  <button class="icon" id="menu" type="button" aria-label="Open quick actions" aria-haspopup="dialog">⋯</button>
  </header>
 
  <section class="hero glass">
@@ -187,7 +187,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <main class="list" id="models"></main>
 </div>
 
-<button class="fab" id="add" aria-label="Add a model">+</button>
+<button class="fab" id="add" type="button" aria-label="Add a model" title="Add a model">+</button>
 
 <div class="sticky-summary" aria-label="Always visible performance summary">
  <div class="summary-top"><span class="summary-title">COUNTED INCENTIVE SCORE · STAYS VISIBLE</span><span class="summary-percent" id="stickyPct">0%</span></div>
@@ -206,14 +206,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <button class="primary" id="save">Add model</button><button class="secondary" data-close>Cancel</button>
 </div></div>
 
-<div class="sheet" id="menuSheet"><div class="panel"><div class="grip"></div><h2>Data &amp; options</h2>
- <button class="primary" id="openBackup">Backup &amp; Restore</button>
- <button class="secondary" id="clr">Clear all quantities</button>
- <button class="danger-btn" id="reset">Reset model list</button>
- <p class="helper">Your changes save automatically on this device. Backup &amp; Restore includes local files, automatic backup settings and the Android backup integration. Incentive score uses the official 60/40 category weighting and achievement caps.</p>
- <button class="secondary" data-close>Close</button>
-</div></div>
-<div class="sheet" id="sBackup"><div class="panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
+<div class="sheet" id="menuSheet" role="dialog" aria-modal="true" aria-label="Quick actions"><div class="panel"><div class="grip"></div><h2>Quick actions</h2>
+  <button class="primary" id="openAdd" type="button">＋ Add Model</button>
+  <button class="secondary" id="openOptions" type="button">Data &amp; Options</button>
+  <button class="secondary" id="openBackup" type="button">Backup &amp; Restore</button>
+  <button class="secondary" data-close type="button">Close</button>
+ </div></div>
+ <div class="sheet" id="optionsSheet" role="dialog" aria-modal="true" aria-label="Data and options"><div class="panel"><div class="grip"></div><h2>Data &amp; Options</h2>
+  <button class="primary" id="clr" type="button">Clear all quantities</button>
+  <button class="danger-btn" id="reset" type="button">Reset model list</button>
+  <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Incentive score uses the official 60/40 category weighting and achievement caps.</p>
+  <button class="secondary" data-close type="button">Close</button>
+ </div></div>
+ <div class="sheet" id="sBackup"><div class="panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
  <section class="backup-source">
   <div class="backup-row"><h3>Google Drive</h3><span class="backup-status">Cloud backup</span></div>
   <p class="note">Connect Google Drive to back up or restore your tracker in the cloud. Google sign-in and Drive sync require the Android integration.</p>
@@ -460,8 +465,10 @@ $("models").addEventListener("change",e=>{
  m[field]=safeNum(e.target.value);
  saveData();render();toast(field==="r"?"RRP saved":"Incentive saved");
 });
-$("add").addEventListener("click",()=>openSheet("addSheet"));
-$("menu").addEventListener("click",()=>openSheet("menuSheet"));
+$("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
+$("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
+$("openAdd").addEventListener("click",()=>{closeSheet($("menuSheet"));openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
+$("openOptions").addEventListener("click",()=>{closeSheet($("menuSheet"));openSheet("optionsSheet");});
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeSheet(b.closest(".sheet"))));
 document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheet(s);}));
 document.addEventListener("keydown",e=>{
@@ -479,11 +486,11 @@ $("save").addEventListener("click",()=>{
 $("clr").addEventListener("click",()=>{
  if(!data.some(m=>m.q>0)){toast("No quantities to clear");return;}
  if(!confirm("Clear all recorded quantities? Your model list and RRP values will remain."))return;
- data.forEach(m=>m.q=0);expandedId=null;saveData();render();closeSheet($("menuSheet"));toast("All quantities cleared");
+ data.forEach(m=>m.q=0);expandedId=null;saveData();render();closeSheet($("optionsSheet"));toast("All quantities cleared");
 });
 $("reset").addEventListener("click",()=>{
  if(!confirm("Reset the tracker to its original model list and clear all quantities? Current custom models and quantities will be replaced."))return;
- data=INITIAL.map(x=>({...x}));expandedId=null;saveData();setCategory("m");closeSheet($("menuSheet"));toast("Model list reset");
+ data=INITIAL.map(x=>({...x}));expandedId=null;saveData();setCategory("m");closeSheet($("optionsSheet"));toast("Model list reset");
 });
 /* Backup & Restore: local JSON export/import; Drive actions remain clearly marked as requiring native setup. */
 const BACKUP_SETTINGS_KEY="ptt_backup_settings";
@@ -618,7 +625,7 @@ async function restoreLocalBackup(file){
   restoreBackupText(text);
  }catch(e){$("restoreStatus").textContent="File read failed. Try pasting backup JSON instead.";toast("Cannot read this file. Try opening it and pasting its JSON text.");}
 }
-$("openBackup").onclick=()=>{openSheet("sBackup");loadBackupSettings()};
+$("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 $("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
 $("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
 $("localBackup").onclick=downloadLocalBackup;
