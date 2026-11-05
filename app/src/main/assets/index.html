@@ -207,7 +207,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 </div></div>
 
 <div class="sheet" id="menuSheet" role="dialog" aria-modal="true" aria-label="Quick actions"><div class="panel"><div class="grip"></div><h2>Quick actions</h2>
-  <button class="primary" id="openAdd" type="button">＋ Add Model</button>
   <button class="secondary" id="openOptions" type="button">Data &amp; Options</button>
   <button class="secondary" id="openBackup" type="button">Backup &amp; Restore</button>
   <button class="secondary" data-close type="button">Close</button>
@@ -467,7 +466,6 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
-$("openAdd").addEventListener("click",()=>{closeSheet($("menuSheet"));openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("openOptions").addEventListener("click",()=>{closeSheet($("menuSheet"));openSheet("optionsSheet");});
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeSheet(b.closest(".sheet"))));
 document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheet(s);}));
