@@ -2,6 +2,9 @@ plugins {
     id 'com.android.application'
 }
 
+def ciRunNumber = System.getenv("GITHUB_RUN_NUMBER")
+def appVersionCode = ciRunNumber ? ciRunNumber.toInteger() : 1
+
 android {
     namespace 'com.promoter.tracker'
     compileSdk 34
@@ -10,15 +13,30 @@ android {
         applicationId "com.promoter.tracker"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName "1.0.${appVersionCode}"
+    }
+
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv("ANDROID_KEYSTORE_FILE")
+            def keystorePasswordValue = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            def keyAliasValue = System.getenv("ANDROID_KEY_ALIAS")
+            def keyPasswordValue = System.getenv("ANDROID_KEY_PASSWORD")
+
+            if (keystorePath && keystorePasswordValue && keyAliasValue && keyPasswordValue) {
+                storeFile file(keystorePath)
+                storePassword keystorePasswordValue
+                keyAlias keyAliasValue
+                keyPassword keyPasswordValue
+            }
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            // Signed with the debug key so the release APK is installable without a keystore
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
         }
     }
 
