@@ -28,7 +28,7 @@ final class BackupScheduler {
         WorkManager manager = WorkManager.getInstance(context);
         if (!enabled) {
             manager.cancelUniqueWork(INITIAL_NAME);
-            manager.cancelUniquePeriodicWork(PERIODIC_NAME);
+            manager.cancelUniqueWork(PERIODIC_NAME);
             return;
         }
 
