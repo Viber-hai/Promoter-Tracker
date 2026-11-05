@@ -301,12 +301,21 @@ select option{background:#182238;color:#f4f7ff}
    <label class="fld" for="pasteBackup">Or paste saved backup JSON here<textarea id="pasteBackup" rows="3" placeholder="Paste JSON backup text here"></textarea></label>
    <button class="btn" id="importPasted">Import pasted backup</button>
   </section>
-  <div class="backup-select">
-   <label class="fld" for="backupFrequency">Automatic backup frequency</label>
-   <select id="backupFrequency"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select>
+  <div class="backup-source">
+   <h3>Automatic local backup</h3>
+   <div class="backup-select">
+    <label class="fld" for="backupFrequency">Backup frequency</label>
+    <select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select>
+   </div>
+   <div class="backup-row"><label class="fld" for="autoBackup">Enable automatic backup</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
+   <div class="backup-row"><span class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</span><button class="btn" id="chooseAutomaticFolder">Change folder</button></div>
+   <p class="note">No immediate backup is created when you save settings. The first scheduled backup is due after the selected interval. Android may delay background work for battery management.</p>
   </div>
-  <div class="backup-row"><label class="fld" for="autoBackup">Automatic backup to device</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
-  <p class="note">The app saves backup files in Downloads/Promoter Tracker Backups. Automatic backups run on your selected schedule, subject to Android battery and background-work limits.</p>
+  <div class="backup-source">
+   <h3>Manual local backup</h3>
+   <p class="note">Manual backups run only when you press Back up locally.</p>
+   <div class="backup-row"><span class="note" id="manualFolder">Downloads / Promoter Tracker / Manual Backups</span><button class="btn" id="chooseManualFolder">Change folder</button></div>
+  </div>
   <p class="backup-status" id="backupStatus">Last backup: Not yet created</p>
   <button class="btn pri" id="saveBackupSettings">Save backup settings</button>
   <button class="btn" data-close="1">Close</button>
@@ -422,6 +431,7 @@ function loadBackupSettings(){
   const native=window.AppBackup;
   $("backupFrequency").value=(native&&native.getAutoBackupFrequency())||p.frequency||"weekly";
   $("autoBackup").checked=native?!!native.isAutoBackupEnabled():!!p.enabled;
+  if(native){$("automaticFolder").textContent=native.getBackupFolderName("automatic");$("manualFolder").textContent=native.getBackupFolderName("manual");}
   const last=native&&native.getLastBackupStatus?native.getLastBackupStatus():p.lastBackup;
   if(last)setBackupStatus(last);
  }catch(e){}
@@ -434,7 +444,7 @@ function saveBackupSettings(){
   if(window.AppBackup){
    const result=window.AppBackup.setAutoBackup(enabled,frequency);
    if(String(result).startsWith("ERROR|")){toast(String(result).slice(6));return;}
-   toast(enabled?"Automatic device backup enabled ("+frequency+").":"Automatic device backup disabled.");
+   toast(enabled?"Automatic device backup enabled ("+frequency+"). First backup after selected interval.":"Automatic device backup disabled.");
   }else{
    toast(enabled?"Automatic backup is available in the installed app only.":"Backup preferences saved.");
   }
@@ -553,7 +563,11 @@ $("importPasted").onclick=()=>restoreBackupText($("pasteBackup").value.trim());
 $("restoreFile").addEventListener("pointerdown",()=>{$("restoreStatus").textContent="Opening Android file picker… If nothing opens, use Import pasted backup.";});
 $("restoreFile").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];restoreLocalBackup(file);e.target.value="";});
 $("restoreFile").addEventListener("cancel",()=>{$("restoreStatus").textContent="File selection cancelled or unavailable. Try Import pasted backup.";});
-$("saveBackupSettings").onclick=saveBackupSettings;
+ $("saveBackupSettings").onclick=saveBackupSettings;
+$("chooseAutomaticFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.chooseBackupFolder("automatic");else toast("Folder selection is available in the installed app.");};
+$("chooseManualFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.chooseBackupFolder("manual");else toast("Folder selection is available in the installed app.");};
+window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automaticFolder":"manualFolder");if(el)el.textContent=name;toast((kind==="automatic"?"Automatic":"Manual")+" backup folder updated.");};
+
 
 /* keyboard: hide the + button while typing; show compact summary once the hero scrolls away */
 document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input,select"))document.body.classList.add("typing")});
