@@ -163,6 +163,10 @@ body::after{display:none}
 @media(max-width:600px){.hero,.pane,.bar,.toast{-webkit-backdrop-filter:blur(8px) saturate(125%);backdrop-filter:blur(8px) saturate(125%)}.row{box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
+/* Accessible native Android file-picker overlay and pasted-JSON fallback. */
+.restore-trigger{position:relative;display:grid;place-items:center;cursor:pointer;text-align:center}
+.restore-trigger input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:pointer;font-size:0}
+#pasteBackup{width:100%;min-height:88px;resize:vertical;text-align:left;font:13px/1.5 monospace;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--tx);background:var(--inp)}
 /* Backup controls + alignment and native select popup theme */
 .cat{grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;text-align:center}
 .cat>div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;text-align:center}
@@ -291,8 +295,11 @@ select option{background:#182238;color:#f4f7ff}
   <section class="backup-source">
    <div class="backup-row"><h3>Local backup</h3><span class="k">This device</span></div>
    <p class="note">Download a JSON backup file, or restore one into this browser on this device.</p>
-   <div class="backup-row"><button class="btn pri" id="localBackup">Back up locally</button><button class="btn" id="localRestore">Restore locally</button></div>
-   <input class="file-hidden" id="restoreFile" type="file" accept=".json,application/json">
+   <div class="backup-row"><button class="btn pri" id="localBackup">Back up locally</button><label class="btn restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".json,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
+   <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a previously exported JSON file.</p>
+   <div class="backup-row"><button class="btn" id="shareBackup">Save / share to folder</button><button class="btn" id="copyBackup">Copy backup text</button></div>
+   <label class="fld" for="pasteBackup">Or paste saved backup JSON here<textarea id="pasteBackup" rows="3" placeholder="Paste JSON backup text here"></textarea></label>
+   <button class="btn" id="importPasted">Import pasted backup</button>
   </section>
   <div class="backup-select">
    <label class="fld" for="backupFrequency">Automatic backup frequency</label>
@@ -361,7 +368,7 @@ $("menu").onclick=()=>openSheet("sMenu");
 /* rows */
 $("rows").addEventListener("input",e=>{
  const r=e.target.closest(".row"),k=e.target.dataset.f;if(!r||!k)return;
- const x=S.rows[r.dataset.i];x[k]=k==="n"?e.target.value:num(e.target.value);
+ const x=S.rows[r.dataset.i];x[k]=k==="n"?e.target.value:(k==="q"?Math.floor(num(e.target.value)):num(e.target.value));
  if(k==="q")r.classList.toggle("has",x.q>0);
  else{r.querySelector(".nm").textContent=x.n||"Model";r.querySelector(".sub").textContent=subTxt(x)}
  sum();save();
@@ -391,7 +398,7 @@ $("sold").addEventListener("click",e=>{const b=e.currentTarget;b.setAttribute("a
 /* add + clear */
 function add(){
  const n=$("an").value.trim();if(!n){$("an").focus();return}
- const k=$("ag").value;S.rows.unshift({n,r:num($("ar").value),u:num($("au").value),q:num($("aq").value),g:k});
+ const k=$("ag").value;S.rows.unshift({n,r:num($("ar").value),u:num($("au").value),q:Math.floor(num($("aq").value)),g:k});
  ["an","ar","au","aq"].forEach(i=>$(i).value="");$("q").value="";$("sold").setAttribute("aria-pressed","false");
  closeSheet();setTab(k);save();toast(`Added ${n}`);
  $("rows").scrollIntoView({block:"start",behavior:"smooth"});
@@ -418,57 +425,115 @@ function loadBackupSettings(){
  }catch(e){}
 }
 function saveBackupSettings(){
- const p={frequency:$("backupFrequency").value,enabled:false};
- try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));toast("Backup settings saved on this device");}
+ const old=readBackupSettings();
+ const p={...old,frequency:$("backupFrequency").value,enabled:false};
+ try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));toast("Backup preferences saved (automatic backup unavailable)");}
  catch(e){toast("Could not save backup settings");}
 }
-function downloadLocalBackup(){
+function readBackupSettings(){try{return JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}")}catch(e){return {}}}
+function recordBackupStatus(message){
+ setBackupStatus(message);
+ try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify({...readBackupSettings(),lastBackup:message}))}catch(e){}
+}
+function createBackupFile(){
+ const blob=new Blob([JSON.stringify(backupPayload(),null,2)],{type:"application/json"});
+ const name="promoter-tracker-backup-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";
+ return {blob,name};
+}
+async function trySaveFilePicker(blob,name){
+ if(typeof window.showSaveFilePicker!=="function")return false;
+ const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:"JSON backup",accept:{"application/json":[".json"]}}]});
+ const writable=await handle.createWritable();await writable.write(blob);await writable.close();
+ recordBackupStatus("Saved to selected folder · "+new Date().toLocaleString());
+ toast("Backup saved to the selected folder");return true;
+}
+async function shareBackupFile(){
+ const {blob,name}=createBackupFile();
  try{
-  const blob=new Blob([JSON.stringify(backupPayload(),null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob),a=document.createElement("a");
-  a.href=url;a.download="promoter-tracker-backup-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";
-  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
-  const stamp=new Date().toLocaleString();
-  setBackupStatus("Saved locally · "+stamp);
-  try{const p=JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}");p.lastBackup="Saved locally · "+stamp;localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));}catch(e){}
-  toast("Local backup file created");
- }catch(e){toast("Could not create local backup");}
-}
-function restoreLocalBackup(file){
- if(!file)return;
- const reader=new FileReader();
- reader.onload=()=>{
-  const previous=S;
-  try{
-   const parsed=JSON.parse(String(reader.result||""));
-   const incoming=parsed&&parsed.data?parsed.data:parsed;
-   if(!incoming||!Array.isArray(incoming.rows)||incoming.rows.length>5000||
-      !Number.isFinite(Number(incoming.tm))||!Number.isFinite(Number(incoming.tw))||
-      !incoming.rows.every(x=>x&&typeof x==="object"&&typeof x.n==="string"&&Number.isFinite(Number(x.r))&&Number.isFinite(Number(x.q)))){
-    throw new Error("Invalid backup structure");
-   }
-   if(!confirm("Restore this backup? Your current tracker data will be replaced."))return;
-   S={...incoming,tm:num(incoming.tm),tw:num(incoming.tw),rows:incoming.rows.map(x=>({n:String(x.n||"Model"),r:num(x.r),u:num(x.u),q:num(x.q),g:x.g==="w"?"w":"m"}))};
-   openI=-1;
-   if(!save())throw new Error("Browser storage is unavailable or full");
-   setTab(g);
-   const stamp=new Date().toLocaleString();
-   setBackupStatus("Restored to this browser · "+stamp);
-   toast("Backup restored and saved on this device");
-  }catch(e){
-   S=previous;
-   toast(e.message==="Browser storage is unavailable or full"?"Restore failed: browser storage is unavailable or full":"That file is not a valid Promoter Tracker backup");
+  if(await trySaveFilePicker(blob,name))return;
+ }catch(e){if(e.name==="AbortError")return;}
+ try{
+  const file=new File([blob],name,{type:"application/json"});
+  if(!navigator.share||!navigator.canShare||!navigator.canShare({files:[file]})){
+   toast("Folder picker unavailable. Use Export backup (Downloads) or Copy backup text.");return;
   }
- };
- reader.onerror=()=>toast("Could not read the selected backup file");
- reader.readAsText(file);
+  await navigator.share({files:[file],title:"Promoter Tracker backup"});
+  recordBackupStatus("Shared / handed to Android · "+new Date().toLocaleString());
+  toast("Backup sent to Android; check your chosen destination");
+ }catch(e){if(e.name!=="AbortError")toast("Unable to share. Try Export backup or Copy backup text.");}
 }
-$("openBackup").onclick=()=>{closeSheet();openSheet("sBackup");loadBackupSettings()};
+async function downloadLocalBackup(){
+ const {blob,name}=createBackupFile();
+ try{
+  if(await trySaveFilePicker(blob,name))return;
+ }catch(e){if(e.name==="AbortError")return;}
+ let url;
+ try{
+  url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=name;a.style.display="none";
+  document.body.appendChild(a);a.click();a.remove();
+  // A browser's download click cannot prove the OS saved the file.
+  toast("Download requested. Check Downloads; if missing use Save / share to folder.");
+  setBackupStatus("Download requested · "+new Date().toLocaleString()+" (verify file in Downloads)");
+ }catch(e){toast("Download unsupported here. Try Save / share or Copy backup text.");}
+ finally{if(url)setTimeout(()=>URL.revokeObjectURL(url),60000);}
+}
+async function copyBackupText(){
+ const data=JSON.stringify(backupPayload(),null,2);
+ try{
+  if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(data);toast("Backup copied. Paste into a text file and save it safely.");return;}
+ }catch(e){}
+ // Older Android HTML viewers may require the classic copy fallback.
+ const area=$("pasteBackup");area.value=data;area.focus();area.select();
+ try{if(document.execCommand("copy")){toast("Backup copied. Save it as a .json text file.");return;}}catch(e){}
+ toast("Backup shown in the text box. Select all and copy it to a safe location.");
+}
+function validateBackup(parsed){
+ const incoming=parsed&&parsed.data?parsed.data:parsed;
+ if(!incoming||typeof incoming!=="object"||!Array.isArray(incoming.rows)||incoming.rows.length>5000)throw Error("Invalid backup format");
+ const validAmount=v=>typeof v==="number"&&Number.isFinite(v)&&v>=0;
+ if(!validAmount(incoming.tm)||!validAmount(incoming.tw)||
+  !incoming.rows.every(x=>x&&typeof x==="object"&&typeof x.n==="string"&&x.n.length<=250&&validAmount(x.r)&&validAmount(x.q)&&Number.isInteger(x.q)&&validAmount(x.u??0)&&(x.g==="m"||x.g==="w")))throw Error("Invalid tracker values in backup");
+ return {tm:incoming.tm,tw:incoming.tw,rows:incoming.rows.map(x=>({n:x.n.trim()||"Model",r:x.r,u:x.u??0,q:x.q,g:x.g}))};
+}
+function restoreBackupText(text){
+ let incoming;
+ try{incoming=validateBackup(JSON.parse(text))}catch(e){$("restoreStatus").textContent="Import rejected: "+e.message;toast("Invalid JSON backup: "+e.message);return;}
+ if(!confirm("Import this backup? Current models, quantities and targets will be replaced.")){ $("restoreStatus").textContent="Import cancelled. Existing data unchanged."; return; }
+ const previous=S;
+ const next={...previous,...incoming};
+ try{
+  // Persist first; don't change live state if storage rejects the import.
+  localStorage.setItem("ptt",JSON.stringify({...next,ts:Date.now()}));
+  S=next;openI=-1;setTab(g);
+  recordBackupStatus("Imported from local backup · "+new Date().toLocaleString());
+  $("restoreStatus").textContent="Success: backup imported and saved to this browser.";
+  toast("Backup imported successfully");
+ }catch(e){S=previous;$("restoreStatus").textContent="Import failed: browser storage blocked or full. Existing data unchanged.";toast("Import failed: browser storage blocked or full. Data unchanged.");}
+}
+async function restoreLocalBackup(file){
+ if(!file){$("restoreStatus").textContent="No file selected. Choose a JSON backup.";return;}
+ $("restoreStatus").textContent="Reading selected file: "+file.name;
+ if(file.size>5*1024*1024){toast("Backup file too large (limit 5 MB)");return;}
+ try{
+  const text=typeof file.text==="function"?await file.text():await new Promise((resolve,reject)=>{
+   const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(Error("Read failed"));reader.readAsText(file);
+  });
+  restoreBackupText(text);
+ }catch(e){$("restoreStatus").textContent="File read failed. Try pasting backup JSON instead.";toast("Cannot read this file. Try opening it and pasting its JSON text.");}
+}
+$("openBackup").onclick=()=>{openSheet("sBackup");loadBackupSettings()};
 $("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
 $("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
 $("localBackup").onclick=downloadLocalBackup;
-$("localRestore").onclick=()=>$("restoreFile").click();
-$("restoreFile").addEventListener("change",e=>{restoreLocalBackup(e.target.files&&e.target.files[0]);e.target.value="";});
+$("shareBackup").onclick=shareBackupFile;
+$("copyBackup").onclick=copyBackupText;
+$("importPasted").onclick=()=>restoreBackupText($("pasteBackup").value.trim());
+// Use the actual file input as the touch target. Android WebViews sometimes block
+// a synthetic .click() on a visually hidden input.
+$("restoreFile").addEventListener("pointerdown",()=>{$("restoreStatus").textContent="Opening Android file picker… If nothing opens, use Import pasted backup.";});
+$("restoreFile").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];restoreLocalBackup(file);e.target.value="";});
+$("restoreFile").addEventListener("cancel",()=>{$("restoreStatus").textContent="File selection cancelled or unavailable. Try Import pasted backup.";});
 $("saveBackupSettings").onclick=saveBackupSettings;
 
 /* keyboard: hide the + button while typing; show compact summary once the hero scrolls away */
