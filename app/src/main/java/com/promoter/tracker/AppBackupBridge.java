@@ -49,6 +49,12 @@ public class AppBackupBridge {
         activity.runOnUiThread(() -> activity.launchBackupFolderPicker(kind));
     }
 
+    public void onBackupFolderSelected(String kind, android.net.Uri uri, String name) {
+        SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
+        prefs.edit().putString("folder_uri_" + kind, uri.toString())
+                .putString("folder_name_" + kind, name).apply();
+    }
+
     @JavascriptInterface
     public String getBackupFolderName(String kind) {
         if (!"automatic".equals(kind) && !"manual".equals(kind)) kind = "manual";
