@@ -376,9 +376,28 @@ function toast(m,fn){$("tm").textContent=m;undoFn=fn||null;$("undo").hidden=!fn;
 function hideToast(){$("toast").classList.remove("on");undoFn=null}
 $("undo").onclick=()=>{const fn=undoFn;hideToast();if(fn)fn()};
 /* sheets: a hash entry lets the phone's Back button close them */
-function openSheet(id){closeSheet(true);cur=id;$(id).classList.add("on");try{if(location.hash!=="#sheet")location.hash="sheet"}catch(e){}}
-function closeSheet(quiet){if(!cur)return;$(cur).classList.remove("on");cur=null;if(!quiet){try{if(location.hash==="#sheet")history.back()}catch(e){}}}
-addEventListener("hashchange",()=>{if(location.hash!=="#sheet"&&cur){$(cur).classList.remove("on");cur=null}});
+/* Only one bottom sheet may ever be visible. Clear all sheets rather than relying
+   only on the tracked current id, which can become stale after browser back/restore. */
+function clearOpenSheets(){
+ document.querySelectorAll(".sheet.on").forEach(sheet=>sheet.classList.remove("on"));
+ cur=null;
+}
+function openSheet(id){
+ clearOpenSheets();
+ const target=$(id);
+ if(!target)return;
+ cur=id;
+ target.classList.add("on");
+ try{if(location.hash!=="#sheet")location.hash="sheet"}catch(e){}
+}
+function closeSheet(quiet){
+ const hadOpen=!!document.querySelector(".sheet.on");
+ clearOpenSheets();
+ if(!quiet&&hadOpen){try{if(location.hash==="#sheet")history.back()}catch(e){}}
+}
+addEventListener("hashchange",()=>{
+ if(location.hash!=="#sheet")clearOpenSheets();
+});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
 document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target.dataset.close)closeSheet()}));
 $("fab").onclick=()=>{$("ag").value=g;openSheet("sAdd");setTimeout(()=>$("an").focus(),60)};
