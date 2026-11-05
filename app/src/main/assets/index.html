@@ -434,7 +434,7 @@ function saveBackupSettings(){
   if(window.AppBackup){
    const result=window.AppBackup.setAutoBackup(enabled,frequency);
    if(String(result).startsWith("ERROR|")){toast(String(result).slice(6));return;}
-   toast(enabled?"Automatic device backup enabled. First backup queued.":"Automatic device backup disabled.");
+   toast(enabled?"Automatic device backup enabled ("+frequency+").":"Automatic device backup disabled.");
   }else{
    toast(enabled?"Automatic backup is available in the installed app only.":"Backup preferences saved.");
   }
