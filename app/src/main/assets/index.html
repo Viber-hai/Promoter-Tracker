@@ -124,6 +124,21 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 @media(max-width:360px){body{padding-left:9px;padding-right:9px}.hero{padding:17px 14px}.hero-main{grid-template-columns:88px minmax(0,1fr);gap:12px}.ring{width:88px;height:88px}.sales-number{font-size:22px}.tag{font-size:7px;padding:6px}.sticky-summary{width:calc(100% - 12px);padding:9px}.summary-metric b{font-size:10px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
  
+
+/* Light-mode readability correction: Backup & Restore only. */
+@media(prefers-color-scheme:light){
+ #sBackup .panel{background:#f8f8fb;border-color:#d1d2da}
+ #sBackup .backup-source{background:#fff;border-color:#d2d3dc}
+ #sBackup .backup-source h3{color:#202027}
+ #sBackup .note,#sBackup .backup-status{color:#555762}
+ #sBackup .field{color:#454752}
+ #sBackup .secondary,#sBackup .restore-trigger{
+  background:#f0f0f4;border-color:#c6c7d1;color:#202027;
+ }
+ #sBackup #pasteBackup{background:#fff;border-color:#c6c7d1;color:#202027}
+ #sBackup #pasteBackup::placeholder{color:#777985;opacity:1}
+}
+
 /* Native Android backup controls retained inside the approved V10 panels. */
 .backup-source{padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);display:grid;gap:8px;margin:10px 0}
 .backup-source h3{font-size:11px;margin:0;color:var(--ink)}
