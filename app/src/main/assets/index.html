@@ -51,9 +51,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .hero h1{font-size:21px;line-height:1.12;letter-spacing:-.75px;margin:7px 0 0}
 .tag{white-space:nowrap;border-radius:99px;padding:7px 9px;background:rgba(200,16,46,.09);border:1px solid rgba(200,16,46,.20);color:var(--red2);font-size:8px;font-weight:850;letter-spacing:.65px}
 .hero-main{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;gap:16px;margin-top:20px}
-.ring{width:104px;height:104px;flex:none;position:relative}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring{width:104px;height:104px;flex:none;position:relative;min-width:0}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:8}.ring .track{stroke:rgba(200,16,46,.15)}.ring .value{stroke:var(--red2);stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;transition:stroke-dashoffset .25s ease}
-.ringtext{position:absolute;inset:0;display:grid;align-content:center;text-align:center}.ringtext b{font-size:24px;font-weight:950;letter-spacing:-1px}.ringtext span{font-size:8px;color:var(--muted);font-weight:800;letter-spacing:.5px}
+.ringtext{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px;text-align:center;white-space:nowrap}.ringtext b{font-size:clamp(16px,5.2vw,22px);font-weight:950;letter-spacing:-.8px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}.ringtext span{font-size:clamp(6px,1.8vw,7px);line-height:1;color:var(--muted);font-weight:850;letter-spacing:.35px;white-space:nowrap}
 .label{font-size:10px;color:var(--muted);font-weight:650}.sales-number{font-size:25px;font-weight:800;letter-spacing:-1px;margin:3px 0 5px}
 .sub{font-size:10px;color:var(--muted);line-height:1.55}.sub b{color:var(--ink);font-weight:700}
 .incentive-line{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
@@ -109,6 +109,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .sheet.show{display:flex}.panel{width:min(100%,510px);max-height:84vh;overflow:auto;border-radius:25px;padding:19px;background:var(--glass-strong);border:1px solid var(--line);box-shadow:0 24px 65px rgba(0,0,0,.28)}
 .grip{width:38px;height:4px;border-radius:99px;background:var(--muted);opacity:.35;margin:-7px auto 16px}
 .panel h2{font-size:18px;margin:0 0 14px;letter-spacing:-.45px}
+.settings-section-title{font-size:12px;font-weight:900;letter-spacing:.2px;margin:8px 0 0;color:var(--ink)}
 .field{display:grid;gap:5px;margin-bottom:11px;font-size:9px;color:var(--muted);font-weight:800}
 .field input,.field select{height:42px;border:1px solid var(--line);border-radius:12px;background:var(--field);padding:0 11px;color:var(--ink)}
 .fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -155,17 +156,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <body>
 <div class="app">
  <header class="top">
-  <div class="brand"><div class="mark" role="img" aria-label="Huawei logo"><svg viewBox="0 0 48 48" aria-hidden="true"><g fill="#C8102E"><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(45 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(90 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(135 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(180 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(225 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(270 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(315 24 24)"/></g></svg></div><div><b>Promoter Tracker</b><small>PERFORMANCE OVERVIEW · SYSTEM THEME</small></div></div>
+  <div class="brand"><div class="mark" role="img" aria-label="Huawei logo"><svg viewBox="0 0 48 48" aria-hidden="true"><g fill="#C8102E"><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(45 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(90 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(135 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(180 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(225 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(270 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(315 24 24)"/></g></svg></div><div><b>Promoter Tracker</b><small>SALES & PERFORMANCE TRACKER</small></div></div>
   <button class="icon" id="menu" type="button" aria-label="Open quick actions" aria-haspopup="dialog">⋯</button>
  </header>
 
  <section class="hero glass">
   <div class="herohead">
    <div><div class="eyebrow">PERFORMANCE OVERVIEW</div><h1>Your progress,<br>at a glance.</h1></div>
-   <span class="tag">LOCAL PREVIEW V10</span>
   </div>
   <div class="hero-main">
-   <div class="ring"><svg viewBox="0 0 112 112" aria-hidden="true"><circle class="track" cx="56" cy="56" r="46"/><circle class="value" id="ring" cx="56" cy="56" r="46"/></svg><div class="ringtext"><b id="score">0%</b><span>INCENTIVE SCORE</span></div></div>
+   <div class="ring"><svg viewBox="0 0 112 112" aria-hidden="true"><circle class="track" cx="56" cy="56" r="46"/><circle class="value" id="ring" cx="56" cy="56" r="46"/></svg><div class="ringtext"><b id="score">0%</b><span>SCORE</span></div></div>
    <div>
     <div class="label">Total sales</div><div class="sales-number" id="salesTotal">0</div>
     <div class="sub">Target <b id="targetTotal">850,500</b> · <b id="remaining">850,500</b> remaining</div>
@@ -205,7 +205,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <button class="fab" id="add" type="button" aria-label="Add a model" title="Add a model">+</button>
 
 <div class="sticky-summary" aria-label="Always visible performance summary">
- <div class="summary-top"><span class="summary-title">COUNTED INCENTIVE SCORE · STAYS VISIBLE</span><span class="summary-percent" id="stickyPct">0%</span></div>
+ <div class="summary-top"><span class="summary-title">PERFORMANCE SCORE</span><span class="summary-percent" id="stickyPct">0%</span></div>
  <div class="summary-track"><span id="stickyFill"></span></div>
  <div class="summary-metrics">
   <div class="summary-metric"><small>TOTAL SALES</small><b id="stickySales">0</b></div>
@@ -227,6 +227,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <button class="secondary" data-close type="button">Close</button>
  </div></div>
  <div class="sheet" id="optionsSheet" role="dialog" aria-modal="true" aria-label="Data and options"><div class="panel"><div class="grip"></div><h2>Data &amp; Options</h2>
+  <h3 class="settings-section-title">Sales targets</h3>
+  <p class="helper">Update the monthly sales targets used for category progress and the overall performance score.</p>
+  <label class="field">Handset &amp; Tablet target (AED)<input id="targetHandset" type="number" min="1" step="1" inputmode="numeric"></label>
+  <label class="field">Audio &amp; Wearables target (AED)<input id="targetWearables" type="number" min="1" step="1" inputmode="numeric"></label>
+  <button class="primary" id="saveTargets" type="button">Save sales targets</button>
   <button class="primary" id="clr" type="button">Clear all quantities</button>
   <button class="danger-btn" id="reset" type="button">Reset model list</button>
   <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Incentive score uses the official 60/40 category weighting and achievement caps.</p>
@@ -307,6 +312,7 @@ let data=S.rows.map((m,i)=>({...m,id:String(m.id||("model-"+i))}));
 let cat="m",g="m",only=false,incentiveVisible=false,toastTimer=null,expandedId=null,openI=-1;
 const TARGETS={m:S.tm,w:S.tw};
 function saveData(){
+ S.tm=TARGETS.m;S.tw=TARGETS.w;
  S.rows=data.map(m=>({id:m.id,n:m.n,r:m.r,u:m.u,q:m.q,g:m.g}));
  S.ts=Date.now();
  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));syncNativeSnapshot();}
@@ -481,7 +487,7 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
-$("openOptions").addEventListener("click",()=>{closeSheet($("menuSheet"));openSheet("optionsSheet");});
+$("openOptions").addEventListener("click",()=>{closeSheet($("menuSheet"));$("targetHandset").value=String(TARGETS.m);$("targetWearables").value=String(TARGETS.w);openSheet("optionsSheet");});
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeSheet(b.closest(".sheet"))));
 document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheet(s);}));
 document.addEventListener("keydown",e=>{
@@ -495,6 +501,11 @@ $("save").addEventListener("click",()=>{
  data.unshift({id:"model-"+Date.now(),n:name.slice(0,70),r:safeNum($("newRrp").value),u:safeNum($("newInc").value),q:0,g:$("newCat").value});
  setCategory($("newCat").value);saveData();closeSheet($("addSheet"));
  ["newName","newRrp","newInc"].forEach(id=>$(id).value="");toast("Model added and saved");
+});
+$("saveTargets").addEventListener("click",()=>{
+ const handset=Number($("targetHandset").value),wearables=Number($("targetWearables").value);
+ if(!Number.isFinite(handset)||!Number.isFinite(wearables)||handset<=0||wearables<=0){toast("Enter valid targets greater than zero");return;}
+ TARGETS.m=handset;TARGETS.w=wearables;saveData();render();closeSheet($("optionsSheet"));toast("Sales targets updated and saved");
 });
 $("clr").addEventListener("click",()=>{
  if(!data.some(m=>m.q>0)){toast("No quantities to clear");return;}
