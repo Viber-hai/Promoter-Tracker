@@ -53,7 +53,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .hero-main{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;gap:16px;margin-top:20px}
 .ring{width:104px;height:104px;flex:none;position:relative;min-width:0}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:8}.ring .track{stroke:rgba(200,16,46,.15)}.ring .value{stroke:var(--red2);stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;transition:stroke-dashoffset .25s ease}
-.ringtext{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px;text-align:center;white-space:nowrap}.ringtext b{font-size:clamp(16px,5.2vw,22px);font-weight:950;letter-spacing:-.8px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}.ringtext span{font-size:clamp(6px,1.8vw,7px);line-height:1;color:var(--muted);font-weight:850;letter-spacing:.35px;white-space:nowrap}
+.ringtext{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;text-align:center;white-space:normal;overflow:hidden}.ringtext b{display:block;width:100%;font-size:clamp(15px,4.8vw,20px);font-weight:950;letter-spacing:-.8px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}.ringtext span{display:block;max-width:100%;font-size:7px;line-height:1.1;color:var(--muted);font-weight:850;letter-spacing:.55px;white-space:normal;overflow-wrap:anywhere}
 .label{font-size:10px;color:var(--muted);font-weight:650}.sales-number{font-size:25px;font-weight:800;letter-spacing:-1px;margin:3px 0 5px}
 .sub{font-size:10px;color:var(--muted);line-height:1.55}.sub b{color:var(--ink);font-weight:700}
 .incentive-line{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
@@ -222,11 +222,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 </div></div>
 
 <div class="sheet" id="menuSheet" role="dialog" aria-modal="true" aria-label="Quick actions"><div class="panel"><div class="grip"></div><h2>Quick actions</h2>
-  <button class="secondary" id="openOptions" type="button">Data &amp; Options</button>
+  <button class="secondary" id="openOptions" type="button">Settings</button>
   <button class="secondary" id="openBackup" type="button">Backup &amp; Restore</button>
   <button class="secondary" data-close type="button">Close</button>
  </div></div>
- <div class="sheet" id="optionsSheet" role="dialog" aria-modal="true" aria-label="Data and options"><div class="panel"><div class="grip"></div><h2>Data &amp; Options</h2>
+ <div class="sheet" id="optionsSheet" role="dialog" aria-modal="true" aria-label="Settings"><div class="panel"><div class="grip"></div><h2>Settings</h2>
   <h3 class="settings-section-title">Sales targets</h3>
   <p class="helper">Update the monthly sales targets used for category progress and the overall performance score.</p>
   <label class="field">Handset &amp; Tablet target (AED)<input id="targetHandset" type="number" min="1" step="1" inputmode="numeric"></label>
@@ -234,7 +234,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <button class="primary" id="saveTargets" type="button">Save sales targets</button>
   <button class="primary" id="clr" type="button">Clear all quantities</button>
   <button class="danger-btn" id="reset" type="button">Reset model list</button>
-  <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Incentive score uses the official 60/40 category weighting and achievement caps.</p>
+  <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Score is calculated using the official 60/40 category weighting and achievement caps.</p>
   <button class="secondary" data-close type="button">Close</button>
  </div></div>
  <div class="sheet" id="sBackup"><div class="panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
@@ -461,7 +461,7 @@ $("models").addEventListener("click",e=>{
   expandedId=expandedId===m.id?null:m.id;render();return;
  }
  if(action==="delete"){
-  if(confirm(`Delete "${m.n}" and its recorded quantity from this preview? This cannot be undone unless you have a backup.`)){
+  if(confirm(`Delete "${m.n}" and its recorded quantity from this tracker? This cannot be undone unless you have a backup.`)){
    if(expandedId===m.id)expandedId=null;
    data.splice(index,1);saveData();render();toast("Model deleted");
   }
