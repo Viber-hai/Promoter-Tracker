@@ -151,6 +151,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .restore-trigger input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:pointer;font-size:0}
 #pasteBackup{width:100%;min-height:88px;resize:vertical;text-align:left;font:10px/1.5 ui-monospace,monospace;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--ink);background:var(--field)}
 #pasteBackup:focus{border-color:rgba(200,16,46,.48);box-shadow:0 0 0 3px rgba(200,16,46,.09);outline:0}
+
+/* Hidden reorder control: appears only after a long press on a model card. */
+.model-top{display:flex;align-items:center;gap:8px}
+.model-top .modelname{flex:1;min-width:0}
+.drag-handle{display:none;flex:none;width:30px;height:30px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted);font-size:20px;line-height:1;place-items:center;user-select:none;-webkit-user-select:none}
+.model.reorder-armed .drag-handle{display:grid}
+.model.reorder-armed{outline:1px dashed var(--red2)}
+.model.dragging{opacity:.48;outline:1px dashed var(--red2)}
+.model.drag-over{border-color:var(--red2);box-shadow:0 0 0 2px rgba(200,16,46,.12)}
+
 </style>
 </head>
 <body>
@@ -341,7 +351,10 @@ function totals(){
  const amountBeforeCap=eligible
   ?(INCENTIVE_RULES.kpiPackageAED+t.perUnitIncentive)*(achievementUsed/100)
   :0;
- t.incentive=Math.min(INCENTIVE_RULES.maximumPayoutAED,amountBeforeCap);
+ const preThresholdEarned=Math.min(INCENTIVE_RULES.maximumPayoutAED,t.perUnitIncentive);
+ t.incentive=eligible
+  ?Math.min(INCENTIVE_RULES.maximumPayoutAED,amountBeforeCap)
+  :preThresholdEarned;
  t.calculation={
   mobileRaw,mobileUsed,mobileWeighted,
   wearableRaw,wearableUsed,wearableWeighted,
@@ -393,7 +406,7 @@ function render(){
  $("models").innerHTML=rows.length?rows.map(m=>`
   <article class="model ${m.q>0?"sold":""} ${expandedId===m.id?"open":""}" data-index="${m.index}">
    <button class="model-main" type="button" data-action="toggle" aria-expanded="${expandedId===m.id}">
-    <div class="model-top"><div class="modelname" title="${escapeHTML(m.n)}">${escapeHTML(m.n)}</div></div>
+    <div class="model-top"><div class="modelname" title="${escapeHTML(m.n)}">${escapeHTML(m.n)}</div><span class="drag-handle" aria-hidden="true">⠿</span></div>
     <div class="meta">RRP ${fmt(m.r)} · Incentive ${fmt(m.u)} / unit</div>
     <div class="detailtext">${m.q?`Sales ${fmt(m.r*m.q)} · Units sold ${m.q}`:"No sales recorded yet"}</div>
    </button>
@@ -446,6 +459,55 @@ document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventList
  incentiveVisible=!incentiveVisible;
  updateIncentiveVisibility();
 }));
+
+let pressTimer=null,pressCard=null,pressPointer=null,reorderFrom=null,reorderActive=false;
+function moveModelTo(fromIndex,toIndex){
+ if(fromIndex===null||toIndex===null||fromIndex===toIndex)return;
+ const from=data[fromIndex],to=data[toIndex];
+ if(!from||!to||from.g!==to.g)return;
+ const [moved]=data.splice(fromIndex,1);
+ data.splice(toIndex,0,moved);
+ saveData();render();toast("Model order saved");
+}
+function clearPress(){
+ if(pressTimer!==null){clearTimeout(pressTimer);pressTimer=null;}
+}
+$("models").addEventListener("pointerdown",e=>{
+ const card=e.target.closest(".model");
+ if(!card||e.target.closest("button,input,select"))return;
+ clearPress();pressCard=card;pressPointer=e.pointerId;reorderActive=false;
+ pressTimer=setTimeout(()=>{
+  if(!pressCard||pressPointer!==e.pointerId)return;
+  reorderActive=true;reorderFrom=Number(pressCard.dataset.index);
+  pressCard.classList.add("reorder-armed","dragging");
+  if(navigator.vibrate)navigator.vibrate(25);
+ },550);
+});
+$("models").addEventListener("pointermove",e=>{
+ if(!pressCard||e.pointerId!==pressPointer)return;
+ if(!reorderActive){
+  if(Math.abs(e.movementX)+Math.abs(e.movementY)>12)clearPress();
+  return;
+ }
+ const under=document.elementFromPoint(e.clientX,e.clientY)?.closest(".model");
+ document.querySelectorAll(".model.drag-over").forEach(x=>x.classList.remove("drag-over"));
+ if(under&&under!==pressCard&&under.dataset.index!==undefined&&data[Number(under.dataset.index)]?.g===data[reorderFrom]?.g)under.classList.add("drag-over");
+});
+$("models").addEventListener("pointerup",e=>{
+ if(!pressCard||e.pointerId!==pressPointer)return;
+ clearPress();
+ const from=reorderFrom,under=document.querySelector(".model.drag-over");
+ const to=under?Number(under.dataset.index):null;
+ document.querySelectorAll(".model").forEach(x=>x.classList.remove("reorder-armed","dragging","drag-over"));
+ pressCard=null;pressPointer=null;reorderFrom=null;
+ const wasReordering=reorderActive;reorderActive=false;
+ if(wasReordering&&to!==null)moveModelTo(from,to);
+});
+$("models").addEventListener("pointercancel",()=>{
+ clearPress();document.querySelectorAll(".model").forEach(x=>x.classList.remove("reorder-armed","dragging","drag-over"));
+ pressCard=null;pressPointer=null;reorderFrom=null;reorderActive=false;
+});
+
 $("models").addEventListener("click",e=>{
  const card=e.target.closest(".model");if(!card)return;
  const index=Number(card.dataset.index),m=data[index],action=e.target.closest("[data-action]")?.dataset.action;
