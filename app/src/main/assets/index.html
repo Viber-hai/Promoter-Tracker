@@ -672,7 +672,7 @@ $("fingerprintEnabled").addEventListener("change",e=>{
  }else AppBackup.setBiometricEnabled(false);
  syncSecuritySettings();
 });
-$("lockTimeout").addEventListener("change",e=>{if(window.AppBackup)AppBackup.setLockTimeoutMinutes(Number(e.target.value));});
+$("lockTimeout").addEventListener("change",e=>{if(window.AppBackup)AppBackup.setLockTimeoutMinutes(Number(e.target.value));scheduleIdleLock();});
 $("setRecoveryPassword").addEventListener("click",()=>{$("recoveryNew").value="";$("recoveryConfirm").value="";$("recoverySetupStatus").textContent="";openSheet("recoverySetupSheet");});
 $("saveRecovery").addEventListener("click",()=>{
  const a=$("recoveryNew").value,b=$("recoveryConfirm").value;
@@ -694,8 +694,23 @@ $("unlockPin").addEventListener("click",()=>{
  if(AppBackup.verifyPin($("pinUnlockValue").value)){unlockPromoterTracker();$("pinUnlockValue").value="";}
  else{$("lockStatus").textContent="Incorrect PIN. Try again.";$("pinUnlockValue").value="";}
 });
-function lockPromoterTracker(){$("securityLock").classList.add("show");$("securityLock").setAttribute("aria-hidden","false");$("lockStatus").textContent="Authenticate to continue.";}
-function unlockPromoterTracker(){$("securityLock").classList.remove("show");$("securityLock").setAttribute("aria-hidden","true");$("lockStatus").textContent="";syncNativeSnapshot();}
+let idleLockTimer=null;
+function scheduleIdleLock(){
+ if(idleLockTimer!==null)clearTimeout(idleLockTimer);
+ idleLockTimer=null;
+ if(!window.AppBackup||!AppBackup.isSecurityEnabled())return;
+ const minutes=Number(AppBackup.getLockTimeoutMinutes());
+ if(minutes>0)idleLockTimer=setTimeout(()=>lockPromoterTracker(),minutes*60000);
+}
+function lockPromoterTracker(){
+ if(idleLockTimer!==null)clearTimeout(idleLockTimer);idleLockTimer=null;
+ $("securityLock").classList.add("show");$("securityLock").setAttribute("aria-hidden","false");$("lockStatus").textContent="Authenticate to continue.";
+}
+function unlockPromoterTracker(){
+ $("securityLock").classList.remove("show");$("securityLock").setAttribute("aria-hidden","true");$("lockStatus").textContent="";
+ syncNativeSnapshot();scheduleIdleLock();
+}
+["pointerdown","touchstart","keydown","scroll","click"].forEach(eventName=>document.addEventListener(eventName,()=>{if(!$("securityLock").classList.contains("show"))scheduleIdleLock();},{passive:true}));
 window.lockPromoterTracker=lockPromoterTracker;
 window.onNativeBiometricResult=(success,message)=>{if(success)unlockPromoterTracker();else $("lockStatus").textContent=message||"Fingerprint not recognized. Use your PIN if needed.";};
 window.onNativeAppReady=()=>{if(window.AppBackup){syncSecuritySettings();if(AppBackup.isSecurityEnabled())lockPromoterTracker();else syncNativeSnapshot();}else syncNativeSnapshot();};
