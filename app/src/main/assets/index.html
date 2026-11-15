@@ -640,6 +640,63 @@ $("save").addEventListener("click",()=>{
  setCategory($("newCat").value);saveData();closeSheet($("addSheet"));
  ["newName","newRrp","newInc"].forEach(id=>$(id).value="");toast("Model added and saved");
 });
+let pendingEnableFingerprint=false;
+function syncSecuritySettings(){
+ if(!window.AppBackup)return;
+ $("fingerprintEnabled").checked=!!AppBackup.isSecurityEnabled();
+ $("lockTimeout").value=String(AppBackup.getLockTimeoutMinutes());
+ $("securitySettingsStatus").textContent=AppBackup.isSecurityEnabled()?"Fingerprint lock is enabled. A backup PIN is configured.":"Fingerprint lock is off.";
+ $("recoveryPasswordState").textContent=AppBackup.hasRecoveryPassword()?"New-phone recovery password is configured. Same-phone restores need no password.":"No new-phone recovery password set. Same-phone restores work; another phone needs a recovery password configured before that backup is made.";
+}
+$("configurePin").addEventListener("click",()=>{$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="";openSheet("pinSetupSheet");});
+$("savePin").addEventListener("click",()=>{
+ const pin=$("pinNew").value,confirmPin=$("pinConfirm").value;
+ if(!/^[0-9]{6}$/.test(pin)){$("pinSetupStatus").textContent="Enter exactly six digits.";return;}
+ if(pin!==confirmPin){$("pinSetupStatus").textContent="The PINs do not match.";return;}
+ if(!window.AppBackup){$("pinSetupStatus").textContent="PIN setup requires the installed Android app.";return;}
+ const result=String(AppBackup.setPin(pin));
+ if(!result.startsWith("OK")){$("pinSetupStatus").textContent=result.replace(/^ERROR\|/,"");return;}
+ $("pinNew").value="";$("pinConfirm").value="";closeSheet($("pinSetupSheet"));
+ if(pendingEnableFingerprint){pendingEnableFingerprint=false;const enabled=String(AppBackup.setBiometricEnabled(true));if(enabled.startsWith("OK")){syncSecuritySettings();lockPromoterTracker();}else toast(enabled.replace(/^ERROR\|/,""));}
+ else{syncSecuritySettings();toast("Backup PIN saved securely.");}
+});
+$("fingerprintEnabled").addEventListener("change",e=>{
+ if(!window.AppBackup){e.target.checked=false;toast("Fingerprint authentication requires the installed Android app.");return;}
+ if(e.target.checked){
+  if(!AppBackup.isPinConfigured()){pendingEnableFingerprint=true;e.target.checked=false;$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="Set a six-digit PIN first. It is your fallback if fingerprint is unavailable.";openSheet("pinSetupSheet");return;}
+  const result=String(AppBackup.setBiometricEnabled(true));
+  if(!result.startsWith("OK")){e.target.checked=false;toast(result.replace(/^ERROR\|/,""));return;}
+  lockPromoterTracker();
+ }else AppBackup.setBiometricEnabled(false);
+ syncSecuritySettings();
+});
+$("lockTimeout").addEventListener("change",e=>{if(window.AppBackup)AppBackup.setLockTimeoutMinutes(Number(e.target.value));});
+$("setRecoveryPassword").addEventListener("click",()=>{$("recoveryNew").value="";$("recoveryConfirm").value="";$("recoverySetupStatus").textContent="";openSheet("recoverySetupSheet");});
+$("saveRecovery").addEventListener("click",()=>{
+ const a=$("recoveryNew").value,b=$("recoveryConfirm").value;
+ if(a.length<10){$("recoverySetupStatus").textContent="Use at least 10 characters.";return;}
+ if(a!==b){$("recoverySetupStatus").textContent="The passwords do not match.";return;}
+ if(!window.AppBackup){$("recoverySetupStatus").textContent="Recovery-password setup requires the installed Android app.";return;}
+ const result=String(AppBackup.setRecoveryPassword(a));
+ if(!result.startsWith("OK")){$("recoverySetupStatus").textContent=result.replace(/^ERROR\|/,"");return;}
+ $("recoveryNew").value="";$("recoveryConfirm").value="";closeSheet($("recoverySetupSheet"));syncSecuritySettings();toast("New-phone recovery password saved.");
+});
+$("decryptRestore").addEventListener("click",async()=>{
+ try{const done=await finishEncryptedRestore(pendingEncryptedRestore,$("restoreRecoveryPassword").value);if(done){pendingEncryptedRestore="";$("restoreRecoveryPassword").value="";closeSheet($("restorePasswordSheet"));}}
+ catch(e){$("restorePasswordStatus").textContent=e.message;}
+});
+$("unlockFingerprint").addEventListener("click",()=>{if(window.AppBackup)AppBackup.authenticateBiometric();else $("lockStatus").textContent="Fingerprint unlock works in the installed Android app.";});
+$("showPinUnlock").addEventListener("click",()=>{$("pinUnlockArea").hidden=false;$("pinUnlockValue").focus();});
+$("unlockPin").addEventListener("click",()=>{
+ if(!window.AppBackup){$("lockStatus").textContent="PIN unlock requires the installed Android app.";return;}
+ if(AppBackup.verifyPin($("pinUnlockValue").value)){unlockPromoterTracker();$("pinUnlockValue").value="";}
+ else{$("lockStatus").textContent="Incorrect PIN. Try again.";$("pinUnlockValue").value="";}
+});
+function lockPromoterTracker(){$("securityLock").classList.add("show");$("securityLock").setAttribute("aria-hidden","false");$("lockStatus").textContent="Authenticate to continue.";}
+function unlockPromoterTracker(){$("securityLock").classList.remove("show");$("securityLock").setAttribute("aria-hidden","true");$("lockStatus").textContent="";syncNativeSnapshot();}
+window.lockPromoterTracker=lockPromoterTracker;
+window.onNativeBiometricResult=(success,message)=>{if(success)unlockPromoterTracker();else $("lockStatus").textContent=message||"Fingerprint not recognized. Use your PIN if needed.";};
+window.onNativeAppReady=()=>{if(window.AppBackup){syncSecuritySettings();if(AppBackup.isSecurityEnabled())lockPromoterTracker();else syncNativeSnapshot();}else syncNativeSnapshot();};
 $("saveTargets").addEventListener("click",()=>{
  const handset=Number($("targetHandset").value),wearables=Number($("targetWearables").value);
  if(!Number.isFinite(handset)||!Number.isFinite(wearables)||handset<=0||wearables<=0){toast("Enter valid targets greater than zero");return;}
@@ -741,14 +798,12 @@ async function downloadLocalBackup(){
  }catch(e){toast("Could not save backup: "+e.message);}
 }
 async function copyBackupText(){
+ if(window.AppBackup){toast("For security, backups are encrypted .ptbackup files. Use Back up locally.");return;}
  const data=JSON.stringify(backupPayload(),null,2);
- try{
-  if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(data);toast("Backup copied. Paste into a text file and save it safely.");return;}
- }catch(e){}
- // Older Android HTML viewers may require the classic copy fallback.
+ try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(data);toast("Preview JSON copied.");return;}}catch(e){}
  const area=$("pasteBackup");area.value=data;area.focus();area.select();
- try{if(document.execCommand("copy")){toast("Backup copied. Save it as a .json text file.");return;}}catch(e){}
- toast("Backup shown in the text box. Select all and copy it to a safe location.");
+ try{if(document.execCommand("copy")){toast("Preview JSON copied.");return;}}catch(e){}
+ toast("Preview data shown in the text box.");
 }
 function validateBackup(parsed){
  const incoming=parsed&&parsed.data?parsed.data:parsed;
@@ -776,24 +831,45 @@ function restoreBackupText(text){
   toast("Backup imported successfully");
  }catch(e){S=previous;$("restoreStatus").textContent="Import failed: app storage blocked or full. Existing data unchanged.";toast("Import failed: browser storage blocked or full. Data unchanged.");}
 }
-async function restoreLocalBackup(file){
- if(!file){$("restoreStatus").textContent="No file selected. Choose a JSON backup.";return;}
- $("restoreStatus").textContent="Reading selected file: "+file.name;
- if(file.size>5*1024*1024){toast("Backup file too large (limit 5 MB)");return;}
- try{
-  const text=typeof file.text==="function"?await file.text():await new Promise((resolve,reject)=>{
-   const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(Error("Read failed"));reader.readAsText(file);
-  });
-  restoreBackupText(text);
- }catch(e){$("restoreStatus").textContent="File read failed. Try pasting backup JSON instead.";toast("Cannot read this file. Try opening it and pasting its JSON text.");}
+async let pendingEncryptedRestore="";
+function bytesToBase64(buffer){const bytes=new Uint8Array(buffer);let binary="";for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
+function base64ToUtf8(value){const binary=atob(value);const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new TextDecoder().decode(bytes);}
+async function finishEncryptedRestore(encoded,password){
+ const result=String(window.AppBackup.decryptBackup(encoded,password||""));
+ if(result.startsWith("PASSWORD_REQUIRED|")){
+  pendingEncryptedRestore=encoded;closeSheet($("sBackup"));$("restoreRecoveryPassword").value="";
+  $("restorePasswordStatus").textContent="Enter the recovery password for this backup.";
+  openSheet("restorePasswordSheet");return false;
+ }
+ if(!result.startsWith("OK|"))throw Error(result.replace(/^ERROR\|/,""));
+ restoreBackupText(base64ToUtf8(result.slice(3)));return true;
 }
+async function restoreLocalBackup(file){
+ if(!file){$("restoreStatus").textContent="No file selected. Choose an encrypted backup.";return;}
+ $("restoreStatus").textContent="Reading selected backup: "+file.name;
+ if(file.size>6*1024*1024){toast("Backup file too large (limit 6 MB)");return;}
+ try{
+  if(window.AppBackup){
+   const encoded=bytesToBase64(await file.arrayBuffer());
+   const header=atob(encoded.slice(0,Math.min(encoded.length,32))).trimStart();
+   if(header.startsWith("{")){
+    if(!confirm("This is an older unencrypted JSON backup. Import it once to migrate your data? New backups will be encrypted."))return;
+    restoreBackupText(await file.text());return;
+   }
+   await finishEncryptedRestore(encoded,"");return;
+  }
+  restoreBackupText(await file.text());
+ }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
+}
+
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 $("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
 $("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
 $("localBackup").onclick=downloadLocalBackup;
 $("shareBackup").onclick=shareBackupFile;
 $("copyBackup").onclick=copyBackupText;
-$("importPasted").onclick=()=>restoreBackupText($("pasteBackup").value.trim());
+if(window.AppBackup){$("copyBackup").style.display="none";$("pasteBackup").closest("label").style.display="none";$("importPasted").style.display="none";}
+$("importPasted").onclick=()=>{if(window.AppBackup){toast("Import encrypted .ptbackup files using Restore locally.");return;}restoreBackupText($("pasteBackup").value.trim());};
 // Use the actual file input as the touch target. Android WebViews sometimes block
 // a synthetic .click() on a visually hidden input.
 $("restoreFile").addEventListener("pointerdown",()=>{$("restoreStatus").textContent="Opening Android file picker… If nothing opens, use Import pasted backup.";});
@@ -808,6 +884,7 @@ window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automa
 
 render();
 syncChangelogIndicator();
+syncSecuritySettings();
 updateFabVisibility();
 </script>
 </body>
