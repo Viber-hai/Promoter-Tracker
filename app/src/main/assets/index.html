@@ -171,7 +171,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .change-entry ul{margin:0;padding-left:18px;color:var(--text);font-size:11px;line-height:1.65}
 .change-entry li{margin:5px 0}
 
-</style>
+.security-divider{height:1px;background:var(--line);margin:16px 0 10px}
+.security-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.security-setting-row div{display:flex;flex-direction:column;gap:4px}.security-setting-row b{font-size:12px;color:var(--text)}.security-setting-row small{font-size:10px;color:var(--muted);line-height:1.4}
+.security-setting-row input{width:22px;height:22px;accent-color:var(--red2)}
+.security-status{font-size:10px;line-height:1.5;color:var(--muted);margin:9px 0}
+.security-lock{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;padding:22px}
+.security-lock.show{display:flex}.security-lock-card{width:min(100%,360px);padding:26px 22px;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow);text-align:center}
+.security-lock-brand{font-size:10px;letter-spacing:2px;font-weight:900;color:var(--muted)}.security-fingerprint{width:90px;height:90px;margin:22px auto 16px;border-radius:50%;display:grid;place-items:center;background:rgba(200,16,46,.09);color:var(--red2);font-size:52px}
+.security-lock-card h2{font-size:20px;margin:8px 0}.security-lock-card p{font-size:12px;color:var(--muted);line-height:1.5}.security-lock-card button{width:100%;margin-top:10px}.security-lock-card #pinUnlockArea[hidden]{display:none}\n</style>
 </head>
 <body>
 <div class="app">
@@ -272,6 +280,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <label class="field">Handset &amp; Tablet target (AED)<input id="targetHandset" type="number" min="1" step="1" inputmode="numeric"></label>
   <label class="field">Audio &amp; Wearables target (AED)<input id="targetWearables" type="number" min="1" step="1" inputmode="numeric"></label>
   <button class="primary" id="saveTargets" type="button">Save sales targets</button>
+  <div class="security-divider"></div><h3 class="settings-section-title">App security</h3>
+  <p class="helper">Protect this tracker with your phone's fingerprint and a private six-digit backup PIN.</p>
+  <div class="security-setting-row"><div><b>Fingerprint lock</b><small>Require your enrolled fingerprint when reopening the app.</small></div><input id="fingerprintEnabled" type="checkbox" aria-label="Enable fingerprint lock"></div>
+  <label class="field">Lock after inactivity<select id="lockTimeout"><option value="0">Immediately when leaving the app</option><option value="1">1 minute</option><option value="5">5 minutes</option><option value="15">15 minutes</option></select></label>
+  <button class="secondary" id="configurePin" type="button">Set / Change backup PIN</button><p class="security-status" id="securitySettingsStatus">Fingerprint lock is off.</p>
   <button class="primary" id="clr" type="button">Clear all quantities</button>
   <button class="danger-btn" id="reset" type="button">Reset model list</button>
   <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Score is calculated using the official 60/40 category weighting and achievement caps.</p>
@@ -283,11 +296,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <p class="note">Connect Google Drive to back up or restore your tracker in the cloud. Google sign-in and Drive sync require the Android integration.</p>
   <div class="backup-row"><button class="secondary" id="driveConnect">Connect Google Drive</button><button class="secondary" id="driveRestore">Restore from Drive</button></div>
  </section>
+ <section class="backup-source" id="backupEncryptionInfo">
+  <div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div>
+  <p class="note">Manual and automatic backup files are encrypted by Promoter Tracker. They are not readable JSON files and can only be restored inside the app.</p>
+  <p class="note" id="recoveryPasswordState">Same phone: automatic restore. New phone: set a recovery password below and enter it once when restoring.</p>
+  <button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button>
+ </section>
  <section class="backup-source">
   <div class="backup-row"><h3>Local backup</h3><span class="backup-status">This device</span></div>
   <p class="note">Save a JSON backup file to this device, or restore a previously saved backup.</p>
-  <div class="backup-row"><button class="primary" id="localBackup">Back up locally</button><label class="secondary restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".json,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
-  <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a previously exported JSON file.</p>
+  <div class="backup-row"><button class="primary" id="localBackup">Back up locally</button><label class="secondary restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".ptbackup,.json,application/octet-stream,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
+  <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a Promoter Tracker .ptbackup file. Older JSON backups can still be imported for migration.</p>
   <div class="backup-row"><button class="secondary" id="shareBackup">Save / share to folder</button><button class="secondary" id="copyBackup">Copy backup text</button></div>
   <label class="field" for="pasteBackup">Or paste saved backup JSON here<textarea id="pasteBackup" rows="3" placeholder="Paste JSON backup text here"></textarea></label>
   <button class="secondary" id="importPasted">Import pasted backup</button>
@@ -310,6 +329,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <button class="primary" id="saveBackupSettings">Save backup settings</button>
  <button class="secondary" data-close>Close</button>
 </div></div>
+<div class="sheet" id="pinSetupSheet" role="dialog" aria-modal="true" aria-label="Set backup PIN"><div class="panel"><div class="grip"></div><h2>Set backup PIN</h2><p class="helper">Create a six-digit PIN. It is stored as a salted PBKDF2 hash, not as readable text.</p><label class="field">New PIN<input id="pinNew" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="6 digits"></label><label class="field">Confirm PIN<input id="pinConfirm" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Repeat PIN"></label><p class="security-status" id="pinSetupStatus"></p><button class="primary" id="savePin" type="button">Save PIN</button><button class="secondary" data-close type="button">Cancel</button></div></div>
+<div class="sheet" id="recoverySetupSheet" role="dialog" aria-modal="true" aria-label="Set recovery password"><div class="panel"><div class="grip"></div><h2>New-phone recovery password</h2><p class="helper">Used only if you restore a backup on a different phone. It is never needed for normal restoration on this phone. Keep it safe: without the original phone or this password, encrypted backups cannot be recovered.</p><label class="field">Recovery password<input id="recoveryNew" type="password" autocomplete="new-password" placeholder="At least 10 characters"></label><label class="field">Confirm recovery password<input id="recoveryConfirm" type="password" autocomplete="new-password" placeholder="Repeat password"></label><p class="security-status" id="recoverySetupStatus"></p><button class="primary" id="saveRecovery" type="button">Save recovery password</button><button class="secondary" data-close type="button">Cancel</button></div></div>
+<div class="sheet" id="restorePasswordSheet" role="dialog" aria-modal="true" aria-label="Unlock encrypted backup"><div class="panel"><div class="grip"></div><h2>Unlock encrypted backup</h2><p class="helper">This backup was created on another phone. Enter the recovery password you set when creating it.</p><label class="field">Recovery password<input id="restoreRecoveryPassword" type="password" autocomplete="current-password" placeholder="Enter recovery password"></label><p class="security-status" id="restorePasswordStatus"></p><button class="primary" id="decryptRestore" type="button">Decrypt &amp; restore</button><button class="secondary" data-close type="button">Cancel</button></div></div>
+<div class="security-lock" id="securityLock" aria-hidden="true"><div class="security-lock-card"><div class="security-lock-brand">PROMOTER TRACKER</div><div class="security-fingerprint">◎</div><h2>App locked</h2><p>Authenticate to open your sales tracker.</p><button class="primary" id="unlockFingerprint" type="button">Unlock with fingerprint</button><button class="secondary" id="showPinUnlock" type="button">Use backup PIN</button><div id="pinUnlockArea" hidden><label class="field">Six-digit PIN<input id="pinUnlockValue" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password"></label><button class="primary" id="unlockPin" type="button">Unlock</button></div><p class="security-status" id="lockStatus"></p></div></div>
 <div class="toast" id="toast" role="status">Saved</div>
 
 <script>
@@ -585,7 +608,7 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
-const CHANGELOG_VERSION="v10-changelog-1";
+const CHANGELOG_VERSION="v10-security-encryption-1";
 const CHANGELOG_SEEN_KEY="pt_changelog_seen_version";
 function syncChangelogIndicator(){
  const seen=localStorage.getItem(CHANGELOG_SEEN_KEY);
