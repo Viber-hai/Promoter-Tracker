@@ -406,7 +406,7 @@ function render(){
  $("models").innerHTML=rows.length?rows.map(m=>`
   <article class="model ${m.q>0?"sold":""} ${expandedId===m.id?"open":""}" data-index="${m.index}">
    <button class="model-main" type="button" data-action="toggle" aria-expanded="${expandedId===m.id}">
-    <div class="model-top"><div class="modelname" title="${escapeHTML(m.n)}">${escapeHTML(m.n)}</div><span class="drag-handle" aria-hidden="true">⠿</span></div>
+    <div class="model-top"><div class="modelname" title="${escapeHTML(m.n)}">${escapeHTML(m.n)}</div></div>
     <div class="meta">RRP ${fmt(m.r)} · Incentive ${fmt(m.u)} / unit</div>
     <div class="detailtext">${m.q?`Sales ${fmt(m.r*m.q)} · Units sold ${m.q}`:"No sales recorded yet"}</div>
    </button>
@@ -460,55 +460,61 @@ document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventList
  updateIncentiveVisibility();
 }));
 
-let pressTimer=null,pressCard=null,pressPointer=null,reorderFrom=null,reorderActive=false;
+
+let holdTimer=null,holdCard=null,holdFrom=null,reorderActive=false,lastHoverCard=null,suppressModelClick=false;
 function moveModelTo(fromIndex,toIndex){
- if(fromIndex===null||toIndex===null||fromIndex===toIndex)return;
+ if(fromIndex===null||toIndex===null||fromIndex===toIndex)return false;
  const from=data[fromIndex],to=data[toIndex];
- if(!from||!to||from.g!==to.g)return;
+ if(!from||!to||from.g!==to.g)return false;
  const [moved]=data.splice(fromIndex,1);
  data.splice(toIndex,0,moved);
- saveData();render();toast("Model order saved");
+ saveData();render();toast("Model order saved");return true;
 }
-function clearPress(){
- if(pressTimer!==null){clearTimeout(pressTimer);pressTimer=null;}
+function clearHold(){if(holdTimer!==null){clearTimeout(holdTimer);holdTimer=null;}}
+function clearReorderVisuals(){document.querySelectorAll(".model").forEach(card=>card.classList.remove("dragging","drag-over"));lastHoverCard=null;}
+function beginHold(card,event){
+ clearHold();holdCard=card;holdFrom=Number(card.dataset.index);reorderActive=false;
+ const pt=event?.touches?.[0]||event;card._holdStart=pt?{x:pt.clientX,y:pt.clientY}:null;
+ holdTimer=setTimeout(()=>{if(!holdCard)return;reorderActive=true;holdCard.classList.add("dragging");if(navigator.vibrate)navigator.vibrate(20);},500);
 }
-$("models").addEventListener("pointerdown",e=>{
+function updateDropTarget(x,y){
+ const under=document.elementFromPoint(x,y)?.closest(".model");
+ document.querySelectorAll(".model.drag-over").forEach(card=>card.classList.remove("drag-over"));
+ if(under&&under!==holdCard&&under.dataset.index!==undefined&&data[Number(under.dataset.index)]?.g===data[holdFrom]?.g){under.classList.add("drag-over");lastHoverCard=under;}else lastHoverCard=null;
+}
+function finishHold(){
+ clearHold();const from=holdFrom,to=lastHoverCard?Number(lastHoverCard.dataset.index):null,wasActive=reorderActive;
+ if(holdCard)holdCard.classList.remove("dragging");clearReorderVisuals();holdCard=null;holdFrom=null;reorderActive=false;
+ if(wasActive&&to!==null){suppressModelClick=true;moveModelTo(from,to);setTimeout(()=>{suppressModelClick=false;},350);}
+}
+$("models").addEventListener("mousedown",e=>{
  const card=e.target.closest(".model");
- if(!card||e.target.closest("button,input,select"))return;
- clearPress();pressCard=card;pressPointer=e.pointerId;reorderActive=false;
- pressTimer=setTimeout(()=>{
-  if(!pressCard||pressPointer!==e.pointerId)return;
-  reorderActive=true;reorderFrom=Number(pressCard.dataset.index);
-  pressCard.classList.add("reorder-armed","dragging");
-  if(navigator.vibrate)navigator.vibrate(25);
- },550);
+ if(!card||e.target.closest(".stepper,input,select,[data-action='delete']"))return;
+ beginHold(card,e);
 });
-$("models").addEventListener("pointermove",e=>{
- if(!pressCard||e.pointerId!==pressPointer)return;
- if(!reorderActive){
-  if(Math.abs(e.movementX)+Math.abs(e.movementY)>12)clearPress();
-  return;
- }
- const under=document.elementFromPoint(e.clientX,e.clientY)?.closest(".model");
- document.querySelectorAll(".model.drag-over").forEach(x=>x.classList.remove("drag-over"));
- if(under&&under!==pressCard&&under.dataset.index!==undefined&&data[Number(under.dataset.index)]?.g===data[reorderFrom]?.g)under.classList.add("drag-over");
+document.addEventListener("mousemove",e=>{
+ if(!holdCard)return;
+ if(!reorderActive){if(holdCard._holdStart&&(Math.abs(e.clientX-holdCard._holdStart.x)+Math.abs(e.clientY-holdCard._holdStart.y)>12))clearHold();return;}
+ updateDropTarget(e.clientX,e.clientY);
 });
-$("models").addEventListener("pointerup",e=>{
- if(!pressCard||e.pointerId!==pressPointer)return;
- clearPress();
- const from=reorderFrom,under=document.querySelector(".model.drag-over");
- const to=under?Number(under.dataset.index):null;
- document.querySelectorAll(".model").forEach(x=>x.classList.remove("reorder-armed","dragging","drag-over"));
- pressCard=null;pressPointer=null;reorderFrom=null;
- const wasReordering=reorderActive;reorderActive=false;
- if(wasReordering&&to!==null)moveModelTo(from,to);
-});
-$("models").addEventListener("pointercancel",()=>{
- clearPress();document.querySelectorAll(".model").forEach(x=>x.classList.remove("reorder-armed","dragging","drag-over"));
- pressCard=null;pressPointer=null;reorderFrom=null;reorderActive=false;
-});
+document.addEventListener("mouseup",()=>{if(holdCard)finishHold();});
+$("models").addEventListener("touchstart",e=>{
+ const card=e.target.closest(".model");
+ if(!card||e.target.closest(".stepper,input,select,[data-action='delete']"))return;
+ beginHold(card,e);
+},{passive:true});
+$("models").addEventListener("touchmove",e=>{
+ if(!holdCard)return;const touch=e.touches[0];if(!touch)return;
+ if(!reorderActive){if(holdCard._holdStart&&(Math.abs(touch.clientX-holdCard._holdStart.x)+Math.abs(touch.clientY-holdCard._holdStart.y)>12))clearHold();return;}
+ e.preventDefault();updateDropTarget(touch.clientX,touch.clientY);
+},{passive:false});
+$("models").addEventListener("touchend",()=>{if(holdCard)finishHold();},{passive:true});
+$("models").addEventListener("touchcancel",()=>{
+ clearHold();if(holdCard)holdCard.classList.remove("dragging");clearReorderVisuals();holdCard=null;holdFrom=null;reorderActive=false;
+},{passive:true});
 
 $("models").addEventListener("click",e=>{
+ if(suppressModelClick){e.preventDefault();e.stopPropagation();return;}
  const card=e.target.closest(".model");if(!card)return;
  const index=Number(card.dataset.index),m=data[index],action=e.target.closest("[data-action]")?.dataset.action;
  if(action==="step"){
