@@ -649,7 +649,8 @@ function syncSecuritySettings(){
  $("securitySettingsStatus").textContent=AppBackup.isSecurityEnabled()?"Fingerprint lock is enabled. A backup PIN is configured.":"Fingerprint lock is off.";
  $("recoveryPasswordState").textContent=AppBackup.hasRecoveryPassword()?"New-phone recovery password is configured. Same-phone restores need no password.":"No new-phone recovery password set. Same-phone restores work; set a recovery password before creating a backup you may move to another phone.";
 }
-$("pinSetupSheet").querySelector("[data-close]").addEventListener("click",()=>{pendingEnableFingerprint=false;});\n$("configurePin").addEventListener("click",()=>{$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="";openSheet("pinSetupSheet");});
+$("pinSetupSheet").querySelector("[data-close]").addEventListener("click",()=>{pendingEnableFingerprint=false;});
+$("configurePin").addEventListener("click",()=>{$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="";openSheet("pinSetupSheet");});
 $("savePin").addEventListener("click",()=>{
  const pin=$("pinNew").value,confirmPin=$("pinConfirm").value;
  if(!/^[0-9]{6}$/.test(pin)){$("pinSetupStatus").textContent="Enter exactly six digits.";return;}
