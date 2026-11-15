@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType("*/*");
-                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/octet-stream","application/x-promoter-tracker-backup"});
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/octet-stream","application/x-promoter-tracker-backup","application/json","text/plain"});
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     startActivityForResult(intent, FILE_CHOOSER_REQUEST);
                     return true;
