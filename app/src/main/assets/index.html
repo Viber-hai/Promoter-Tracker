@@ -261,9 +261,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <h2>What’s new</h2>
   <p class="helper">Updates in this version of Promoter Tracker.</p>
   <div class="change-entry"><div class="change-version">Latest update</div><ul>
-   <li>Rearrange products by pressing and holding a product card, then moving it to a new position.</li>
-   <li>Incentive calculation now uses the full entered per-unit incentive below 80% achievement, then switches to the official weighted formula at 80%.</li>
-   <li>Backup &amp; Restore text is clearer in both light and dark themes.</li>
+   <li>Fingerprint app lock with a six-digit backup PIN and automatic locking after inactivity.</li>
+   <li>Manual and scheduled backups are encrypted with AES-256-GCM; same-phone restore uses Android Keystore automatically.</li>
+   <li>Optional recovery password lets you restore encrypted backups on a new phone.</li>
+   <li>Product reordering, the 80% incentive threshold, and editable sales targets are retained.</li>
   </ul></div>
   <div class="change-entry"><div class="change-version">Earlier improvements</div><ul>
    <li>Editable monthly targets in Settings.</li>
@@ -304,7 +305,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  </section>
  <section class="backup-source">
   <div class="backup-row"><h3>Local backup</h3><span class="backup-status">This device</span></div>
-  <p class="note">Save a JSON backup file to this device, or restore a previously saved backup.</p>
+  <p class="note">Save an encrypted .ptbackup file to this device, or restore a previously saved backup.</p>
   <div class="backup-row"><button class="primary" id="localBackup">Back up locally</button><label class="secondary restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".ptbackup,.json,application/octet-stream,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
   <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a Promoter Tracker .ptbackup file. Older JSON backups can still be imported for migration.</p>
   <div class="backup-row"><button class="secondary" id="shareBackup">Save / share to folder</button><button class="secondary" id="copyBackup">Copy backup text</button></div>
