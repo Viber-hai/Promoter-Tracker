@@ -10,8 +10,9 @@ import androidx.work.PeriodicWorkRequest;
 import java.util.concurrent.TimeUnit;
 
 final class BackupScheduler {
-    private static final String PERIODIC_NAME = "promoter-tracker-local-auto-backup-v2";
+    private static final String PERIODIC_NAME = "promoter-tracker-auto-backup-v3";
     private static final String LEGACY_NAME = "promoter-tracker-local-auto-backup";
+    private static final String PREVIOUS_NAME = "promoter-tracker-local-auto-backup-v2";
 
     private BackupScheduler() {}
 
@@ -34,23 +35,29 @@ final class BackupScheduler {
 
     static void ensureScheduled(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
-        WorkManager manager = WorkManager.getInstance(context);
-        // Remove the earlier schedule once, so an old immediate/near-term run cannot remain active.
-        manager.cancelUniqueWork(LEGACY_NAME);
-        if (!prefs.getBoolean(BackupWorker.KEY_ENABLED, false) && !prefs.getBoolean("drive_auto_enabled", false)) return;
-
-        String frequency = prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly");
-        manager.enqueueUniquePeriodicWork(
-                PERIODIC_NAME, ExistingPeriodicWorkPolicy.KEEP, buildRequest(frequency));
+        // Migration safety: if an older installation had both destinations enabled,
+        // preserve local backups and turn off Drive rather than running both.
+        if (prefs.getBoolean(BackupWorker.KEY_ENABLED, false)
+                && prefs.getBoolean("drive_auto_enabled", false)) {
+            prefs.edit().putBoolean("drive_auto_enabled", false).commit();
+        }
+        configure(context);
     }
 
-    static void configure(Context context, boolean enabled, String frequency) {
+    static void configure(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
         WorkManager manager = WorkManager.getInstance(context);
         manager.cancelUniqueWork(LEGACY_NAME);
+        manager.cancelUniqueWork(PREVIOUS_NAME);
         manager.cancelUniqueWork(PERIODIC_NAME);
-        if (!enabled) return;
 
-        // No one-time work is queued. The first periodic backup is delayed by the chosen interval.
+        boolean localEnabled = prefs.getBoolean(BackupWorker.KEY_ENABLED, false);
+        boolean driveEnabled = prefs.getBoolean("drive_auto_enabled", false) && !localEnabled;
+        if (!localEnabled && !driveEnabled) return;
+
+        String frequency = localEnabled
+                ? prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly")
+                : prefs.getString("drive_frequency", "weekly");
         manager.enqueueUniquePeriodicWork(
                 PERIODIC_NAME, ExistingPeriodicWorkPolicy.KEEP, buildRequest(frequency));
     }
