@@ -141,6 +141,35 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 }
 
 /* Native Android backup controls retained inside the approved V10 panels. */
+/* Backup sheet: responsive destination accordions. */
+#sBackup{overflow-x:hidden;padding:10px;align-items:flex-end}
+#sBackup .backup-panel{width:min(100%,510px);max-width:100%;min-width:0;max-height:88vh;max-height:88dvh;overflow-x:hidden;overscroll-behavior:contain}
+#sBackup .backup-panel>*{min-width:0;max-width:100%}
+#sBackup .backup-source,#sBackup .backup-accordion{min-width:0;max-width:100%;overflow:hidden}
+.backup-intro{font-size:10px}
+.backup-destination-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.backup-destination-row label{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:10px 5px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:10px;font-weight:800}
+.backup-destination-row input{width:16px;height:16px;accent-color:var(--red2);flex:none}
+.backup-accordion{border:1px solid var(--line);border-radius:16px;background:var(--surface);margin:10px 0}
+.backup-accordion summary{display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;cursor:pointer;padding:14px;min-width:0}
+.backup-accordion summary::-webkit-details-marker{display:none}
+.backup-accordion summary span:first-child{display:grid;gap:4px;min-width:0}
+.backup-accordion summary b{font-size:12px}
+.backup-accordion summary small{font-size:9px;line-height:1.4;color:var(--muted);font-weight:500}
+.accordion-chevron{font-size:20px;color:var(--red2);transition:transform .15s}
+.backup-accordion[open] .accordion-chevron{transform:rotate(180deg)}
+.accordion-content{padding:0 12px 12px;display:grid;gap:8px;min-width:0}
+.accordion-content .field{min-width:0;width:100%;margin:0}
+.accordion-content select{width:100%;min-width:0;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--field);padding:0 10px;color:var(--ink)}
+.backup-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.backup-actions>*{width:100%;min-width:0;margin:0}
+#sBackup .backup-row{flex-wrap:wrap;align-items:center}
+#sBackup .backup-row>*{min-width:0;max-width:100%}
+#sBackup .backup-row .field{flex:1 1 100%}
+#sBackup .backup-status,#sBackup .note{overflow-wrap:anywhere}
+#sBackup .restore-trigger{min-height:43px;padding:0 8px}
+@media(max-width:380px){.backup-destination-row label{font-size:9px;gap:3px;padding:9px 3px}.backup-actions{grid-template-columns:1fr}}
+
 .backup-source{padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);display:grid;gap:8px;margin:10px 0}
 .backup-source h3{font-size:11px;margin:0;color:var(--ink)}
 .backup-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
@@ -260,7 +289,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <div class="grip"></div>
   <h2>What’s new</h2>
   <p class="helper">Updates in this version of Promoter Tracker.</p>
-  <div class="change-entry"><div class="change-version">Google Drive backups</div><ul><li>Connect your Google account to keep encrypted backups in Drive.</li><li>Save a backup to Drive whenever you want, or restore a previous backup.</li><li>Use the same automatic backup schedule for local and Google Drive backups.</li><li>Choose whether to enable local backups, Drive backups, or both.</li></ul></div>
+  <div class="change-entry"><div class="change-version">Google Drive backups</div><ul><li>Connect your Google account to keep encrypted backups in Drive.</li><li>Save a backup to Drive whenever you want, or restore a previous backup.</li><li>Choose Local or Google Drive as the single automatic backup destination.</li><li>Set separate schedules and storage options for each destination.</li></ul></div>
   <div class="change-entry"><div class="change-version">Incentive privacy</div><ul>
    <li>Incentives stay blurred until you choose to reveal them.</li>
    <li>Unlock incentive amounts securely with your fingerprint.</li>
@@ -311,51 +340,24 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Score is calculated using the official 60/40 category weighting and achievement caps.</p>
   <button class="secondary" data-close type="button">Close</button>
  </div></div>
- <div class="sheet" id="sBackup"><div class="panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
- <section class="backup-source">
-  <div class="backup-row"><h3>Google Drive</h3><span class="backup-status">Cloud backup</span></div>
-  <p class="note">Save private, encrypted backups to your Google account. Only Promoter Tracker can see these files in its private Drive app storage.</p>
-  <p class="note" id="driveAccountStatus">Not connected</p>
-  <div class="backup-row"><button class="secondary" id="driveConnect">Connect Google Drive</button><button class="secondary" id="driveManualBackup">Back up to Drive</button></div>
-  <div class="backup-row"><button class="secondary" id="driveRestore">Find Drive backups</button><button class="secondary" id="driveDisconnect">Disconnect</button></div>
-  <label class="field">Available encrypted backups<select id="driveBackupList"><option value="">Connect and select Find Drive backups</option></select></label>
-  <button class="secondary" id="driveRestoreSelected">Restore selected Drive backup</button>
-  <div class="backup-row"><label class="field" for="driveAutoBackup">Include Google Drive in automatic backups</label><input id="driveAutoBackup" type="checkbox" aria-label="Enable automatic Google Drive backups" style="width:22px;min-height:22px"></div>
-  <p class="note">Google Drive and local automatic backups use the same frequency selected below. Background backups need an internet connection and may be delayed by Android.</p>
-  <p class="backup-status" id="driveBackupStatus">No Google Drive backup yet</p>
- </section>
- <section class="backup-source" id="backupEncryptionInfo">
-  <div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div>
-  <p class="note">Manual and automatic backup files are encrypted by Promoter Tracker. They are not readable JSON files and can only be restored inside the app.</p>
-  <p class="note" id="recoveryPasswordState">Same phone: automatic restore. For new-phone restore, set a recovery password before creating a backup. Existing backups are not changed.</p>
-  <button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button>
- </section>
- <section class="backup-source">
-  <div class="backup-row"><h3>Local backup</h3><span class="backup-status">This device</span></div>
-  <p class="note">Save an encrypted .ptbackup file to this device, or restore a previously saved backup.</p>
-  <div class="backup-row"><button class="primary" id="localBackup">Back up locally</button><label class="secondary restore-trigger" for="restoreFile"><span>Restore locally</span><input id="restoreFile" type="file" accept=".ptbackup,.json,application/octet-stream,application/json,text/plain" aria-label="Choose local JSON backup to restore"></label></div>
-  <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">To restore, select a Promoter Tracker .ptbackup file. Older JSON backups can still be imported for migration.</p>
-  <div class="backup-row"><button class="secondary" id="shareBackup">Save / share to folder</button><button class="secondary" id="copyBackup">Copy backup text</button></div>
-  <label class="field" for="pasteBackup">Or paste saved backup JSON here<textarea id="pasteBackup" rows="3" placeholder="Paste JSON backup text here"></textarea></label>
-  <button class="secondary" id="importPasted">Import pasted backup</button>
- </section>
- <section class="backup-source">
-  <h3>Automatic local backup</h3>
-  <div class="backup-select"><label class="field" for="backupFrequency">Backup frequency</label>
-   <select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select>
-  </div>
-  <div class="backup-row"><label class="field" for="autoBackup">Enable automatic local backup</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
-  <div class="backup-row"><span class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</span><button class="secondary" id="chooseAutomaticFolder">Change folder</button></div>
-  <p class="note">The first scheduled backup is due after the selected interval. Android may delay background work for battery management.</p>
- </section>
- <section class="backup-source">
-  <h3>Manual local backup</h3>
-  <p class="note">Manual backups run only when you press Back up locally.</p>
-  <div class="backup-row"><span class="note" id="manualFolder">Downloads / Promoter Tracker / Manual Backups</span><button class="secondary" id="chooseManualFolder">Change folder</button></div>
- </section>
- <p class="backup-status" id="backupStatus">Last backup: Not yet created</p>
- <button class="primary" id="saveBackupSettings">Save backup settings</button>
- <button class="secondary" data-close>Close</button>
+ <div class="sheet" id="sBackup" role="dialog" aria-modal="true" aria-label="Backup and Restore"><div class="panel backup-panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
+ <p class="note backup-intro">Choose where automatic backups are saved. Only one automatic destination can be active at a time. Manual backups remain available for both destinations.</p>
+ <section class="backup-source"><h3>Automatic backup destination</h3><div class="backup-destination-row">
+ <label><input type="radio" name="backupDestination" id="destinationOff" value="off"> Off</label><label><input type="radio" name="backupDestination" id="destinationLocal" value="local"> Local</label><label><input type="radio" name="backupDestination" id="destinationDrive" value="drive"> Google Drive</label></div><p class="note">Select one destination. Its own frequency and settings will be used.</p></section>
+ <details class="backup-accordion" id="localBackupSettings"><summary><span><b>Local backup</b><small>Save encrypted files on this device or a folder you choose</small></span><span class="accordion-chevron">⌄</span></summary><div class="accordion-content">
+ <label class="field">Automatic frequency<select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select></label>
+ <div class="backup-row"><span class="note">Automatic backup folder</span><button class="secondary" id="chooseAutomaticFolder" type="button">Choose folder</button></div><p class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</p>
+ <div class="backup-row"><span class="note">Manual backup folder</span><button class="secondary" id="chooseManualFolder" type="button">Choose folder</button></div><p class="note" id="manualFolder">Downloads / Promoter Tracker / Manual Backups</p>
+ <div class="backup-actions"><button class="primary" id="localBackup" type="button">Back up locally now</button><label class="secondary restore-trigger" for="restoreFile"><span>Restore local backup</span><input id="restoreFile" type="file" accept=".ptbackup,.json,application/octet-stream,application/json,text/plain" aria-label="Choose local backup to restore"></label></div>
+ <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">Choose an encrypted .ptbackup file. Older JSON backups can still be imported.</p><p class="note">Files are saved in Downloads / Promoter Tracker by default, unless you choose another folder. Android may delay scheduled work.</p></div></details>
+ <details class="backup-accordion" id="driveBackupSettings"><summary><span><b>Google Drive</b><small>Private encrypted cloud backups in your Google account</small></span><span class="accordion-chevron">⌄</span></summary><div class="accordion-content">
+ <p class="note" id="driveAccountStatus">Not connected</p><div class="backup-actions"><button class="secondary" id="driveConnect" type="button">Connect Google Drive</button><button class="secondary" id="driveDisconnect" type="button">Disconnect</button></div>
+ <label class="field">Automatic frequency<select id="driveBackupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select></label>
+ <button class="primary" id="driveManualBackup" type="button">Back up to Drive now</button><button class="secondary" id="driveRestore" type="button">Find Drive backups</button>
+ <label class="field">Available encrypted backups<select id="driveBackupList"><option value="">Connect and find backups</option></select></label><button class="secondary" id="driveRestoreSelected" type="button">Restore selected Drive backup</button>
+ <p class="note">Google Drive backups are stored in Promoter Tracker's private app-data area. They do not appear in your normal Drive folders. Internet access is required.</p><p class="backup-status" id="driveBackupStatus">No Google Drive backup yet</p></div></details>
+ <section class="backup-source" id="backupEncryptionInfo"><div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div><p class="note">Backup files are encrypted by Promoter Tracker and can only be restored inside the app.</p><p class="note" id="recoveryPasswordState">Same-phone restore uses this device's secure key. For a new phone, set a recovery password before creating a backup.</p><button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button></section>
+ <p class="backup-status" id="backupStatus">Last backup: Not yet created</p><button class="primary" id="saveBackupSettings" type="button">Save backup settings</button><button class="secondary" data-close type="button">Close</button>
 </div></div>
 <div class="sheet" id="pinSetupSheet" role="dialog" aria-modal="true" aria-label="Set backup PIN"><div class="panel"><div class="grip"></div><h2>Set backup PIN</h2><p class="helper">Create a six-digit PIN. It is stored as a salted PBKDF2 hash, not as readable text.</p><label class="field">New PIN<input id="pinNew" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="6 digits"></label><label class="field">Confirm PIN<input id="pinConfirm" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Repeat PIN"></label><p class="security-status" id="pinSetupStatus"></p><button class="primary" id="savePin" type="button">Save PIN</button><button class="secondary" data-close type="button">Cancel</button></div></div>
 <div class="sheet" id="recoverySetupSheet" role="dialog" aria-modal="true" aria-label="Set recovery password"><div class="panel"><div class="grip"></div><h2>New-phone recovery password</h2><p class="helper">Used only if you restore a backup on a different phone. It is never needed for normal restoration on this phone. Keep it safe: without the original phone or this password, encrypted backups cannot be recovered.</p><label class="field">Recovery password<input id="recoveryNew" type="password" autocomplete="new-password" placeholder="At least 10 characters"></label><label class="field">Confirm recovery password<input id="recoveryConfirm" type="password" autocomplete="new-password" placeholder="Repeat password"></label><p class="security-status" id="recoverySetupStatus"></p><button class="primary" id="saveRecovery" type="button">Save recovery password</button><button class="secondary" data-close type="button">Cancel</button></div></div>
