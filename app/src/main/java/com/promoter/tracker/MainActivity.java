@@ -1,6 +1,6 @@
 package com.promoter.tracker;
 
-import android.app.Activity;
+import androidx.fragment.app.FragmentActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -25,7 +25,7 @@ import org.json.JSONObject;
 
 import java.util.concurrent.Executor;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int AUTO_FOLDER_REQUEST = 1002;
     private static final int MANUAL_FOLDER_REQUEST = 1003;
