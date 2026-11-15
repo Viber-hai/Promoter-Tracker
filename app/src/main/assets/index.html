@@ -161,13 +161,23 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .model.dragging{opacity:.48;outline:1px dashed var(--red2)}
 .model.drag-over{border-color:var(--red2);box-shadow:0 0 0 2px rgba(200,16,46,.12)}
 
+/* Version update indicator and changelog panel */
+.menu-with-update{position:relative}
+.update-dot{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:#d71935;border:2px solid var(--surface);box-shadow:0 0 0 1px rgba(215,25,53,.18);display:none}
+.update-dot.visible{display:block}
+.new-pill{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;padding:2px 6px;border-radius:99px;background:#d71935;color:#fff;font-size:8px;font-weight:850;letter-spacing:.4px}
+.change-entry{padding:12px 0;border-top:1px solid var(--line)}
+.change-version{font-size:11px;font-weight:850;color:var(--red2);margin-bottom:7px}
+.change-entry ul{margin:0;padding-left:18px;color:var(--text);font-size:11px;line-height:1.65}
+.change-entry li{margin:5px 0}
+
 </style>
 </head>
 <body>
 <div class="app">
  <header class="top">
   <div class="brand"><div class="mark" role="img" aria-label="Huawei logo"><svg viewBox="0 0 48 48" aria-hidden="true"><g fill="#C8102E"><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(45 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(90 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(135 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(180 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(225 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(270 24 24)"/><path d="M24 22 C20.5 18.7 18.4 12 24 3 C29.6 12 27.5 18.7 24 22Z" transform="rotate(315 24 24)"/></g></svg></div><div><b>Promoter Tracker</b><small>SALES & PERFORMANCE TRACKER</small></div></div>
-  <button class="icon" id="menu" type="button" aria-label="Open quick actions" aria-haspopup="dialog">⋯</button>
+  <button class="icon menu-with-update" id="menu" type="button" aria-label="Open quick actions" aria-haspopup="dialog">⋯<span class="update-dot" id="changelogDot" aria-hidden="true"></span></button>
  </header>
 
  <section class="hero glass">
@@ -233,9 +243,29 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 <div class="sheet" id="menuSheet" role="dialog" aria-modal="true" aria-label="Quick actions"><div class="panel"><div class="grip"></div><h2>Quick actions</h2>
   <button class="secondary" id="openOptions" type="button">Settings</button>
+  <button class="secondary" id="openChangelog" type="button">What’s new <span class="new-pill" id="newPill">NEW</span></button>
   <button class="secondary" id="openBackup" type="button">Backup &amp; Restore</button>
   <button class="secondary" data-close type="button">Close</button>
  </div></div>
+ <div class="sheet" id="changelogSheet" role="dialog" aria-modal="true" aria-label="What’s new">
+ <div class="panel">
+  <div class="grip"></div>
+  <h2>What’s new</h2>
+  <p class="helper">Updates in this version of Promoter Tracker.</p>
+  <div class="change-entry"><div class="change-version">Latest update</div><ul>
+   <li>Rearrange products by pressing and holding a product card, then moving it to a new position.</li>
+   <li>Incentive calculation now uses the full entered per-unit incentive below 80% achievement, then switches to the official weighted formula at 80%.</li>
+   <li>Backup &amp; Restore text is clearer in both light and dark themes.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">Earlier improvements</div><ul>
+   <li>Editable monthly targets in Settings.</li>
+   <li>Model management moved out of the main product list.</li>
+   <li>Automatic and manual backup, restore, and backup location settings.</li>
+  </ul></div>
+  <button class="primary" id="closeChangelog" type="button">Got it</button>
+ </div>
+</div>
+
  <div class="sheet" id="optionsSheet" role="dialog" aria-modal="true" aria-label="Settings"><div class="panel"><div class="grip"></div><h2>Settings</h2>
   <h3 class="settings-section-title">Sales targets</h3>
   <p class="helper">Update the monthly sales targets used for category progress and the overall performance score.</p>
@@ -555,6 +585,23 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
+const CHANGELOG_VERSION="v10-changelog-1";
+const CHANGELOG_SEEN_KEY="pt_changelog_seen_version";
+function syncChangelogIndicator(){
+ const seen=localStorage.getItem(CHANGELOG_SEEN_KEY);
+ $("changelogDot")?.classList.toggle("visible",seen!==CHANGELOG_VERSION);
+ $("newPill")?.classList.toggle("visible",seen!==CHANGELOG_VERSION);
+}
+function openChangelog(){
+ localStorage.setItem(CHANGELOG_SEEN_KEY,CHANGELOG_VERSION);
+ syncChangelogIndicator();
+ closeSheet($("menuSheet"));
+ openSheet("changelogSheet");
+}
+$("openChangelog").addEventListener("click",openChangelog);
+$("closeChangelog").addEventListener("click",()=>closeSheet($("changelogSheet")));
+$("changelogDot").addEventListener("click",openChangelog);
+
 $("openOptions").addEventListener("click",()=>{closeSheet($("menuSheet"));$("targetHandset").value=String(TARGETS.m);$("targetWearables").value=String(TARGETS.w);openSheet("optionsSheet");});
 document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeSheet(b.closest(".sheet"))));
 document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheet(s);}));
@@ -737,6 +784,7 @@ window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automa
 
 
 render();
+syncChangelogIndicator();
 updateFabVisibility();
 </script>
 </body>
