@@ -32,7 +32,7 @@ public class BackupWorker extends Worker {
         Context context = getApplicationContext();
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         boolean localEnabled = prefs.getBoolean(KEY_ENABLED, false);
-        boolean driveEnabled = prefs.getBoolean("drive_auto_enabled", false);
+        // Defensive exclusivity: local takes priority if legacy preferences ever contain both flags.\n        boolean driveEnabled = prefs.getBoolean("drive_auto_enabled", false) && !localEnabled;
         if (!localEnabled && !driveEnabled) return Result.success();
 
         File encryptedSnapshot = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.enc");
