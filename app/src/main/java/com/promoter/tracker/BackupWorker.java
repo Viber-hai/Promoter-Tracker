@@ -8,6 +8,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,19 +33,32 @@ public class BackupWorker extends Worker {
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         if (!prefs.getBoolean(KEY_ENABLED, false)) return Result.success();
 
-        File snapshot = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.json");
-        if (!snapshot.isFile()) return Result.retry();
-
+        File encryptedSnapshot = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.enc");
+        File legacySnapshot = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.json");
         try {
-            String json = new String(Files.readAllBytes(snapshot.toPath()), StandardCharsets.UTF_8);
+            String json;
+            if (encryptedSnapshot.isFile()) {
+                json = BackupCrypto.decryptLocal(context, Files.readAllBytes(encryptedSnapshot.toPath()));
+            } else if (legacySnapshot.isFile()) {
+                // One-time migration of an older app-private plaintext snapshot.
+                json = new String(Files.readAllBytes(legacySnapshot.toPath()), StandardCharsets.UTF_8);
+                byte[] encrypted = BackupCrypto.encryptLocal(context, json);
+                try (FileOutputStream out = new FileOutputStream(encryptedSnapshot)) {
+                    out.write(encrypted); out.getFD().sync();
+                }
+                if (!legacySnapshot.delete()) legacySnapshot.deleteOnExit();
+            } else {
+                return Result.retry();
+            }
+
             String path = BackupStorage.writeBackup(context, json, "automatic");
             String stamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
             prefs.edit().putString(KEY_LAST_BACKUP,
-                    "Automatic backup saved · " + stamp + " · " + path).apply();
+                    "Encrypted automatic backup saved · " + stamp + " · " + path).apply();
             return Result.success();
-        } catch (IOException | RuntimeException e) {
+        } catch (Exception e) {
             prefs.edit().putString(KEY_LAST_BACKUP,
-                    "Automatic backup failed: " + (e.getMessage() == null ? "Storage error" : e.getMessage())).apply();
+                    "Automatic backup failed: " + (e.getMessage() == null ? "Encryption/storage error" : e.getMessage())).apply();
             return Result.retry();
         }
     }
