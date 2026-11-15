@@ -37,7 +37,7 @@ final class BackupScheduler {
         WorkManager manager = WorkManager.getInstance(context);
         // Remove the earlier schedule once, so an old immediate/near-term run cannot remain active.
         manager.cancelUniqueWork(LEGACY_NAME);
-        if (!prefs.getBoolean(BackupWorker.KEY_ENABLED, false)) return;
+        if (!prefs.getBoolean(BackupWorker.KEY_ENABLED, false) && !prefs.getBoolean("drive_auto_enabled", false)) return;
 
         String frequency = prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly");
         manager.enqueueUniquePeriodicWork(
