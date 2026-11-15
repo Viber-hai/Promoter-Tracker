@@ -22,6 +22,13 @@ import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 
 import org.json.JSONObject;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.common.api.ApiException;
+import java.util.concurrent.Executors;
 
 import java.util.concurrent.Executor;
 
@@ -29,6 +36,7 @@ public class MainActivity extends FragmentActivity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int AUTO_FOLDER_REQUEST = 1002;
     private static final int MANUAL_FOLDER_REQUEST = 1003;
+    private static final int GOOGLE_SIGN_IN_REQUEST = 1004;
     private WebView web;
     private ValueCallback<Uri[]> filePathCallback;
     private String pendingFolderKind;
@@ -129,6 +137,50 @@ public class MainActivity extends FragmentActivity {
         runOnUiThread(() -> { if (web != null) web.evaluateJavascript(js, null); });
     }
 
+    void connectGoogleDrive() {
+        runOnUiThread(() -> {
+            GoogleSignInOptions options = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .requestScopes(new Scope(DriveBackupManager.SCOPE))
+                    .build();
+            startActivityForResult(GoogleSignIn.getClient(this, options).getSignInIntent(), GOOGLE_SIGN_IN_REQUEST);
+        });
+    }
+
+    void disconnectGoogleDrive() {
+        runOnUiThread(() -> {
+            GoogleSignInOptions options = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail().requestScopes(new Scope(DriveBackupManager.SCOPE)).build();
+            GoogleSignIn.getClient(this, options).signOut().addOnCompleteListener(task ->
+                    sendDriveEvent("connection", "Disconnected", null));
+        });
+    }
+
+    void runDriveTask(String action, String value) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                if (!DriveBackupManager.connected(this)) throw new Exception("Connect Google Drive first.");
+                if ("backup".equals(action)) {
+                    String name = DriveBackupManager.upload(this, value, "manual");
+                    sendDriveEvent("backup", "Saved to Google Drive: " + name, null);
+                } else if ("list".equals(action)) {
+                    sendDriveEvent("list", "OK", DriveBackupManager.list(this).toString());
+                } else if ("download".equals(action)) {
+                    sendDriveEvent("download", "OK", DriveBackupManager.downloadEncoded(this, value));
+                }
+            } catch (Exception e) {
+                sendDriveEvent(action, "ERROR: " + (e.getMessage() == null ? "Google Drive request failed." : e.getMessage()), null);
+            }
+        });
+    }
+
+    private void sendDriveEvent(String action, String status, String data) {
+        String js = "window.onNativeDriveResult && window.onNativeDriveResult(" +
+                JSONObject.quote(action) + "," + JSONObject.quote(status) + "," +
+                (data == null ? "null" : JSONObject.quote(data)) + ");";
+        runOnUiThread(() -> { if (web != null) web.evaluateJavascript(js, null); });
+    }
+
     public void launchBackupFolderPicker(String kind) {
         pendingFolderKind = kind;
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
@@ -138,6 +190,15 @@ public class MainActivity extends FragmentActivity {
 
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
+        if (requestCode == GOOGLE_SIGN_IN_REQUEST) {
+            try {
+                GoogleSignInAccount account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException.class);
+                sendDriveEvent("connection", "Connected: " + account.getEmail(), null);
+            } catch (Exception e) {
+                sendDriveEvent("connection", "ERROR: Google sign-in failed. Check your Google Cloud Android OAuth setup. " + e.getMessage(), null);
+            }
+            return;
+        }
         if (requestCode == FILE_CHOOSER_REQUEST && filePathCallback != null) {
             Uri[] result=null;
             if(resultCode==RESULT_OK && data!=null && data.getData()!=null) result=new Uri[]{data.getData()};
