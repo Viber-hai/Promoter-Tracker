@@ -116,6 +116,16 @@ final class BackupCrypto {
         byte[] cipherText = new byte[cipherLength]; in.readFully(cipherText);
 
         byte[] master = getExistingMasterKey(context);
+        if (master != null) {
+            try {
+                String plain = new String(aesDecrypt(master, dataNonce, cipherText, BACKUP_AAD), StandardCharsets.UTF_8);
+                Arrays.fill(master, (byte) 0);
+                return plain;
+            } catch (Exception wrongDeviceKey) {
+                Arrays.fill(master, (byte) 0);
+                master = null;
+            }
+        }
         if (master == null && hasRecovery) {
             if (recoveryPassword == null || recoveryPassword.length == 0)
                 throw new RecoveryPasswordRequiredException();
