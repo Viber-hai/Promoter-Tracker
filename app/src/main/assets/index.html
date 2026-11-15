@@ -300,7 +300,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <section class="backup-source" id="backupEncryptionInfo">
   <div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div>
   <p class="note">Manual and automatic backup files are encrypted by Promoter Tracker. They are not readable JSON files and can only be restored inside the app.</p>
-  <p class="note" id="recoveryPasswordState">Same phone: automatic restore. New phone: set a recovery password below and enter it once when restoring.</p>
+  <p class="note" id="recoveryPasswordState">Same phone: automatic restore. For new-phone restore, set a recovery password before creating a backup. Existing backups are not changed.</p>
   <button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button>
  </section>
  <section class="backup-source">
@@ -647,9 +647,9 @@ function syncSecuritySettings(){
  $("fingerprintEnabled").checked=!!AppBackup.isSecurityEnabled();
  $("lockTimeout").value=String(AppBackup.getLockTimeoutMinutes());
  $("securitySettingsStatus").textContent=AppBackup.isSecurityEnabled()?"Fingerprint lock is enabled. A backup PIN is configured.":"Fingerprint lock is off.";
- $("recoveryPasswordState").textContent=AppBackup.hasRecoveryPassword()?"New-phone recovery password is configured. Same-phone restores need no password.":"No new-phone recovery password set. Same-phone restores work; another phone needs a recovery password configured before that backup is made.";
+ $("recoveryPasswordState").textContent=AppBackup.hasRecoveryPassword()?"New-phone recovery password is configured. Same-phone restores need no password.":"No new-phone recovery password set. Same-phone restores work; set a recovery password before creating a backup you may move to another phone.";
 }
-$("configurePin").addEventListener("click",()=>{$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="";openSheet("pinSetupSheet");});
+$("pinSetupSheet").querySelector("[data-close]").addEventListener("click",()=>{pendingEnableFingerprint=false;});\n$("configurePin").addEventListener("click",()=>{$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="";openSheet("pinSetupSheet");});
 $("savePin").addEventListener("click",()=>{
  const pin=$("pinNew").value,confirmPin=$("pinConfirm").value;
  if(!/^[0-9]{6}$/.test(pin)){$("pinSetupStatus").textContent="Enter exactly six digits.";return;}
