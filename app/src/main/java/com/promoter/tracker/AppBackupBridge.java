@@ -84,6 +84,59 @@ public class AppBackupBridge {
     }
 
     @JavascriptInterface
+    public boolean isDriveConnected() { return DriveBackupManager.connected(context); }
+
+    @JavascriptInterface
+    public String getDriveAccount() {
+        String email = DriveBackupManager.accountEmail(context);
+        return email == null ? "" : email;
+    }
+
+    @JavascriptInterface
+    public void connectDrive() { activity.connectGoogleDrive(); }
+
+    @JavascriptInterface
+    public void disconnectDrive() {
+        setDriveAutoBackupEnabled(false);
+        activity.disconnectGoogleDrive();
+    }
+
+    @JavascriptInterface
+    public void backupToDrive(String json) {
+        if (json == null || json.length() > 5 * 1024 * 1024) return;
+        activity.runDriveTask("backup", json);
+    }
+
+    @JavascriptInterface
+    public void listDriveBackups() { activity.runDriveTask("list", ""); }
+
+    @JavascriptInterface
+    public void downloadDriveBackup(String id) { activity.runDriveTask("download", id); }
+
+    @JavascriptInterface
+    public boolean isDriveAutoBackupEnabled() {
+        return context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE)
+                .getBoolean("drive_auto_enabled", false);
+    }
+
+    @JavascriptInterface
+    public String setDriveAutoBackupEnabled(boolean enabled) {
+        if (enabled && !DriveBackupManager.connected(context))
+            return "ERROR|Connect your Google account before enabling Drive backups.";
+        SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
+        prefs.edit().putBoolean("drive_auto_enabled", enabled).apply();
+        boolean local = prefs.getBoolean(BackupWorker.KEY_ENABLED, false);
+        BackupScheduler.configure(context, local || enabled, prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly"));
+        return "OK";
+    }
+
+    @JavascriptInterface
+    public String getLastDriveBackupStatus() {
+        return context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE)
+                .getString("last_drive_backup", "No Google Drive backup yet");
+    }
+
+    @JavascriptInterface
     public void chooseBackupFolder(String kind) {
         if (!"automatic".equals(kind) && !"manual".equals(kind)) return;
         activity.runOnUiThread(() -> activity.launchBackupFolderPicker(kind));
@@ -112,7 +165,7 @@ public class AppBackupBridge {
         boolean changed = oldEnabled != enabled || !oldFrequency.equals(safeFrequency);
         prefs.edit().putBoolean(BackupWorker.KEY_ENABLED, enabled)
                 .putString(BackupWorker.KEY_FREQUENCY, safeFrequency).apply();
-        if (changed) BackupScheduler.configure(context, enabled, safeFrequency);
+        if (changed) BackupScheduler.configure(context, enabled || isDriveAutoBackupEnabled(), safeFrequency);
         return enabled ? "OK|Automatic encrypted device backup enabled for " + safeFrequency + " schedule."
                 : "OK|Automatic device backup disabled.";
     }
