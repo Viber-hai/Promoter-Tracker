@@ -797,29 +797,39 @@ function backupPayload(){return {app:"Promoter Tracker",version:1,createdAt:new 
 function setBackupStatus(message){$("backupStatus").textContent="Last backup: "+message;}
 function loadBackupSettings(){
  try{
-  const p=JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}");
-  const native=window.AppBackup;
+  const p=readBackupSettings(),native=window.AppBackup;
+  const localEnabled=native?!!native.isAutoBackupEnabled():p.destination==="local"||!!p.enabled&&!p.driveEnabled;
+  const driveEnabled=native?!!native.isDriveAutoBackupEnabled():p.destination==="drive"||!!p.driveEnabled;
+  const destination=localEnabled?"local":driveEnabled?"drive":"off";
+  $("destinationOff").checked=destination==="off";
+  $("destinationLocal").checked=destination==="local";
+  $("destinationDrive").checked=destination==="drive";
   $("backupFrequency").value=(native&&native.getAutoBackupFrequency())||p.frequency||"weekly";
-  $("autoBackup").checked=native?!!native.isAutoBackupEnabled():!!p.enabled;
-  if(native){$("automaticFolder").textContent=native.getBackupFolderName("automatic");$("manualFolder").textContent=native.getBackupFolderName("manual");$("driveAutoBackup").checked=native.isDriveAutoBackupEnabled();refreshDriveStatus();}
+  $("driveBackupFrequency").value=(native&&native.getDriveAutoBackupFrequency&&native.getDriveAutoBackupFrequency())||p.driveFrequency||"weekly";
+  $("localBackupSettings").open=destination==="local";
+  $("driveBackupSettings").open=destination==="drive";
+  if(native){
+   $("automaticFolder").textContent=native.getBackupFolderName("automatic");
+   $("manualFolder").textContent=native.getBackupFolderName("manual");
+   refreshDriveStatus();
+  }
   const last=native&&native.getLastBackupStatus?native.getLastBackupStatus():p.lastBackup;
   if(last)setBackupStatus(last);
- }catch(e){}
+ }catch(e){console.warn("Backup settings could not be loaded",e);}
 }
 function saveBackupSettings(){
- const old=readBackupSettings(),enabled=$("autoBackup").checked,frequency=$("backupFrequency").value;
- const p={...old,frequency,enabled,driveEnabled:$("driveAutoBackup").checked};
+ const old=readBackupSettings();
+ const destination=$("destinationDrive").checked?"drive":$("destinationLocal").checked?"local":"off";
+ const frequency=$("backupFrequency").value,driveFrequency=$("driveBackupFrequency").value;
+ const p={...old,destination,frequency,driveFrequency,enabled:destination==="local",driveEnabled:destination==="drive"};
  try{
-  localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));
   if(window.AppBackup){
-   const driveResult=window.AppBackup.setDriveAutoBackupEnabled($("driveAutoBackup").checked);
-   if(String(driveResult).startsWith("ERROR|")){toast(String(driveResult).slice(6));return;}
-   const result=window.AppBackup.setAutoBackup(enabled,frequency);
-   if(String(result).startsWith("ERROR|")){toast(String(result).slice(6));return;}
-   toast((enabled||$("driveAutoBackup").checked)?"Automatic backups saved ("+frequency+"). First backup after selected interval.":"Automatic backups disabled.");
-  }else{
-   toast(enabled?"Automatic backup is available in the installed app only.":"Backup preferences saved.");
+   const result=String(window.AppBackup.configureAutoBackup(destination,frequency,driveFrequency));
+   if(result.startsWith("ERROR|")){toast(result.slice(6));return;}
   }
+  localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));
+  const label=destination==="local"?"Local":destination==="drive"?"Google Drive":"No";
+  toast(label+" automatic backup setting saved. The first scheduled backup runs after the selected interval.");
  }catch(e){toast("Could not save backup settings: "+e.message);}
 }
 function readBackupSettings(){try{return JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}")}catch(e){return {}}}
@@ -944,6 +954,11 @@ async function restoreLocalBackup(file){
  }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
 }
 
+$("destinationOff").addEventListener("change",()=>{$("localBackupSettings").open=false;$("driveBackupSettings").open=false;});
+$("destinationLocal").addEventListener("change",()=>{$("localBackupSettings").open=true;$("driveBackupSettings").open=false;});
+$("destinationDrive").addEventListener("change",()=>{$("driveBackupSettings").open=true;$("localBackupSettings").open=false;});
+$("localBackupSettings").addEventListener("toggle",()=>{if($("localBackupSettings").open)$("driveBackupSettings").open=false;});
+$("driveBackupSettings").addEventListener("toggle",()=>{if($("driveBackupSettings").open)$("localBackupSettings").open=false;});
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 function refreshDriveStatus(){
  if(!window.AppBackup){$("driveAccountStatus").textContent="Google Drive is available in the Android app.";return;}
@@ -951,7 +966,7 @@ function refreshDriveStatus(){
  $("driveAccountStatus").textContent=email?"Connected: "+email:"Not connected · Sign in to enable Drive backups.";
  $("driveConnect").textContent=email?"Switch Google account":"Connect Google Drive";
  $("driveBackupStatus").textContent=AppBackup.getLastDriveBackupStatus();
- $("driveAutoBackup").checked=AppBackup.isDriveAutoBackupEnabled();
+ $("driveBackupFrequency").value=AppBackup.getDriveAutoBackupFrequency?AppBackup.getDriveAutoBackupFrequency():$("driveBackupFrequency").value;
 }
 $("driveConnect").onclick=()=>{if(window.AppBackup)AppBackup.connectDrive();else toast("Install the Android app to connect Google Drive.");};
 $("driveDisconnect").onclick=()=>{if(!window.AppBackup)return;if(confirm("Disconnect Google Drive? Your existing backups will stay in Drive."))AppBackup.disconnectDrive();};
