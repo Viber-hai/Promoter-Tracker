@@ -45,19 +45,29 @@ final class SecurityStore {
         c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putString(PIN_SALT, Base64.encodeToString(salt, Base64.NO_WRAP))
                 .putString(PIN_HASH, Base64.encodeToString(hash, Base64.NO_WRAP))
+                .putInt("pin_failed_attempts", 0).putLong("pin_locked_until", 0L)
                 .apply();
         Arrays.fill(hash, (byte) 0);
     }
     static boolean verifyPin(Context c, String pin) {
         if (pin == null || !pin.matches("[0-9]{6}")) return false;
         SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (System.currentTimeMillis() < p.getLong("pin_locked_until", 0L)) return false;
         String saltText = p.getString(PIN_SALT, null), hashText = p.getString(PIN_HASH, null);
         if (saltText == null || hashText == null) return false;
         byte[] actual = null;
         try {
             byte[] expected = Base64.decode(hashText, Base64.NO_WRAP);
             actual = derive(pin.toCharArray(), Base64.decode(saltText, Base64.NO_WRAP));
-            return MessageDigest.isEqual(expected, actual);
+            boolean valid = MessageDigest.isEqual(expected, actual);
+            if (valid) p.edit().putInt("pin_failed_attempts", 0).putLong("pin_locked_until", 0L).apply();
+            else {
+                int failures = p.getInt("pin_failed_attempts", 0) + 1;
+                SharedPreferences.Editor edit = p.edit().putInt("pin_failed_attempts", failures);
+                if (failures >= 5) edit.putInt("pin_failed_attempts", 0).putLong("pin_locked_until", System.currentTimeMillis() + 30000L);
+                edit.apply();
+            }
+            return valid;
         } catch (Exception e) { return false; }
         finally { if (actual != null) Arrays.fill(actual, (byte) 0); }
     }
