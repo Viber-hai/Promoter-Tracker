@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -14,8 +15,15 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
-import org.json.JSONObject;
+
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
+
+import org.json.JSONObject;
+
+import java.util.concurrent.Executor;
 
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST = 1001;
@@ -24,6 +32,8 @@ public class MainActivity extends Activity {
     private WebView web;
     private ValueCallback<Uri[]> filePathCallback;
     private String pendingFolderKind;
+    private long pausedAt = 0L;
+    private boolean pageLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +58,7 @@ public class MainActivity extends Activity {
                     Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
                     intent.setType("*/*");
-                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json","text/plain","application/octet-stream"});
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/octet-stream","application/x-promoter-tracker-backup"});
                     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     startActivityForResult(intent, FILE_CHOOSER_REQUEST);
                     return true;
@@ -67,9 +77,56 @@ public class MainActivity extends Activity {
                 catch(ActivityNotFoundException e){Toast.makeText(MainActivity.this,"No app can open this link.",Toast.LENGTH_SHORT).show();}
                 return true;
             }
-            @Override public void onPageFinished(WebView view,String url){super.onPageFinished(view,url);view.evaluateJavascript("if(window.syncNativeSnapshot){window.syncNativeSnapshot();}",null);}
+            @Override public void onPageFinished(WebView view,String url){
+                super.onPageFinished(view,url);
+                pageLoaded = true;
+                view.evaluateJavascript("if(window.onNativeAppReady){window.onNativeAppReady();}else if(window.syncNativeSnapshot){window.syncNativeSnapshot();}",null);
+            }
         });
         web.loadUrl("file:///android_asset/index.html");
+    }
+
+    boolean isBiometricAvailable() {
+        return BiometricManager.from(this).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                == BiometricManager.BIOMETRIC_SUCCESS;
+    }
+
+    void authenticateBiometric() {
+        runOnUiThread(() -> {
+            if (!isBiometricAvailable()) {
+                sendBiometricResult(false, "No enrolled strong fingerprint is available.");
+                return;
+            }
+            Executor executor = ContextCompat.getMainExecutor(this);
+            BiometricPrompt prompt = new BiometricPrompt(this, executor, new BiometricPrompt.AuthenticationCallback() {
+                @Override public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
+                    super.onAuthenticationSucceeded(result);
+                    sendBiometricResult(true, "Fingerprint verified.");
+                }
+                @Override public void onAuthenticationError(int errorCode, CharSequence errString) {
+                    super.onAuthenticationError(errorCode, errString);
+                    sendBiometricResult(false, errString == null ? "Fingerprint authentication cancelled." : errString.toString());
+                }
+                @Override public void onAuthenticationFailed() {
+                    super.onAuthenticationFailed();
+                    sendBiometricResult(false, "Fingerprint not recognized. Try again or use your PIN.");
+                }
+            });
+            BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
+                    .setTitle("Unlock Promoter Tracker")
+                    .setSubtitle("Confirm your fingerprint")
+                    .setNegativeButtonText("Use PIN")
+                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                    .build();
+            prompt.authenticate(info);
+        });
+    }
+
+    private void sendBiometricResult(boolean success, String message) {
+        if (web == null) return;
+        String js = "window.onNativeBiometricResult && window.onNativeBiometricResult("
+                + success + "," + JSONObject.quote(message) + ");";
+        runOnUiThread(() -> { if (web != null) web.evaluateJavascript(js, null); });
     }
 
     public void launchBackupFolderPicker(String kind) {
@@ -101,8 +158,22 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override protected void onDestroy(){if(filePathCallback!=null){filePathCallback.onReceiveValue(null);filePathCallback=null;}if(web!=null){web.removeJavascriptInterface("AppBackup");web.stopLoading();web.destroy();web=null;}super.onDestroy();}
+    @Override protected void onDestroy(){
+        if(filePathCallback!=null){filePathCallback.onReceiveValue(null);filePathCallback=null;}
+        if(web!=null){web.removeJavascriptInterface("AppBackup");web.stopLoading();web.destroy();web=null;}
+        super.onDestroy();
+    }
     @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
-    @Override protected void onPause(){super.onPause();if(web!=null)web.onPause();}
-    @Override protected void onResume(){super.onResume();if(web!=null)web.onResume();BackupScheduler.ensureScheduled(this);}
+    @Override protected void onPause(){pausedAt=SystemClock.elapsedRealtime();super.onPause();if(web!=null)web.onPause();}
+    @Override protected void onResume(){
+        super.onResume();
+        if(web!=null)web.onResume();
+        BackupScheduler.ensureScheduled(this);
+        if(web!=null && pageLoaded && SecurityStore.isEnabled(this) && pausedAt>0){
+            long minutes=(SystemClock.elapsedRealtime()-pausedAt)/60000L;
+            int timeout=SecurityStore.getLockTimeout(this);
+            if(timeout==0 || minutes>=timeout) web.evaluateJavascript("window.lockPromoterTracker && window.lockPromoterTracker();",null);
+        }
+        pausedAt=0L;
+    }
 }
