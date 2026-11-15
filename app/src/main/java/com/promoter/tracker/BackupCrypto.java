@@ -123,6 +123,7 @@ final class BackupCrypto {
             try { master = aesDecrypt(wrappingKey, wrapNonce, wrapped, WRAP_AAD); }
             finally { Arrays.fill(wrappingKey, (byte) 0); Arrays.fill(recoveryPassword, '\0'); }
         }
+        if (master == null && !hasRecovery) throw new IllegalStateException("This backup has no new-phone recovery key. Restore it on the original phone, or create a new backup after setting a recovery password.");
         if (master == null) throw new RecoveryPasswordRequiredException();
         try {
             return new String(aesDecrypt(master, dataNonce, cipherText, BACKUP_AAD), StandardCharsets.UTF_8);
