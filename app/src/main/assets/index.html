@@ -260,18 +260,33 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <div class="grip"></div>
   <h2>What’s new</h2>
   <p class="helper">Updates in this version of Promoter Tracker.</p>
-  <div class="change-entry"><div class="change-version">Latest update</div><ul>
-   <li>FIX: Removed conflicting incentive tap handler so fingerprint authentication is requested correctly; authentication survives Android biometric dialog focus changes.</li>
-   <li>NEW: Incentives remain blurred by default and require native fingerprint verification to reveal, with a separate setting to disable the requirement.</li>
-   <li>Fingerprint app lock with a six-digit backup PIN and automatic locking after inactivity.</li>
-   <li>Manual and scheduled backups are encrypted with AES-256-GCM; same-phone restore uses Android Keystore automatically.</li>
-   <li>Optional recovery password lets you restore encrypted backups on a new phone.</li>
-   <li>Product reordering, the 80% incentive threshold, and editable sales targets are retained.</li>
+  <div class="change-entry"><div class="change-version">Latest features · Incentive privacy</div><ul>
+   <li>Incentives stay blurred until you choose to reveal them.</li>
+   <li>Unlock incentive amounts securely with your fingerprint.</li>
+   <li>Turn fingerprint verification for incentives on or off in Settings.</li>
+   <li>Tap a revealed incentive again to hide it.</li>
   </ul></div>
-  <div class="change-entry"><div class="change-version">Earlier improvements</div><ul>
-   <li>Editable monthly targets in Settings.</li>
-   <li>Model management moved out of the main product list.</li>
-   <li>Automatic and manual backup, restore, and backup location settings.</li>
+  <div class="change-entry"><div class="change-version">App security</div><ul>
+   <li>Protect the app with fingerprint unlock and a six-digit backup PIN.</li>
+   <li>Choose when the app locks after inactivity.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">Backup &amp; restore</div><ul>
+   <li>Keep your manual and automatic backups encrypted.</li>
+   <li>Restore encrypted backups on the same phone without entering a password.</li>
+   <li>Set a recovery password to restore backups on a new phone.</li>
+   <li>Choose backup folders and automatic backup schedules.</li>
+   <li>Import older JSON backups when moving to encrypted backups.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">Sales &amp; incentives</div><ul>
+   <li>Edit monthly Handset &amp; Tablet and Audio &amp; Wearables targets in Settings.</li>
+   <li>View sales progress, category performance, and your total incentive.</li>
+   <li>Calculate incentives using the full entered per-unit amount below 80% achievement and the weighted incentive formula from 80% onward.</li>
+   <li>Update model quantities and rearrange products by pressing and holding a card.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">Everyday improvements</div><ul>
+   <li>Keep the main screen focused on product cards, with management tools in the menu.</li>
+   <li>Use the app in light or dark mode with clearer backup and settings text.</li>
+   <li>See a red indicator when there are new features to explore.</li>
   </ul></div>
   <button class="primary" id="closeChangelog" type="button">Got it</button>
  </div>
@@ -637,7 +652,7 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
-const CHANGELOG_VERSION="v10-fingerprint-incentive-fix-2";
+const CHANGELOG_VERSION="v10-feature-history-3";
 const CHANGELOG_SEEN_KEY="pt_changelog_seen_version";
 function syncChangelogIndicator(){
  const seen=localStorage.getItem(CHANGELOG_SEEN_KEY);
