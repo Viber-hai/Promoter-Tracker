@@ -64,7 +64,7 @@ final class DriveBackupManager {
             InputStream input = status >= 200 && status < 300 ? connection.getInputStream() : connection.getErrorStream();
             byte[] response = input == null ? new byte[0] : readAll(input, 8 * 1024 * 1024);
             if (status < 200 || status >= 300) throw new IOException("Google Drive returned HTTP " + status + ". " +
-                    new String(response, StandardCharsets.UTF_8).substring(0, Math.min(240, response.length)));
+                    new String(response, StandardCharsets.UTF_8).substring(0, Math.min(240, new String(response, StandardCharsets.UTF_8).length())));
             return response;
         } finally { connection.disconnect(); }
     }
