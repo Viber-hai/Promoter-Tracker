@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111216">
+  <meta name="description" content="Promoter Tracker helps you track product sales, targets and incentives on Android.">
+  <title>Promoter Tracker — Sales & Incentive Tracking</title>
+  <style>
+    :root{color-scheme:dark;--bg:#101116;--panel:#1a1b22;--line:#30313a;--text:#f5f5f7;--muted:#b4b4bd;--red:#d7193f;--red2:#f05b73}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#7d102622,transparent 32rem),var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+    a{color:#ff8295;text-decoration:none}a:hover{text-decoration:underline}.wrap{width:min(100% - 32px,900px);margin:auto}
+    header{padding:22px 0;display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid var(--line)}
+    .brand{font-weight:850;letter-spacing:.2px}.brand span{color:var(--red2)}nav{display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+    .hero{padding:76px 0 56px}.eyebrow{color:var(--red2);font-size:12px;font-weight:850;letter-spacing:2px;text-transform:uppercase}
+    h1{font-size:clamp(38px,7vw,66px);line-height:1.04;letter-spacing:-2px;max-width:760px;margin:14px 0 18px}
+    .lead{font-size:19px;color:var(--muted);max-width:680px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+    .btn{display:inline-block;padding:12px 18px;border-radius:12px;background:var(--red);color:white;font-weight:800}.btn.secondary{background:var(--panel);border:1px solid var(--line)}
+    section{padding:30px 0 54px}h2{font-size:26px;letter-spacing:-.6px;margin:0 0 18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .card{padding:20px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#ffffff09,#ffffff03)}.card h3{margin:0 0 8px;font-size:17px}.card p{margin:0;color:var(--muted);font-size:14px}
+    .notice{padding:16px 18px;border:1px solid #d7193f55;border-radius:14px;background:#d7193f12;color:var(--muted);font-size:14px}
+    footer{border-top:1px solid var(--line);padding:24px 0 36px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    @media(max-width:560px){header{align-items:flex-start;flex-direction:column}.hero{padding:54px 0 42px}h1{letter-spacing:-1.2px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span>●</span> PROMOTER TRACKER</div>
+      <nav aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/Viber-hai/Promoter-Tracker">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="eyebrow">Android sales companion</div>
+        <h1>Keep your sales targets and incentives in view.</h1>
+        <p class="lead">Promoter Tracker is an Android app for recording product sales, following category targets and calculating incentive progress in one place.</p>
+        <div class="actions">
+          <a class="btn" href="https://github.com/Viber-hai/Promoter-Tracker">View project on GitHub</a>
+          <a class="btn secondary" href="privacy.html">Read the privacy policy</a>
+        </div>
+      </section>
+
+      <section id="features">
+        <h2>Built for everyday tracking</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Sales by category</h3>
+            <p>Record quantities for handset and tablet products, plus audio and wearable products.</p>
+          </article>
+          <article class="card">
+            <h3>Targets and progress</h3>
+            <p>Set category targets and see achievement progress alongside an overall score.</p>
+          </article>
+          <article class="card">
+            <h3>Incentive calculations</h3>
+            <p>Track per-unit incentives and see estimated totals based on recorded sales and the app's scoring rules.</p>
+          </article>
+          <article class="card">
+            <h3>Privacy and app lock</h3>
+            <p>Use the app's available PIN and Android biometric security options to help protect access to incentive information.</p>
+          </article>
+          <article class="card">
+            <h3>Backup and restore</h3>
+            <p>Create local backups and, in the Android app, optionally connect Google Drive for encrypted backup and restore.</p>
+          </article>
+          <article class="card">
+            <h3>Designed for mobile</h3>
+            <p>A compact interface designed for quick updates on an Android phone.</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="notice"><strong>Project status:</strong> This site provides information about the project. It does not host or install the Android app. Check the GitHub repository for the current source code, build instructions and available releases.</div>
+      </section>
+    </main>
+
+    <footer>
+      <span>© 2026 Promoter Tracker</span>
+      <span><a href="privacy.html">Privacy Policy</a> · <a href="https://github.com/Viber-hai/Promoter-Tracker/issues">Support / Report an issue</a></span>
+    </footer>
+  </div>
+</body>
+</html>
