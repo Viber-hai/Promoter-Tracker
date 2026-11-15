@@ -124,9 +124,42 @@ public class AppBackupBridge {
         if (enabled && !DriveBackupManager.connected(context))
             return "ERROR|Connect your Google account before enabling Drive backups.";
         SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
-        prefs.edit().putBoolean("drive_auto_enabled", enabled).apply();
-        boolean local = prefs.getBoolean(BackupWorker.KEY_ENABLED, false);
-        BackupScheduler.configure(context, local || enabled, prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly"));
+        SharedPreferences.Editor edit = prefs.edit().putBoolean("drive_auto_enabled", enabled);
+        if (enabled) edit.putBoolean(BackupWorker.KEY_ENABLED, false);
+        edit.apply();
+        BackupScheduler.configure(context);
+        return "OK";
+    }
+
+    @JavascriptInterface
+    public String setDriveAutoBackupFrequency(String frequency) {
+        String safe = safeBackupFrequency(frequency);
+        SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
+        prefs.edit().putString("drive_frequency", safe).apply();
+        if (prefs.getBoolean("drive_auto_enabled", false)) BackupScheduler.configure(context);
+        return "OK";
+    }
+
+    @JavascriptInterface
+    public String getDriveAutoBackupFrequency() {
+        return context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE)
+                .getString("drive_frequency", "weekly");
+    }
+
+    @JavascriptInterface
+    public String configureAutoBackup(String destination, String localFrequency, String driveFrequency) {
+        if (!"off".equals(destination) && !"local".equals(destination) && !"drive".equals(destination))
+            return "ERROR|Choose Local, Google Drive, or Off.";
+        if ("drive".equals(destination) && !DriveBackupManager.connected(context))
+            return "ERROR|Connect your Google account before enabling Google Drive automatic backups.";
+        SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
+        prefs.edit()
+                .putBoolean(BackupWorker.KEY_ENABLED, "local".equals(destination))
+                .putString(BackupWorker.KEY_FREQUENCY, safeBackupFrequency(localFrequency))
+                .putBoolean("drive_auto_enabled", "drive".equals(destination))
+                .putString("drive_frequency", safeBackupFrequency(driveFrequency))
+                .commit();
+        BackupScheduler.configure(context);
         return "OK";
     }
 
@@ -157,17 +190,20 @@ public class AppBackupBridge {
 
     @JavascriptInterface
     public String setAutoBackup(boolean enabled, String frequency) {
-        String safeFrequency = ("daily".equals(frequency) || "weekly".equals(frequency)
-                || "monthly".equals(frequency) || "yearly".equals(frequency)) ? frequency : "weekly";
+        String safeFrequency = safeBackupFrequency(frequency);
         SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
-        boolean oldEnabled = prefs.getBoolean(BackupWorker.KEY_ENABLED, false);
-        String oldFrequency = prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly");
-        boolean changed = oldEnabled != enabled || !oldFrequency.equals(safeFrequency);
-        prefs.edit().putBoolean(BackupWorker.KEY_ENABLED, enabled)
-                .putString(BackupWorker.KEY_FREQUENCY, safeFrequency).apply();
-        if (changed) BackupScheduler.configure(context, enabled || isDriveAutoBackupEnabled(), safeFrequency);
+        SharedPreferences.Editor edit = prefs.edit().putBoolean(BackupWorker.KEY_ENABLED, enabled)
+                .putString(BackupWorker.KEY_FREQUENCY, safeFrequency);
+        if (enabled) edit.putBoolean("drive_auto_enabled", false);
+        edit.apply();
+        BackupScheduler.configure(context);
         return enabled ? "OK|Automatic encrypted device backup enabled for " + safeFrequency + " schedule."
                 : "OK|Automatic device backup disabled.";
+    }
+
+    private static String safeBackupFrequency(String frequency) {
+        return ("daily".equals(frequency) || "weekly".equals(frequency)
+                || "monthly".equals(frequency) || "yearly".equals(frequency)) ? frequency : "weekly";
     }
 
     @JavascriptInterface
