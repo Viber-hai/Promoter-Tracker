@@ -261,6 +261,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <h2>What’s new</h2>
   <p class="helper">Updates in this version of Promoter Tracker.</p>
   <div class="change-entry"><div class="change-version">Latest update</div><ul>
+   <li>FIX: Removed conflicting incentive tap handler so fingerprint authentication is requested correctly; authentication survives Android biometric dialog focus changes.</li>
    <li>NEW: Incentives remain blurred by default and require native fingerprint verification to reveal, with a separate setting to disable the requirement.</li>
    <li>Fingerprint app lock with a six-digit backup PIN and automatic locking after inactivity.</li>
    <li>Manual and scheduled backups are encrypted with AES-256-GCM; same-phone restore uses Android Keystore automatically.</li>
@@ -512,10 +513,7 @@ function closeSheet(sheet){
 document.querySelectorAll(".cat").forEach(b=>b.addEventListener("click",()=>setCategory(b.dataset.cat)));
 $("search").addEventListener("input",render);
 $("sold").addEventListener("click",()=>{only=!only;$("sold").classList.toggle("active",only);render();});
-document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventListener("click",()=>{
- incentiveVisible=!incentiveVisible;
- updateIncentiveVisibility();
-}));
+// Incentive taps are handled by the fingerprint-aware listener below.
 
 
 const INCENTIVE_FINGERPRINT_KEY="pt_incentive_fingerprint_required_v1";
@@ -543,7 +541,7 @@ document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventList
  biometricPurpose="incentive";
  AppBackup.authenticateBiometric();
 }));
-document.addEventListener("visibilitychange",()=>{if(document.hidden){incentiveVisible=false;updateIncentiveVisibility();biometricPurpose=null;}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){incentiveVisible=false;updateIncentiveVisibility();}});
 
 let holdTimer=null,holdCard=null,holdFrom=null,reorderActive=false,lastHoverCard=null,suppressModelClick=false;
 function moveModelTo(fromIndex,toIndex){
@@ -639,7 +637,7 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
-const CHANGELOG_VERSION="v10-fingerprint-incentive-1";
+const CHANGELOG_VERSION="v10-fingerprint-incentive-fix-2";
 const CHANGELOG_SEEN_KEY="pt_changelog_seen_version";
 function syncChangelogIndicator(){
  const seen=localStorage.getItem(CHANGELOG_SEEN_KEY);
