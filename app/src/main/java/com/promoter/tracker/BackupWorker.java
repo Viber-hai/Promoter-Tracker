@@ -31,7 +31,9 @@ public class BackupWorker extends Worker {
     public Result doWork() {
         Context context = getApplicationContext();
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        if (!prefs.getBoolean(KEY_ENABLED, false)) return Result.success();
+        boolean localEnabled = prefs.getBoolean(KEY_ENABLED, false);
+        boolean driveEnabled = prefs.getBoolean("drive_auto_enabled", false);
+        if (!localEnabled && !driveEnabled) return Result.success();
 
         File encryptedSnapshot = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.enc");
         File legacySnapshot = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.json");
@@ -51,11 +53,29 @@ public class BackupWorker extends Worker {
                 return Result.retry();
             }
 
-            String path = BackupStorage.writeBackup(context, json, "automatic");
             String stamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-            prefs.edit().putString(KEY_LAST_BACKUP,
-                    "Encrypted automatic backup saved · " + stamp + " · " + path).apply();
-            return Result.success();
+            boolean failed = false;
+            if (localEnabled) {
+                try {
+                    String path = BackupStorage.writeBackup(context, json, "automatic");
+                    prefs.edit().putString(KEY_LAST_BACKUP,
+                            "Encrypted automatic backup saved · " + stamp + " · " + path).apply();
+                } catch (Exception e) {
+                    failed = true;
+                    prefs.edit().putString(KEY_LAST_BACKUP, "Automatic local backup failed: " + e.getMessage()).apply();
+                }
+            }
+            if (driveEnabled) {
+                try {
+                    String name = DriveBackupManager.upload(context, json, "automatic");
+                    prefs.edit().putString("last_drive_backup",
+                            "Google Drive backup saved · " + stamp + " · " + name).apply();
+                } catch (Exception e) {
+                    failed = true;
+                    prefs.edit().putString("last_drive_backup", "Google Drive backup failed: " + e.getMessage()).apply();
+                }
+            }
+            return failed ? Result.retry() : Result.success();
         } catch (Exception e) {
             prefs.edit().putString(KEY_LAST_BACKUP,
                     "Automatic backup failed: " + (e.getMessage() == null ? "Encryption/storage error" : e.getMessage())).apply();
