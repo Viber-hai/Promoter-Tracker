@@ -146,6 +146,7 @@ public class AppBackupBridge {
 
     @JavascriptInterface
     public String setBiometricEnabled(boolean enabled) {
+        if (enabled && !SecurityStore.isPinConfigured(context)) return "ERROR|Set a 6-digit backup PIN before enabling fingerprint unlock.";
         if (enabled && !activity.isBiometricAvailable()) return "ERROR|No enrolled strong fingerprint is available on this phone.";
         SecurityStore.setEnabled(context, enabled);
         return "OK";
