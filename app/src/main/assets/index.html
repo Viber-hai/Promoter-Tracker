@@ -261,6 +261,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <h2>What’s new</h2>
   <p class="helper">Updates in this version of Promoter Tracker.</p>
   <div class="change-entry"><div class="change-version">Latest update</div><ul>
+   <li>NEW: Incentives remain blurred by default and require native fingerprint verification to reveal, with a separate setting to disable the requirement.</li>
    <li>Fingerprint app lock with a six-digit backup PIN and automatic locking after inactivity.</li>
    <li>Manual and scheduled backups are encrypted with AES-256-GCM; same-phone restore uses Android Keystore automatically.</li>
    <li>Optional recovery password lets you restore encrypted backups on a new phone.</li>
@@ -285,6 +286,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <p class="helper">Protect this tracker with your phone's fingerprint and a private six-digit backup PIN.</p>
   <div class="security-setting-row"><div><b>Fingerprint lock</b><small>Require your enrolled fingerprint when reopening the app.</small></div><input id="fingerprintEnabled" type="checkbox" aria-label="Enable fingerprint lock"></div>
   <label class="field">Lock after inactivity<select id="lockTimeout"><option value="0">Immediately when leaving the app</option><option value="1">1 minute</option><option value="5">5 minutes</option><option value="15">15 minutes</option></select></label>
+  <div class="security-setting-row"><div><b>Fingerprint to reveal incentive</b><small>Incentive stays blurred until your fingerprint is verified. Enabled by default.</small></div><input id="incentiveFingerprintEnabled" type="checkbox" checked aria-label="Require fingerprint to reveal incentive"></div>
+  <p class="security-status" id="incentiveFingerprintStatus">Enabled · Tap either incentive amount to authenticate.</p>
   <button class="secondary" id="configurePin" type="button">Set / Change backup PIN</button><p class="security-status" id="securitySettingsStatus">Fingerprint lock is off.</p>
   <button class="primary" id="clr" type="button">Clear all quantities</button>
   <button class="danger-btn" id="reset" type="button">Reset model list</button>
@@ -515,6 +518,33 @@ document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventList
 }));
 
 
+const INCENTIVE_FINGERPRINT_KEY="pt_incentive_fingerprint_required_v1";
+let incentiveFingerprintRequired=true;
+try{incentiveFingerprintRequired=localStorage.getItem(INCENTIVE_FINGERPRINT_KEY)!=="false";}catch(e){}
+$("incentiveFingerprintEnabled").checked=incentiveFingerprintRequired;
+function updateIncentiveFingerprintSetting(){
+ $("incentiveFingerprintStatus").textContent=incentiveFingerprintRequired
+  ?"Enabled · Tap either incentive amount to authenticate."
+  :"Disabled · Tap either incentive amount to reveal it normally.";
+}
+updateIncentiveFingerprintSetting();
+$("incentiveFingerprintEnabled").addEventListener("change",e=>{
+ incentiveFingerprintRequired=e.target.checked;
+ incentiveVisible=false;updateIncentiveVisibility();
+ try{localStorage.setItem(INCENTIVE_FINGERPRINT_KEY,String(incentiveFingerprintRequired));}catch(err){}
+ updateIncentiveFingerprintSetting();
+});
+let biometricPurpose=null;
+document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventListener("click",()=>{
+ if(incentiveVisible){incentiveVisible=false;updateIncentiveVisibility();return;}
+ if(!incentiveFingerprintRequired){incentiveVisible=true;updateIncentiveVisibility();return;}
+ if(!window.AppBackup){toast("Fingerprint verification requires the Android app.");return;}
+ if(!AppBackup.isBiometricAvailable()){toast("Set up a strong fingerprint in Android settings first.");return;}
+ biometricPurpose="incentive";
+ AppBackup.authenticateBiometric();
+}));
+document.addEventListener("visibilitychange",()=>{if(document.hidden){incentiveVisible=false;updateIncentiveVisibility();biometricPurpose=null;}});
+
 let holdTimer=null,holdCard=null,holdFrom=null,reorderActive=false,lastHoverCard=null,suppressModelClick=false;
 function moveModelTo(fromIndex,toIndex){
  if(fromIndex===null||toIndex===null||fromIndex===toIndex)return false;
@@ -609,7 +639,7 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
-const CHANGELOG_VERSION="v10-security-encryption-1";
+const CHANGELOG_VERSION="v10-fingerprint-incentive-1";
 const CHANGELOG_SEEN_KEY="pt_changelog_seen_version";
 function syncChangelogIndicator(){
  const seen=localStorage.getItem(CHANGELOG_SEEN_KEY);
@@ -703,6 +733,7 @@ function scheduleIdleLock(){
  if(minutes>0)idleLockTimer=setTimeout(()=>lockPromoterTracker(),minutes*60000);
 }
 function lockPromoterTracker(){
+ biometricPurpose=null;incentiveVisible=false;updateIncentiveVisibility();
  if(idleLockTimer!==null)clearTimeout(idleLockTimer);idleLockTimer=null;
  $("securityLock").classList.add("show");$("securityLock").setAttribute("aria-hidden","false");$("lockStatus").textContent="Authenticate to continue.";
 }
@@ -712,7 +743,16 @@ function unlockPromoterTracker(){
 }
 ["pointerdown","touchstart","keydown","scroll","click"].forEach(eventName=>document.addEventListener(eventName,()=>{if(!$("securityLock").classList.contains("show"))scheduleIdleLock();},{passive:true}));
 window.lockPromoterTracker=lockPromoterTracker;
-window.onNativeBiometricResult=(success,message)=>{if(success)unlockPromoterTracker();else $("lockStatus").textContent=message||"Fingerprint not recognized. Use your PIN if needed.";};
+window.onNativeBiometricResult=(success,message)=>{
+ if(biometricPurpose==="incentive"){
+  biometricPurpose=null;
+  if(success && !$("securityLock").classList.contains("show")){incentiveVisible=true;updateIncentiveVisibility();}
+  else if(!success)toast(message||"Fingerprint verification cancelled.");
+  return;
+ }
+ if(success)unlockPromoterTracker();
+ else $("lockStatus").textContent=message||"Fingerprint not recognized. Use your PIN if needed.";
+};
 window.onNativeAppReady=()=>{if(window.AppBackup){syncSecuritySettings();if(AppBackup.isSecurityEnabled())lockPromoterTracker();else syncNativeSnapshot();}else syncNativeSnapshot();};
 $("saveTargets").addEventListener("click",()=>{
  const handset=Number($("targetHandset").value),wearables=Number($("targetWearables").value);
