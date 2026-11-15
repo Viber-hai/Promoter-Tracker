@@ -165,10 +165,23 @@ final class BackupCrypto {
         byte[] existing = getExistingMasterKey(context);
         if (existing != null) return existing;
         byte[] master = randomBytes(32);
-        byte[] nonce = randomBytes(12);
-        byte[] wrapped = aesEncrypt(getDeviceKey(), nonce, master, WRAP_AAD);
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        // Android Keystore keys with randomized encryption must generate their own GCM IV.
+        // Supplying a caller-generated IV here causes "Caller-provided IV not permitted".
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, getDeviceKey());
+        cipher.updateAAD(WRAP_AAD);
+        byte[] wrapped = cipher.doFinal(master);
+        byte[] nonce = cipher.getIV();
+        if (nonce == null || nonce.length != 12) {
+            Arrays.fill(master, (byte) 0);
+            throw new IllegalStateException("Android Keystore returned an invalid backup encryption IV.");
+        }
+        boolean saved = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putString(MASTER_NONCE, b64(nonce)).putString(MASTER_BLOB, b64(wrapped)).commit();
+        if (!saved) {
+            Arrays.fill(master, (byte) 0);
+            throw new IllegalStateException("Could not securely save the backup encryption key.");
+        }
         return master;
     }
 
