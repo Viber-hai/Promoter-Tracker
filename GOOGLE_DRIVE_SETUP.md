@@ -11,7 +11,7 @@ Promoter Tracker keeps its existing local encrypted backups. Google Drive is opt
    - Add the Drive **appDataFolder** scope: `https://www.googleapis.com/auth/drive.appdata`. This is limited to private app-created Drive data, not all Drive files.
 4. Go to **Clients → Create client → Android**.
    - Package name: `com.promoter.tracker`
-   - SHA-1: use the **SHA-1 certificate fingerprint from the signed release APK** in the GitHub Actions build's **Verify APK signature** step. Use the **original release signing certificate**, not a debug keystore. The workflow uses the existing release signing secrets.
+   - SHA-1 (verified from the signed release APK): `76:8F:6F:60:E9:95:DC:28:7A:CE:DE:00:38:81:1C:36:BD:9C:BE:7D`. Use the original release signing certificate, not a debug keystore.
 5. Save the Android OAuth client. You do **not** need to copy your keystore, passwords, or any Google account password into GitHub or ChatGPT.
 6. Install the newly built release APK, open **Backup & Restore → Connect Google Drive**, and approve access with the Google account listed as a test user.
 7. Set a **new-phone recovery password** before making a Drive backup if you may need to restore on another device. Google Drive storage does not replace this encryption password.
