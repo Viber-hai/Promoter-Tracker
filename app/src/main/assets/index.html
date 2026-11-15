@@ -260,7 +260,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <div class="grip"></div>
   <h2>What’s new</h2>
   <p class="helper">Updates in this version of Promoter Tracker.</p>
-  <div class="change-entry"><div class="change-version">Latest features · Incentive privacy</div><ul>
+  <div class="change-entry"><div class="change-version">Google Drive backups</div><ul><li>Connect your Google account to keep encrypted backups in Drive.</li><li>Save a backup to Drive whenever you want, or restore a previous backup.</li><li>Use the same automatic backup schedule for local and Google Drive backups.</li><li>Choose whether to enable local backups, Drive backups, or both.</li></ul></div>
+  <div class="change-entry"><div class="change-version">Incentive privacy</div><ul>
    <li>Incentives stay blurred until you choose to reveal them.</li>
    <li>Unlock incentive amounts securely with your fingerprint.</li>
    <li>Turn fingerprint verification for incentives on or off in Settings.</li>
@@ -313,8 +314,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <div class="sheet" id="sBackup"><div class="panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
  <section class="backup-source">
   <div class="backup-row"><h3>Google Drive</h3><span class="backup-status">Cloud backup</span></div>
-  <p class="note">Connect Google Drive to back up or restore your tracker in the cloud. Google sign-in and Drive sync require the Android integration.</p>
-  <div class="backup-row"><button class="secondary" id="driveConnect">Connect Google Drive</button><button class="secondary" id="driveRestore">Restore from Drive</button></div>
+  <p class="note">Save private, encrypted backups to your Google account. Only Promoter Tracker can see these files in its private Drive app storage.</p>
+  <p class="note" id="driveAccountStatus">Not connected</p>
+  <div class="backup-row"><button class="secondary" id="driveConnect">Connect Google Drive</button><button class="secondary" id="driveManualBackup">Back up to Drive</button></div>
+  <div class="backup-row"><button class="secondary" id="driveRestore">Find Drive backups</button><button class="secondary" id="driveDisconnect">Disconnect</button></div>
+  <label class="field">Available encrypted backups<select id="driveBackupList"><option value="">Connect and select Find Drive backups</option></select></label>
+  <button class="secondary" id="driveRestoreSelected">Restore selected Drive backup</button>
+  <div class="backup-row"><label class="field" for="driveAutoBackup">Include Google Drive in automatic backups</label><input id="driveAutoBackup" type="checkbox" aria-label="Enable automatic Google Drive backups" style="width:22px;min-height:22px"></div>
+  <p class="note">Google Drive and local automatic backups use the same frequency selected below. Background backups need an internet connection and may be delayed by Android.</p>
+  <p class="backup-status" id="driveBackupStatus">No Google Drive backup yet</p>
  </section>
  <section class="backup-source" id="backupEncryptionInfo">
   <div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div>
@@ -336,7 +344,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <div class="backup-select"><label class="field" for="backupFrequency">Backup frequency</label>
    <select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select>
   </div>
-  <div class="backup-row"><label class="field" for="autoBackup">Enable automatic backup</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
+  <div class="backup-row"><label class="field" for="autoBackup">Enable automatic local backup</label><input id="autoBackup" type="checkbox" aria-label="Enable automatic device backups" style="width:22px;min-height:22px"></div>
   <div class="backup-row"><span class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</span><button class="secondary" id="chooseAutomaticFolder">Change folder</button></div>
   <p class="note">The first scheduled backup is due after the selected interval. Android may delay background work for battery management.</p>
  </section>
@@ -652,7 +660,7 @@ $("models").addEventListener("change",e=>{
 });
 $("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
 $("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
-const CHANGELOG_VERSION="v10-feature-history-3";
+const CHANGELOG_VERSION="v10-drive-backup-1";
 const CHANGELOG_SEEN_KEY="pt_changelog_seen_version";
 function syncChangelogIndicator(){
  const seen=localStorage.getItem(CHANGELOG_SEEN_KEY);
@@ -791,20 +799,22 @@ function loadBackupSettings(){
   const native=window.AppBackup;
   $("backupFrequency").value=(native&&native.getAutoBackupFrequency())||p.frequency||"weekly";
   $("autoBackup").checked=native?!!native.isAutoBackupEnabled():!!p.enabled;
-  if(native){$("automaticFolder").textContent=native.getBackupFolderName("automatic");$("manualFolder").textContent=native.getBackupFolderName("manual");}
+  if(native){$("automaticFolder").textContent=native.getBackupFolderName("automatic");$("manualFolder").textContent=native.getBackupFolderName("manual");$("driveAutoBackup").checked=native.isDriveAutoBackupEnabled();refreshDriveStatus();}
   const last=native&&native.getLastBackupStatus?native.getLastBackupStatus():p.lastBackup;
   if(last)setBackupStatus(last);
  }catch(e){}
 }
 function saveBackupSettings(){
  const old=readBackupSettings(),enabled=$("autoBackup").checked,frequency=$("backupFrequency").value;
- const p={...old,frequency,enabled};
+ const p={...old,frequency,enabled,driveEnabled:$("driveAutoBackup").checked};
  try{
   localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));
   if(window.AppBackup){
+   const driveResult=window.AppBackup.setDriveAutoBackupEnabled($("driveAutoBackup").checked);
+   if(String(driveResult).startsWith("ERROR|")){toast(String(driveResult).slice(6));return;}
    const result=window.AppBackup.setAutoBackup(enabled,frequency);
    if(String(result).startsWith("ERROR|")){toast(String(result).slice(6));return;}
-   toast(enabled?"Automatic device backup enabled ("+frequency+"). First backup after selected interval.":"Automatic device backup disabled.");
+   toast((enabled||$("driveAutoBackup").checked)?"Automatic backups saved ("+frequency+"). First backup after selected interval.":"Automatic backups disabled.");
   }else{
    toast(enabled?"Automatic backup is available in the installed app only.":"Backup preferences saved.");
   }
@@ -933,8 +943,52 @@ async function restoreLocalBackup(file){
 }
 
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
-$("driveConnect").onclick=()=>toast("Google Drive needs Android sign-in and Drive API setup");
-$("driveRestore").onclick=()=>toast("Google Drive restore will work after Android Drive integration");
+function refreshDriveStatus(){
+ if(!window.AppBackup){$("driveAccountStatus").textContent="Google Drive is available in the Android app.";return;}
+ const email=AppBackup.getDriveAccount();
+ $("driveAccountStatus").textContent=email?"Connected: "+email:"Not connected · Sign in to enable Drive backups.";
+ $("driveConnect").textContent=email?"Switch Google account":"Connect Google Drive";
+ $("driveBackupStatus").textContent=AppBackup.getLastDriveBackupStatus();
+ $("driveAutoBackup").checked=AppBackup.isDriveAutoBackupEnabled();
+}
+$("driveConnect").onclick=()=>{if(window.AppBackup)AppBackup.connectDrive();else toast("Install the Android app to connect Google Drive.");};
+$("driveDisconnect").onclick=()=>{if(!window.AppBackup)return;if(confirm("Disconnect Google Drive? Your existing backups will stay in Drive."))AppBackup.disconnectDrive();};
+$("driveManualBackup").onclick=()=>{
+ if(!window.AppBackup){toast("Google Drive requires the Android app.");return;}
+ if(!AppBackup.isDriveConnected()){toast("Connect Google Drive first.");return;}
+ $("driveBackupStatus").textContent="Uploading encrypted backup…";
+ AppBackup.backupToDrive(JSON.stringify(backupPayload()));
+};
+$("driveRestore").onclick=()=>{
+ if(!window.AppBackup||!AppBackup.isDriveConnected()){toast("Connect Google Drive first.");return;}
+ $("driveBackupStatus").textContent="Loading available backups…";
+ AppBackup.listDriveBackups();
+};
+$("driveRestoreSelected").onclick=()=>{
+ const id=$("driveBackupList").value;
+ if(!id){toast("Choose a Drive backup first.");return;}
+ if(!confirm("Restore this Google Drive backup? Your current tracker data will be replaced."))return;
+ $("driveBackupStatus").textContent="Downloading encrypted backup…";
+ AppBackup.downloadDriveBackup(id);
+};
+window.onNativeDriveResult=async(action,status,data)=>{
+ if(action==="connection"){toast(status);refreshDriveStatus();return;}
+ if(status.startsWith("ERROR:")){$("driveBackupStatus").textContent=status;toast(status);return;}
+ if(action==="backup"){$("driveBackupStatus").textContent=status;toast("Encrypted backup saved to Drive");return;}
+ if(action==="list"){
+  try{
+   const files=JSON.parse(data||"[]"),select=$("driveBackupList");
+   select.replaceChildren();
+   const empty=document.createElement("option");empty.value="";empty.textContent=files.length?"Choose a backup":"No backups found";select.append(empty);
+   files.forEach(file=>{const option=document.createElement("option");option.value=file.id;option.textContent=file.name+" · "+new Date(file.createdTime).toLocaleString();select.append(option);});
+   $("driveBackupStatus").textContent=files.length+" encrypted Drive backups available.";
+  }catch(e){toast("Could not read Drive backup list.");}
+ }
+ if(action==="download"){
+  try{await finishEncryptedRestore(data,"");$("driveBackupStatus").textContent="Backup downloaded. Follow any recovery password prompt.";}
+  catch(e){$("driveBackupStatus").textContent="Restore failed: "+e.message;toast("Could not restore this Drive backup.");}
+ }
+};
 $("localBackup").onclick=downloadLocalBackup;
 $("shareBackup").onclick=shareBackupFile;
 $("copyBackup").onclick=copyBackupText;
