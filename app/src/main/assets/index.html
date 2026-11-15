@@ -832,7 +832,7 @@ function restoreBackupText(text){
   toast("Backup imported successfully");
  }catch(e){S=previous;$("restoreStatus").textContent="Import failed: app storage blocked or full. Existing data unchanged.";toast("Import failed: browser storage blocked or full. Data unchanged.");}
 }
-async let pendingEncryptedRestore="";
+let pendingEncryptedRestore="";
 function bytesToBase64(buffer){const bytes=new Uint8Array(buffer);let binary="";for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
 function base64ToUtf8(value){const binary=atob(value);const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new TextDecoder().decode(bytes);}
 async function finishEncryptedRestore(encoded,password){
