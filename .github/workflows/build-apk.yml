@@ -77,7 +77,7 @@ jobs:
           SIGNATURE_REPORT="$("$APKSIGNER" verify --verbose --print-certs "$APK")"
           printf '%s\n' "$SIGNATURE_REPORT"
           EXPECTED_SHA1_COMPACT="768F6F60E995DC287ACEDE0038811C36BD9CBE7D"
-          APK_SHA1="$(printf '%s\n' "$SIGNATURE_REPORT" | awk -F': ' '/certificate SHA-1 digest:/{print toupper($2); exit}' | tr -d ':')"
+          APK_SHA1="$(printf '%s\n' "$SIGNATURE_REPORT" | awk -F': ' '/certificate SHA-1 digest:/{print toupper($NF); exit}' | tr -d ':')"
           if [ "$APK_SHA1" != "$EXPECTED_SHA1_COMPACT" ]; then
             echo "::error::Built APK signer SHA-1 does not match the configured Google Cloud Android OAuth client."
             exit 1
