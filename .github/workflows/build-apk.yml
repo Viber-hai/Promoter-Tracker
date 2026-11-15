@@ -50,8 +50,13 @@ jobs:
             -keystore "$RUNNER_TEMP/promoter-tracker-release.jks" \
             -storepass "$ANDROID_KEYSTORE_PASSWORD" \
             -alias "$ANDROID_KEY_ALIAS" > "$RUNNER_TEMP/release-certificate.txt"
-          grep -q "SHA256:" "$RUNNER_TEMP/release-certificate.txt"
-          echo "Release keystore and requested alias verified."
+          EXPECTED_SHA1="76:8F:6F:60:E9:95:DC:28:7A:CE:DE:00:38:81:1C:36:BD:9C:BE:7D"
+          ACTUAL_SHA1="$(awk -F': ' '/SHA1:/{print toupper($2); exit}' "$RUNNER_TEMP/release-certificate.txt")"
+          if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
+            echo "::error::Release keystore SHA-1 does not match the Android OAuth client. Expected $EXPECTED_SHA1 but found $ACTUAL_SHA1."
+            exit 1
+          fi
+          echo "Release keystore SHA-1 matches the Google Cloud Android OAuth client."
           grep "SHA256:" "$RUNNER_TEMP/release-certificate.txt"
 
       - name: Build permanently signed APK
@@ -69,7 +74,15 @@ jobs:
           test -n "$APK"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
-          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          SIGNATURE_REPORT="$("$APKSIGNER" verify --verbose --print-certs "$APK")"
+          printf '%s\n' "$SIGNATURE_REPORT"
+          EXPECTED_SHA1_COMPACT="768F6F60E995DC287ACEDE0038811C36BD9CBE7D"
+          APK_SHA1="$(printf '%s\n' "$SIGNATURE_REPORT" | awk -F': ' '/certificate SHA-1 digest:/{print toupper($2); exit}' | tr -d ':')"
+          if [ "$APK_SHA1" != "$EXPECTED_SHA1_COMPACT" ]; then
+            echo "::error::Built APK signer SHA-1 does not match the configured Google Cloud Android OAuth client."
+            exit 1
+          fi
+          echo "Built APK signature matches the configured Google Cloud Android OAuth client."
 
       - uses: actions/upload-artifact@v4
         with:
