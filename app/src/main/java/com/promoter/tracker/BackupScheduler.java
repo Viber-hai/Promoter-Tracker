@@ -41,7 +41,18 @@ final class BackupScheduler {
                 && prefs.getBoolean("drive_auto_enabled", false)) {
             prefs.edit().putBoolean("drive_auto_enabled", false).commit();
         }
-        configure(context);
+        WorkManager manager = WorkManager.getInstance(context);
+        manager.cancelUniqueWork(LEGACY_NAME);
+        manager.cancelUniqueWork(PREVIOUS_NAME);
+        boolean localEnabled = prefs.getBoolean(BackupWorker.KEY_ENABLED, false);
+        boolean driveEnabled = prefs.getBoolean("drive_auto_enabled", false) && !localEnabled;
+        if (!localEnabled && !driveEnabled) return;
+        String frequency = localEnabled
+                ? prefs.getString(BackupWorker.KEY_FREQUENCY, "weekly")
+                : prefs.getString("drive_frequency", "weekly");
+        // KEEP preserves the existing countdown when the app is reopened.
+        manager.enqueueUniquePeriodicWork(
+                PERIODIC_NAME, ExistingPeriodicWorkPolicy.KEEP, buildRequest(frequency));
     }
 
     static void configure(Context context) {
