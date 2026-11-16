@@ -861,7 +861,8 @@ function setBackupSaveFeedback(message,isError=false){
 }
 function saveBackupSettings(){
  const old=readBackupSettings();
- const destination=$("destinationDrive").checked?"drive":$("destinationLocal").checked?"local":"off";
+ const selectedDestination=document.querySelector('input[name="backupDestination"]:checked');
+ const destination=selectedDestination?selectedDestination.value:"off";
  const frequency=$("backupFrequency").value,driveFrequency=$("driveBackupFrequency").value;
  const p={...old,destination,frequency,driveFrequency,enabled:destination==="local",driveEnabled:destination==="drive"};
  setBackupSaveFeedback("Saving automatic backup settings…");
@@ -1014,24 +1015,22 @@ async function restoreLocalBackup(file){
  }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
 }
 
-$("localBackupSettings").querySelector("summary").addEventListener("click",()=>{$("destinationLocal").checked=true;$("destinationOff").checked=false;$("destinationDrive").checked=false;});
-$("driveBackupSettings").querySelector("summary").addEventListener("click",()=>{$("destinationDrive").checked=true;$("destinationOff").checked=false;$("destinationLocal").checked=false;});
-$("destinationOff").addEventListener("change",()=>{$("localBackupSettings").open=false;$("driveBackupSettings").open=false;});
-$("destinationLocal").addEventListener("change",()=>{$("localBackupSettings").open=true;$("driveBackupSettings").open=false;});
-$("destinationDrive").addEventListener("change",()=>{$("driveBackupSettings").open=true;$("localBackupSettings").open=false;});
-$("localBackupSettings").addEventListener("toggle",()=>{
- if($("localBackupSettings").open){
-  $("driveBackupSettings").open=false;
-  $("destinationLocal").checked=true;$("destinationOff").checked=false;$("destinationDrive").checked=false;
-  setBackupSaveFeedback("Local selected. Save to enable automatic local backups.");
- }
+// The destination radio buttons are the single source of truth.
+// Opening or closing an accordion must never silently change the selected destination.
+$("destinationOff").addEventListener("change",()=>{
+ if(!$("destinationOff").checked)return;
+ $("localBackupSettings").open=false;$("driveBackupSettings").open=false;
+ setBackupSaveFeedback("Automatic backups are off. Save to confirm.");
 });
-$("driveBackupSettings").addEventListener("toggle",()=>{
- if($("driveBackupSettings").open){
-  $("localBackupSettings").open=false;
-  $("destinationDrive").checked=true;$("destinationOff").checked=false;$("destinationLocal").checked=false;
-  setBackupSaveFeedback("Google Drive selected. Save to enable automatic Drive backups.");
- }
+$("destinationLocal").addEventListener("change",()=>{
+ if(!$("destinationLocal").checked)return;
+ $("localBackupSettings").open=true;$("driveBackupSettings").open=false;
+ setBackupSaveFeedback("Local selected. Save to enable automatic local backups.");
+});
+$("destinationDrive").addEventListener("change",()=>{
+ if(!$("destinationDrive").checked)return;
+ $("driveBackupSettings").open=true;$("localBackupSettings").open=false;
+ setBackupSaveFeedback("Google Drive selected. Save to enable automatic Drive backups.");
 });
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 function refreshDriveStatus(){
