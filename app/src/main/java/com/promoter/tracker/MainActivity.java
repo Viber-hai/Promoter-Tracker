@@ -16,6 +16,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.app.DownloadManager;
+import android.database.Cursor;
+import android.os.Handler;
+import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -52,6 +57,9 @@ public class MainActivity extends FragmentActivity {
     private long pausedAt = 0L;
     private boolean pageLoaded = false;
     private boolean updateDialogShowing = false;
+    private final Handler updateHandler = new Handler(Looper.getMainLooper());
+    private ProgressDialog updateProgressDialog;
+    private Runnable updateProgressPoll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,8 +148,8 @@ public class MainActivity extends FragmentActivity {
                             .setPositiveButton("Download & Update", (dialog, which) -> {
                                 try {
                                     String apk = UpdateManager.apkUrl(release);
-                                    UpdateManager.download(this, apk, version);
-                                    Toast.makeText(this, "Update downloading. Android will ask you to install it when ready.", Toast.LENGTH_LONG).show();
+                                    long downloadId = UpdateManager.download(this, apk, version);
+                                    showUpdateDownloadProgress(downloadId, version);
                                 } catch (Exception e) {
                                     Toast.makeText(this, "Could not start update: " + e.getMessage(), Toast.LENGTH_LONG).show();
                                 }
@@ -154,6 +162,66 @@ public class MainActivity extends FragmentActivity {
                 if (manual) runOnUiThread(() -> Toast.makeText(this, "Could not check updates. Check your internet connection and try again.", Toast.LENGTH_LONG).show());
             }
         });
+    }
+
+    private void showUpdateDownloadProgress(long downloadId, String version) {
+        if (updateProgressDialog != null && updateProgressDialog.isShowing()) updateProgressDialog.dismiss();
+        updateProgressDialog = new ProgressDialog(this);
+        updateProgressDialog.setTitle("Downloading Promoter Tracker " + version);
+        updateProgressDialog.setMessage("Preparing download…");
+        updateProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        updateProgressDialog.setMax(100);
+        updateProgressDialog.setProgress(0);
+        updateProgressDialog.setCancelable(false);
+        updateProgressDialog.setButton(ProgressDialog.BUTTON_NEGATIVE, "Run in background", (dialog, which) -> {
+            dialog.dismiss();
+            Toast.makeText(this, "Download will continue in the background. Check notifications for progress.", Toast.LENGTH_LONG).show();
+        });
+        updateProgressDialog.show();
+
+        updateProgressPoll = new Runnable() {
+            @Override public void run() {
+                DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                DownloadManager.Query query = new DownloadManager.Query().setFilterById(downloadId);
+                try (Cursor cursor = dm.query(query)) {
+                    if (cursor == null || !cursor.moveToFirst()) {
+                        if (updateProgressDialog != null && updateProgressDialog.isShowing()) updateProgressDialog.dismiss();
+                        Toast.makeText(MainActivity.this, "The update download could not be found. Please try again.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    int status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                    long downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    long total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                    if (total > 0) {
+                        int percent = (int) Math.min(100, (downloaded * 100L) / total);
+                        if (updateProgressDialog != null && updateProgressDialog.isShowing()) {
+                            updateProgressDialog.setProgress(percent);
+                            updateProgressDialog.setMessage((downloaded / 1024) + " KB of " + (total / 1024) + " KB");
+                        }
+                    } else if (updateProgressDialog != null && updateProgressDialog.isShowing()) {
+                        updateProgressDialog.setMessage("Connecting to GitHub and preparing the APK…");
+                    }
+
+                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                        if (updateProgressDialog != null && updateProgressDialog.isShowing()) updateProgressDialog.dismiss();
+                        Toast.makeText(MainActivity.this, "Update downloaded. Opening Android installer…", Toast.LENGTH_LONG).show();
+                        UpdateManager.installPending(MainActivity.this);
+                        return;
+                    }
+                    if (status == DownloadManager.STATUS_FAILED) {
+                        int reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
+                        if (updateProgressDialog != null && updateProgressDialog.isShowing()) updateProgressDialog.dismiss();
+                        Toast.makeText(MainActivity.this, "Update download failed (code " + reason + "). Check internet and try again.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    updateHandler.postDelayed(this, 700);
+                } catch (Exception e) {
+                    if (updateProgressDialog != null && updateProgressDialog.isShowing()) updateProgressDialog.dismiss();
+                    Toast.makeText(MainActivity.this, "Could not monitor the update download: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+        };
+        updateHandler.post(updateProgressPoll);
     }
 
     boolean isBiometricAvailable() {
