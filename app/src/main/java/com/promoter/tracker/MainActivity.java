@@ -134,12 +134,9 @@ public class MainActivity extends FragmentActivity {
                     if (updateDialogShowing) return;
                     updateDialogShowing = true;
                     String version = release.optString("tag_name", "New version");
-                    String notes = release.optString("body", "Bug fixes and improvements.");
-                    if (notes.length() > 1400) notes = notes.substring(0, 1400) + "…";
-                    final String releaseNotes = notes;
                     new AlertDialog.Builder(this)
                             .setTitle("Promoter Tracker update available · " + version)
-                            .setMessage(releaseNotes + "\n\nCurrent version: " + current + "\nNew version: " + latest)
+                            .setMessage("A new version is ready to install.\n\nCurrent version: " + current + "\nNew version: " + latest)
                             .setPositiveButton("Download & Update", (dialog, which) -> {
                                 try {
                                     String apk = UpdateManager.apkUrl(release);
