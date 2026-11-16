@@ -357,6 +357,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <label class="field">Available encrypted backups<select id="driveBackupList"><option value="">Connect and find backups</option></select></label><button class="secondary" id="driveRestoreSelected" type="button">Restore selected Drive backup</button>
  <p class="note">Google Drive backups are stored in Promoter Tracker's private app-data area. They do not appear in your normal Drive folders. Internet access is required.</p><p class="backup-status" id="driveBackupStatus">No Google Drive backup yet</p></div></details>
  <section class="backup-source" id="backupEncryptionInfo"><div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div><p class="note">Backup files are encrypted by Promoter Tracker and can only be restored inside the app.</p><p class="note" id="recoveryPasswordState">Same-phone restore uses this device's secure key. For a new phone, set a recovery password before creating a backup.</p><button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button></section>
+ <p class="backup-status" id="backupSaveStatus" role="status" aria-live="polite">Choose Local or Google Drive, then save your automatic backup preference.</p>
  <p class="backup-status" id="backupStatus">Last backup: Not yet created</p><button class="primary" id="saveBackupSettings" type="button">Save backup settings</button><button class="secondary" data-close type="button">Close</button>
 </div></div>
 <div class="sheet" id="pinSetupSheet" role="dialog" aria-modal="true" aria-label="Set backup PIN"><div class="panel"><div class="grip"></div><h2>Set backup PIN</h2><p class="helper">Create a six-digit PIN. It is stored as a salted PBKDF2 hash, not as readable text.</p><label class="field">New PIN<input id="pinNew" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="6 digits"></label><label class="field">Confirm PIN<input id="pinConfirm" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Repeat PIN"></label><p class="security-status" id="pinSetupStatus"></p><button class="primary" id="savePin" type="button">Save PIN</button><button class="secondary" data-close type="button">Cancel</button></div></div>
@@ -817,20 +818,36 @@ function loadBackupSettings(){
   if(last)setBackupStatus(last);
  }catch(e){console.warn("Backup settings could not be loaded",e);}
 }
+function setBackupSaveFeedback(message,isError=false){
+ const status=$("backupSaveStatus");
+ if(status){status.textContent=message;status.style.color=isError?"var(--red2)":"var(--muted)";}
+}
 function saveBackupSettings(){
  const old=readBackupSettings();
  const destination=$("destinationDrive").checked?"drive":$("destinationLocal").checked?"local":"off";
  const frequency=$("backupFrequency").value,driveFrequency=$("driveBackupFrequency").value;
  const p={...old,destination,frequency,driveFrequency,enabled:destination==="local",driveEnabled:destination==="drive"};
+ setBackupSaveFeedback("Saving automatic backup settings…");
  try{
   if(window.AppBackup){
    const result=String(window.AppBackup.configureAutoBackup(destination,frequency,driveFrequency));
-   if(result.startsWith("ERROR|")){toast(result.slice(6));return;}
+   if(result.startsWith("ERROR|")){
+    const message=result.slice(6);
+    setBackupSaveFeedback("Not saved: "+message,true);toast(message);return;
+   }
+   if(result!=="OK"){
+    setBackupSaveFeedback("Not saved: Android did not confirm the setting.",true);
+    toast("Android did not confirm the backup setting.");return;
+   }
   }
   localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));
   const label=destination==="local"?"Local":destination==="drive"?"Google Drive":"No";
-  toast(label+" automatic backup setting saved. The first scheduled backup runs after the selected interval.");
- }catch(e){toast("Could not save backup settings: "+e.message);}
+  const message=label+" automatic backup setting saved. First scheduled backup is due after "+(destination==="drive"?driveFrequency:frequency)+".";
+  setBackupSaveFeedback(message);toast(message);
+ }catch(e){
+  const message="Could not save backup settings: "+(e&&e.message?e.message:String(e));
+  setBackupSaveFeedback(message,true);toast(message);
+ }
 }
 function readBackupSettings(){try{return JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}")}catch(e){return {}}}
 function recordBackupStatus(message){
@@ -954,6 +971,8 @@ async function restoreLocalBackup(file){
  }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
 }
 
+$("localBackupSettings").querySelector("summary").addEventListener("click",()=>{$("destinationLocal").checked=true;$("destinationOff").checked=false;$("destinationDrive").checked=false;});
+$("driveBackupSettings").querySelector("summary").addEventListener("click",()=>{$("destinationDrive").checked=true;$("destinationOff").checked=false;$("destinationLocal").checked=false;});
 $("destinationOff").addEventListener("change",()=>{$("localBackupSettings").open=false;$("driveBackupSettings").open=false;});
 $("destinationLocal").addEventListener("change",()=>{$("localBackupSettings").open=true;$("driveBackupSettings").open=false;});
 $("destinationDrive").addEventListener("change",()=>{$("driveBackupSettings").open=true;$("localBackupSettings").open=false;});
@@ -989,7 +1008,14 @@ $("driveRestoreSelected").onclick=()=>{
  AppBackup.downloadDriveBackup(id);
 };
 window.onNativeDriveResult=async(action,status,data)=>{
- if(action==="connection"){toast(status);refreshDriveStatus();return;}
+ if(action==="connection"){
+   if(status.startsWith("Connected:")){
+    $("destinationDrive").checked=true;$("destinationLocal").checked=false;$("destinationOff").checked=false;
+    $("driveBackupSettings").open=true;$("localBackupSettings").open=false;
+    setBackupSaveFeedback("Google Drive connected. Save to enable automatic Drive backups.");
+   }
+   toast(status);refreshDriveStatus();return;
+  }
  if(status.startsWith("ERROR:")){$("driveBackupStatus").textContent=status;toast(status);return;}
  if(action==="backup"){$("driveBackupStatus").textContent=status;toast("Encrypted backup saved to Drive");return;}
  if(action==="list"){
@@ -1023,7 +1049,7 @@ window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automa
 
 
 
-render();
+setCategory(cat);
 syncChangelogIndicator();
 syncSecuritySettings();
 updateFabVisibility();
