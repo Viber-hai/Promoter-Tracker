@@ -265,8 +265,14 @@ public class AppBackupBridge {
 
     @JavascriptInterface
     public String setPin(String pin) {
-        try { SecurityStore.setPin(context, pin); return "OK"; }
-        catch (Exception e) { return "ERROR|" + e.getMessage(); }
+        try {
+            SecurityStore.setPin(context, pin);
+            if (!SecurityStore.isPinConfigured() || !SecurityStore.verifyPin(context, pin))
+                return "ERROR|The backup PIN was written but could not be verified. Please try again.";
+            return "OK|Backup PIN saved and verified on this device.";
+        } catch (Exception e) {
+            return "ERROR|" + (e.getMessage() == null ? "Could not save the backup PIN." : e.getMessage());
+        }
     }
 
     @JavascriptInterface
