@@ -712,9 +712,14 @@ $("savePin").addEventListener("click",()=>{
  if(!window.AppBackup){$("pinSetupStatus").textContent="PIN setup requires the installed Android app.";return;}
  const result=String(AppBackup.setPin(pin));
  if(!result.startsWith("OK")){$("pinSetupStatus").textContent=result.replace(/^ERROR\|/,"");return;}
+ if(!AppBackup.isPinConfigured()||!AppBackup.verifyPin(pin)){
+  $("pinSetupStatus").textContent="Android did not confirm the saved PIN. Please try again.";
+  return;
+ }
+ $("pinSetupStatus").textContent="PIN saved and verified on this phone.";
  $("pinNew").value="";$("pinConfirm").value="";closeSheet($("pinSetupSheet"));
  if(pendingEnableFingerprint){pendingEnableFingerprint=false;const enabled=String(AppBackup.setBiometricEnabled(true));if(enabled.startsWith("OK")){syncSecuritySettings();lockPromoterTracker();}else toast(enabled.replace(/^ERROR\|/,""));}
- else{syncSecuritySettings();toast("Backup PIN saved securely.");}
+ else{syncSecuritySettings();toast("Backup PIN saved and verified.");}
 });
 $("fingerprintEnabled").addEventListener("change",e=>{
  if(!window.AppBackup){e.target.checked=false;toast("Fingerprint authentication requires the installed Android app.");return;}
@@ -735,7 +740,12 @@ $("saveRecovery").addEventListener("click",()=>{
  if(!window.AppBackup){$("recoverySetupStatus").textContent="Recovery-password setup requires the installed Android app.";return;}
  const result=String(AppBackup.setRecoveryPassword(a));
  if(!result.startsWith("OK")){$("recoverySetupStatus").textContent=result.replace(/^ERROR\|/,"");return;}
- $("recoveryNew").value="";$("recoveryConfirm").value="";closeSheet($("recoverySetupSheet"));syncSecuritySettings();toast("New-phone recovery password saved.");
+ if(!AppBackup.hasRecoveryPassword()){
+  $("recoverySetupStatus").textContent="Android did not confirm the saved recovery password. Please try again.";
+  return;
+ }
+ $("recoverySetupStatus").textContent="Recovery password saved and verified on this phone.";
+ $("recoveryNew").value="";$("recoveryConfirm").value="";closeSheet($("recoverySetupSheet"));syncSecuritySettings();toast("New-phone recovery password saved and verified.");
 });
 $("decryptRestore").addEventListener("click",async()=>{
  try{const done=await finishEncryptedRestore(pendingEncryptedRestore,$("restoreRecoveryPassword").value);if(done){pendingEncryptedRestore="";$("restoreRecoveryPassword").value="";closeSheet($("restorePasswordSheet"));}}
@@ -1015,30 +1025,31 @@ async function restoreLocalBackup(file){
  }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
 }
 
-// Keep the radio selection and accordion interaction synchronized.
-// Opening a section selects its destination; closing it leaves the selection unchanged.
-function selectBackupDestination(destination, feedback){
+// Persist a destination as soon as the user selects it. The Save button also
+// persists the selected frequency and re-verifies Android's stored preferences.
+function selectBackupDestination(destination){
  const radio=$(destination==="local"?"destinationLocal":destination==="drive"?"destinationDrive":"destinationOff");
  if(!radio)return;
  radio.checked=true;
  $("localBackupSettings").open=destination==="local";
  $("driveBackupSettings").open=destination==="drive";
- setBackupSaveFeedback(feedback);
 }
+function persistSelectedBackupDestination(){saveBackupSettings();}
 $("destinationOff").addEventListener("change",()=>{
- if($("destinationOff").checked)selectBackupDestination("off","Automatic backups are off. Save to confirm.");
+ if($("destinationOff").checked)persistSelectedBackupDestination();
 });
 $("destinationLocal").addEventListener("change",()=>{
- if($("destinationLocal").checked)selectBackupDestination("local","Local selected. Save to enable automatic local backups.");
+ if($("destinationLocal").checked)persistSelectedBackupDestination();
 });
 $("destinationDrive").addEventListener("change",()=>{
- if($("destinationDrive").checked)selectBackupDestination("drive","Google Drive selected. Save to enable automatic Drive backups.");
+ if($("destinationDrive").checked)persistSelectedBackupDestination();
 });
-$("localBackupSettings").querySelector("summary").addEventListener("click",()=>{
- if(!$("localBackupSettings").open)selectBackupDestination("local","Local selected. Save to enable automatic local backups.");
+// Details toggle fires after the browser has changed the open state.
+$("localBackupSettings").addEventListener("toggle",()=>{
+ if($("localBackupSettings").open){selectBackupDestination("local");persistSelectedBackupDestination();}
 });
-$("driveBackupSettings").querySelector("summary").addEventListener("click",()=>{
- if(!$("driveBackupSettings").open)selectBackupDestination("drive","Google Drive selected. Save to enable automatic Drive backups.");
+$("driveBackupSettings").addEventListener("toggle",()=>{
+ if($("driveBackupSettings").open){selectBackupDestination("drive");persistSelectedBackupDestination();}
 });
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 function refreshDriveStatus(){
