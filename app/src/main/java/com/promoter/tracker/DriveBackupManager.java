@@ -105,11 +105,19 @@ final class DriveBackupManager {
     }
 
     static JSONArray list(Context context) throws Exception {
-        String url = BASE + "?spaces=appDataFolder&q=" +
-                java.net.URLEncoder.encode("name contains 'promoter-tracker-' and trashed = false", "UTF-8") +
-                "&fields=nextPageToken,files(id,name,createdTime,size)&orderBy=createdTime%20desc&pageSize=50";
-        JSONObject response = new JSONObject(new String(request(context, "GET", url, null, null), StandardCharsets.UTF_8));
-        return response.optJSONArray("files") == null ? new JSONArray() : response.getJSONArray("files");
+        JSONArray all = new JSONArray();
+        String pageToken = null;
+        do {
+            String url = BASE + "?spaces=appDataFolder&q=" +
+                    java.net.URLEncoder.encode("name contains 'promoter-tracker-' and trashed = false", "UTF-8") +
+                    "&fields=nextPageToken,files(id,name,createdTime,size)&orderBy=createdTime%20desc&pageSize=100";
+            if (pageToken != null) url += "&pageToken=" + java.net.URLEncoder.encode(pageToken, "UTF-8");
+            JSONObject response = new JSONObject(new String(request(context, "GET", url, null, null), StandardCharsets.UTF_8));
+            JSONArray page = response.optJSONArray("files");
+            if (page != null) for (int i = 0; i < page.length(); i++) all.put(page.getJSONObject(i));
+            pageToken = response.optString("nextPageToken", null);
+        } while (pageToken != null && !pageToken.isEmpty());
+        return all;
     }
 
     static void delete(Context context, String id) throws Exception {
