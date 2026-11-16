@@ -92,7 +92,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .stepper button{width:27px;height:27px;border:0;border-radius:9px;background:var(--glass-strong);box-shadow:0 2px 6px rgba(20,20,25,.08);font-size:17px;color:var(--ink)}
 .stepper .plus{background:linear-gradient(145deg,#e64b64,#b80b2b);color:#fff;box-shadow:0 4px 9px #c8102e35}
 .stepper .qty-edit{min-width:29px;height:29px;padding:0 4px;border:1px solid var(--line);border-radius:9px;background:var(--glass-strong);color:var(--red2);font-size:13px;font-weight:950;text-align:center;font-variant-numeric:tabular-nums}.stepper .qty-manual{width:54px;height:29px;padding:0 4px;border:1px solid rgba(200,16,46,.42);border-radius:9px;background:var(--field);color:var(--ink);font-size:13px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;outline:none}
-.details{display:grid;grid-column:1/-1;grid-template-columns:minmax(0,1fr);grid-template-rows:0fr;gap:0;border-top:1px solid transparent;padding-top:0;min-height:0;opacity:0;transform:translateY(-4px);transition:grid-template-rows .32s cubic-bezier(.2,.75,.25,1),padding-top .28s ease,opacity .22s ease,transform .32s ease,border-color .25s ease}
+.details{display:grid;grid-column:1/-1;grid-template-columns:minmax(0,1fr);grid-template-rows:0fr;gap:0;border-top:1px solid transparent;padding-top:0;min-height:0;opacity:0;transform:translateY(-5px);transition:grid-template-rows .38s cubic-bezier(.22,.8,.25,1),padding-top .34s ease,opacity .26s ease,transform .38s cubic-bezier(.22,.8,.25,1),border-color .3s ease}
 .model.open .details{grid-template-rows:1fr;gap:9px;border-top-color:var(--line);padding-top:10px;opacity:1;transform:translateY(0)}
 .details-inner{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;min-height:0;overflow:hidden;align-content:start}
 .details label{font-size:8px;color:var(--muted);font-weight:750;display:grid;gap:5px}
@@ -719,8 +719,21 @@ $("models").addEventListener("click",e=>{
   const input=stepper.querySelector(".qty-manual");input.focus();input.select();return;
  }
  if(action==="toggle"){
-  expandedId=expandedId===m.id?null:m.id;
-  render();
+  // Animate the existing cards in place. Re-rendering innerHTML here destroys
+  // the closing transition before the browser can play it.
+  const list=$("models");
+  const opening=expandedId!==m.id;
+  if(opening&&expandedId!==null){
+   const previous=Array.from(list.querySelectorAll(".model")).find(el=>data[Number(el.dataset.index)]?.id===expandedId);
+   if(previous){
+    previous.classList.remove("open");
+    previous.querySelector(".model-main")?.setAttribute("aria-expanded","false");
+   }
+  }
+  expandedId=opening?m.id:null;
+  card.classList.toggle("open",opening);
+  card.querySelector(".model-main")?.setAttribute("aria-expanded",opening?"true":"false");
+  document.body.classList.toggle("editing-model",opening);
   return;
  }
  if(action==="delete"){
