@@ -129,6 +129,12 @@ public class AppBackupBridge {
     public void downloadDriveBackup(String id) { activity.runDriveTask("download", id); }
 
     @JavascriptInterface
+    public void deleteDriveBackup(String id) { activity.runDriveTask("delete", id); }
+
+    @JavascriptInterface
+    public void deleteAllDriveBackups() { activity.runDriveTask("deleteAll", ""); }
+
+    @JavascriptInterface
     public boolean isDriveAutoBackupEnabled() {
         return context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE)
                 .getBoolean("drive_auto_enabled", false);
