@@ -48,7 +48,7 @@ final class SecurityStore {
                 .putInt("pin_failed_attempts", 0).putLong("pin_locked_until", 0L)
                 .commit();
         Arrays.fill(hash, (byte) 0);
-        if (!saved || !isPinConfigured() || !verifyPin(c, pin))
+        if (!saved || !isPinConfigured(c) || !verifyPin(c, pin))
             throw new IllegalStateException("Android could not confirm that the backup PIN was saved. Please try again.");
     }
     static boolean verifyPin(Context c, String pin) {
