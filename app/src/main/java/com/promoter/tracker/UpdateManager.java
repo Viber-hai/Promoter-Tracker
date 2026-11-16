@@ -25,7 +25,7 @@ final class UpdateManager {
     static final String PREFS = "promoter_update_state";
     static final String KEY_DOWNLOAD_ID = "pending_update_download_id";
     static final String CHANNEL = "promoter_app_updates";
-    static final String RELEASES_API = "https://api.github.com/repos/Viber-hai/Promoter-Tracker/releases/latest";
+    static final String RELEASES_API = "https://api.github.com/repos/Viber-hai/Promoter-Tracker/releases?per_page=100";
     private UpdateManager() {}
 
     static JSONObject fetchLatestRelease() throws Exception {
@@ -43,8 +43,32 @@ final class UpdateManager {
                 String line;
                 while ((line = r.readLine()) != null) body.append(line);
             }
-            return new JSONObject(body.toString());
+
+            JSONArray releases = new JSONArray(body.toString());
+            JSONObject newest = null;
+            int newestCode = -1;
+            for (int i = 0; i < releases.length(); i++) {
+                JSONObject release = releases.optJSONObject(i);
+                if (release == null || release.optBoolean("draft", false) || release.optBoolean("prerelease", false)) continue;
+                int versionCode = releaseVersionCode(release);
+                if (versionCode <= newestCode || !hasApkAsset(release)) continue;
+                newest = release;
+                newestCode = versionCode;
+            }
+            if (newest == null) throw new Exception("No published Promoter Tracker release with an APK was found.");
+            return newest;
         } finally { c.disconnect(); }
+    }
+
+    private static boolean hasApkAsset(JSONObject release) {
+        JSONArray assets = release.optJSONArray("assets");
+        if (assets == null) return false;
+        for (int i = 0; i < assets.length(); i++) {
+            JSONObject asset = assets.optJSONObject(i);
+            if (asset != null && asset.optString("name", "").toLowerCase(java.util.Locale.ROOT).endsWith(".apk")
+                    && !asset.optString("browser_download_url", "").isEmpty()) return true;
+        }
+        return false;
     }
 
     static int currentVersionCode(Context context) throws Exception {
