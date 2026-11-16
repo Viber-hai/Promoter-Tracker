@@ -597,6 +597,28 @@ function closeSheet(sheet){
  if(sheet){sheet.classList.remove("show");return;}
  document.querySelectorAll(".sheet.show").forEach(x=>x.classList.remove("show"));
 }
+// Light native haptic feedback for meaningful user actions across the app.
+(function(){
+ let lastHapticAt=0;
+ function haptic(){
+  const now=Date.now();
+  if(now-lastHapticAt<45)return;
+  lastHapticAt=now;
+  try{if(window.AppUpdates&&typeof window.AppUpdates.performHapticFeedback==="function")window.AppUpdates.performHapticFeedback();}catch(e){}
+ }
+ document.addEventListener("click",function(event){
+  const target=event.target;
+  if(!target||!target.closest)return;
+  const control=target.closest("button,[role='button'],summary,.cat,.model-main,.stepper,.tab,.menu-item");
+  if(!control)return;
+  if(control.disabled||control.getAttribute("aria-disabled")==="true")return;
+  haptic();
+ },true);
+ document.addEventListener("change",function(event){
+  const el=event.target;
+  if(el&&el.matches&&el.matches("select,input[type=checkbox],input[type=radio]"))haptic();
+ },true);
+})();
 document.querySelectorAll(".cat").forEach(b=>b.addEventListener("click",()=>setCategory(b.dataset.cat)));
 $("search").addEventListener("input",render);
 $("sold").addEventListener("click",()=>{only=!only;$("sold").classList.toggle("active",only);render();});
