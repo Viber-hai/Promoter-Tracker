@@ -25,6 +25,9 @@
             </intent-filter>
 
         </activity>
+        <receiver android:name=".UpdateInstallReceiver" android:exported="false">
+            <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED"/></intent-filter>
+        </receiver>
         <receiver android:name=".UpdateDownloadReceiver" android:exported="false">
             <intent-filter><action android:name="android.intent.action.DOWNLOAD_COMPLETE"/></intent-filter>
         </receiver>
