@@ -354,7 +354,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <p class="note" id="driveAccountStatus">Not connected</p><div class="backup-actions"><button class="secondary" id="driveConnect" type="button">Connect Google Drive</button><button class="secondary" id="driveDisconnect" type="button">Disconnect</button></div>
  <label class="field">Automatic frequency<select id="driveBackupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select></label>
  <button class="primary" id="driveManualBackup" type="button">Back up to Drive now</button><button class="secondary" id="driveRestore" type="button">Find Drive backups</button>
- <label class="field">Available encrypted backups<select id="driveBackupList"><option value="">Connect and find backups</option></select></label><button class="secondary" id="driveRestoreSelected" type="button">Restore selected Drive backup</button>
+ <label class="field">Available encrypted backups<select id="driveBackupList"><option value="">Connect and find backups</option></select></label><div class="backup-actions"><button class="secondary" id="driveRestoreSelected" type="button">Restore selected backup</button><button class="danger-btn" id="driveDeleteSelected" type="button">Delete selected backup</button></div><button class="danger-btn" id="driveDeleteAll" type="button">Delete all app backups from Drive</button>
  <p class="note">Google Drive backups are stored in Promoter Tracker's private app-data area. They do not appear in your normal Drive folders. Internet access is required.</p><p class="backup-status" id="driveBackupStatus">No Google Drive backup yet</p></div></details>
  <section class="backup-source" id="backupEncryptionInfo"><div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div><p class="note">Backup files are encrypted by Promoter Tracker and can only be restored inside the app.</p><p class="note" id="recoveryPasswordState">Same-phone restore uses this device's secure key. For a new phone, set a recovery password before creating a backup.</p><button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button></section>
  <p class="backup-status" id="backupSaveStatus" role="status" aria-live="polite">Choose Local or Google Drive, then save your automatic backup preference.</p>
@@ -1025,8 +1025,8 @@ async function restoreLocalBackup(file){
  }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
 }
 
-// Persist a destination as soon as the user selects it. The Save button also
-// persists the selected frequency and re-verifies Android's stored preferences.
+// Destination selection is deliberately separate from saving.
+// Opening an accordion must never silently change or overwrite the chosen destination.
 function selectBackupDestination(destination){
  const radio=$(destination==="local"?"destinationLocal":destination==="drive"?"destinationDrive":"destinationOff");
  if(!radio)return;
@@ -1034,23 +1034,16 @@ function selectBackupDestination(destination){
  $("localBackupSettings").open=destination==="local";
  $("driveBackupSettings").open=destination==="drive";
 }
-function persistSelectedBackupDestination(){saveBackupSettings();}
-$("destinationOff").addEventListener("change",()=>{
- if($("destinationOff").checked)persistSelectedBackupDestination();
-});
-$("destinationLocal").addEventListener("change",()=>{
- if($("destinationLocal").checked)persistSelectedBackupDestination();
-});
-$("destinationDrive").addEventListener("change",()=>{
- if($("destinationDrive").checked)persistSelectedBackupDestination();
-});
-// Details toggle fires after the browser has changed the open state.
-$("localBackupSettings").addEventListener("toggle",()=>{
- if($("localBackupSettings").open){selectBackupDestination("local");persistSelectedBackupDestination();}
-});
-$("driveBackupSettings").addEventListener("toggle",()=>{
- if($("driveBackupSettings").open){selectBackupDestination("drive");persistSelectedBackupDestination();}
-});
+function showBackupSelection(){
+ const selected=document.querySelector('input[name="backupDestination"]:checked');
+ const value=selected?selected.value:"off";
+ const label=value==="local"?"Local":value==="drive"?"Google Drive":"Off";
+ setBackupSaveFeedback(label+" selected. Press “Save backup settings” to store this choice.");
+}
+$("destinationOff").addEventListener("change",()=>{if($("destinationOff").checked)showBackupSelection();});
+$("destinationLocal").addEventListener("change",()=>{if($("destinationLocal").checked){$("localBackupSettings").open=true;$("driveBackupSettings").open=false;showBackupSelection();}});
+$("destinationDrive").addEventListener("change",()=>{if($("destinationDrive").checked){$("driveBackupSettings").open=true;$("localBackupSettings").open=false;showBackupSelection();}});
+$("saveBackupSettings").onclick=saveBackupSettings;
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 function refreshDriveStatus(){
  if(!window.AppBackup){$("driveAccountStatus").textContent="Google Drive is available in the Android app.";return;}
@@ -1080,6 +1073,18 @@ $("driveRestoreSelected").onclick=()=>{
  $("driveBackupStatus").textContent="Downloading encrypted backup…";
  AppBackup.downloadDriveBackup(id);
 };
+$("driveDeleteSelected").onclick=()=>{
+ const id=$("driveBackupList").value;
+ if(!id){toast("Choose a Drive backup to delete first.");return;}
+ if(!confirm("Permanently delete this encrypted backup from Google Drive? This cannot be undone."))return;
+ $("driveBackupStatus").textContent="Deleting selected Drive backup…";
+ AppBackup.deleteDriveBackup(id);
+};
+$("driveDeleteAll").onclick=()=>{
+ if(!confirm("Permanently delete ALL Promoter Tracker backups stored in this app's private Google Drive area? This cannot be undone."))return;
+ $("driveBackupStatus").textContent="Deleting all Promoter Tracker backups from Drive…";
+ AppBackup.deleteAllDriveBackups();
+};
 window.onNativeDriveResult=async(action,status,data)=>{
  if(action==="connection"){
    if(status.startsWith("Connected:")){
@@ -1091,6 +1096,12 @@ window.onNativeDriveResult=async(action,status,data)=>{
   }
  if(status.startsWith("ERROR:")){$("driveBackupStatus").textContent=status;toast(status);return;}
  if(action==="backup"){$("driveBackupStatus").textContent=status;toast("Encrypted backup saved to Drive");return;}
+ if(action==="delete"||action==="deleteAll"){
+  $("driveBackupStatus").textContent=status;
+  toast(status);
+  AppBackup.listDriveBackups();
+  return;
+ }
  if(action==="list"){
   try{
    const files=JSON.parse(data||"[]"),select=$("driveBackupList");
@@ -1129,3 +1140,15 @@ updateFabVisibility();
 </script>
 </body>
 </html>
+<style>
+/* Backup & Restore text must wrap inside the panel on narrow phones. */
+#sBackup .backup-panel{box-sizing:border-box;padding-left:16px;padding-right:16px}
+#sBackup .backup-panel p,#sBackup .backup-panel small,#sBackup .backup-panel label,
+#sBackup .backup-panel summary,#sBackup .backup-panel h2,#sBackup .backup-panel h3{
+ max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:normal;
+}
+#sBackup .backup-intro,#sBackup .backup-save-explainer{font-size:12px;line-height:1.55;margin:8px 0 12px}
+#sBackup .backup-status,#sBackup .note{line-height:1.5;text-align:left}
+#sBackup .backup-destination-row label{white-space:normal;text-align:center;line-height:1.3}
+#sBackup .backup-source,#sBackup .backup-accordion{box-sizing:border-box}
+</style>
