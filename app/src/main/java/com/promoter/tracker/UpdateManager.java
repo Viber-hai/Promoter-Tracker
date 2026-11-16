@@ -24,6 +24,7 @@ import java.net.URL;
 final class UpdateManager {
     static final String PREFS = "promoter_update_state";
     static final String KEY_DOWNLOAD_ID = "pending_update_download_id";
+    static final String EXTRA_INSTALL_PENDING = "install_pending_update";
     static final String CHANNEL = "promoter_app_updates";
     static final String RELEASES_API = "https://api.github.com/repos/Viber-hai/Promoter-Tracker/releases?per_page=100";
     private UpdateManager() {}
@@ -120,6 +121,7 @@ final class UpdateManager {
     static void notifyDownloadReady(Context context) {
         ensureChannel(context);
         Intent open = new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        open.putExtra(EXTRA_INSTALL_PENDING, true);
         PendingIntent pi = PendingIntent.getActivity(context, 7102, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         android.app.Notification n = new NotificationCompat.Builder(context, CHANNEL)
@@ -151,12 +153,28 @@ final class UpdateManager {
         if (uri == null) return;
         if (Build.VERSION.SDK_INT >= 26 && !context.getPackageManager().canRequestPackageInstalls()) {
             Intent settings = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                    Uri.parse("package:" + context.getPackageName())).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(settings);
+                    Uri.parse("package:" + context.getPackageName()));
+            if (context instanceof MainActivity) {
+                ((MainActivity) context).startActivityForResult(settings, MainActivity.INSTALL_PERMISSION_REQUEST);
+            } else {
+                settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(settings);
+            }
             return;
         }
+
+        // Consume this download before opening Android installer. The installer can
+        // briefly return focus to MainActivity while scanning; never relaunch it for the same APK.
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                .remove(KEY_DOWNLOAD_ID).commit();
         Intent install = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(install);
+        try {
+            context.startActivity(install);
+        } catch (Exception e) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    .putLong(KEY_DOWNLOAD_ID, id).commit();
+            throw e;
+        }
     }
 }
