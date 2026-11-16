@@ -8,6 +8,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.os.Vibrator;
+import android.os.VibrationEffect;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -122,6 +124,22 @@ public class MainActivity extends FragmentActivity {
             intent.setAction(null);
             UpdateManager.installPending(this);
         }
+    }
+
+    @JavascriptInterface
+    public void performHapticFeedback() {
+        try {
+            Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (vibrator == null || !vibrator.hasVibrator()) return;
+            if (Build.VERSION.SDK_INT >= 29) {
+                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK));
+            } else if (Build.VERSION.SDK_INT >= 26) {
+                vibrator.vibrate(VibrationEffect.createOneShot(12, 45));
+            } else {
+                // Legacy devices use the deprecated one-shot API through Vibrator.
+                vibrator.vibrate(12);
+            }
+        } catch (Exception ignored) { }
     }
 
     @JavascriptInterface
