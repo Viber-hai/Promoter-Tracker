@@ -729,7 +729,7 @@ $("models").addEventListener("click",e=>{
    const animation=panel.animate([
     {height:height+"px",opacity:1,transform:"translateY(0)",paddingTop:"10px"},
     {height:"0px",opacity:0,transform:"translateY(-5px)",paddingTop:"0px"}
-   ],{duration:460,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
+   ],{duration:520,easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"});
    animation.onfinish=()=>{expandedId=null;render();};
    return;
   }
