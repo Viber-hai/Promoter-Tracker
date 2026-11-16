@@ -118,6 +118,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .secondary{margin-top:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .danger-btn{margin-top:8px;border:1px solid rgba(197,43,62,.28);background:rgba(197,43,62,.08);color:var(--danger)}
 .helper{font-size:9px;line-height:1.5;color:var(--muted);margin:10px 2px}
+.drive-delete-picker{margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.drive-delete-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px}
+.drive-select-all{display:flex;align-items:center;gap:7px;font-size:11px}
+.drive-select-all input,.drive-backup-delete-item input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+.drive-backup-delete-list{max-height:260px;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.drive-backup-delete-item{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--line);min-width:0}
+.drive-backup-delete-item:last-child{border-bottom:0}
+.drive-backup-delete-details{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.drive-backup-delete-details b{font-size:11px;overflow-wrap:anywhere}
+.drive-backup-delete-details small{font-size:10px;color:var(--muted)}
+#driveDeleteSelected:disabled{opacity:.45;cursor:not-allowed}
 .toast{
  position:fixed;z-index:100;left:50%;
  bottom:calc(18px + env(safe-area-inset-bottom));
@@ -378,7 +389,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  <p class="note" id="driveAccountStatus">Not connected</p><div class="backup-actions"><button class="secondary" id="driveConnect" type="button">Connect Google Drive</button><button class="secondary" id="driveDisconnect" type="button">Disconnect</button></div>
  <label class="field">Automatic frequency<select id="driveBackupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select></label>
  <button class="primary" id="driveManualBackup" type="button">Back up to Drive now</button><button class="secondary" id="driveRestore" type="button">Find Drive backups</button>
- <label class="field">Available encrypted backups<select id="driveBackupList"><option value="">Connect and find backups</option></select></label><div class="backup-actions"><button class="secondary" id="driveRestoreSelected" type="button">Restore selected backup</button><button class="danger-btn" id="driveDeleteSelected" type="button">Delete selected backup</button></div><button class="danger-btn" id="driveDeleteAll" type="button">Delete all app backups from Drive</button>
+ <label class="field">Backup to restore (choose one)<select id="driveBackupList"><option value="">Connect and find backups</option></select></label><button class="secondary" id="driveRestoreSelected" type="button">Restore selected backup</button>
+ <div class="drive-delete-picker"><div class="drive-delete-heading"><b>Choose backups to delete</b><label class="drive-select-all"><input id="driveSelectAll" type="checkbox"> Select all</label></div><p class="note" id="driveDeleteCount">0 backups selected</p><div id="driveBackupDeleteList" class="drive-backup-delete-list" aria-label="Select multiple backups for deletion"><p class="note">Find Drive backups to load the list.</p></div><button class="danger-btn" id="driveDeleteSelected" type="button" disabled>Delete selected backups</button></div>
+ <button class="danger-btn" id="driveDeleteAll" type="button">Delete all app backups from Drive</button>
  <p class="note">Google Drive backups are stored in Promoter Tracker's private app-data area. They do not appear in your normal Drive folders. Internet access is required.</p><p class="backup-status" id="driveBackupStatus">No Google Drive backup yet</p></div></details>
  <section class="backup-source" id="backupEncryptionInfo"><div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div><p class="note">Backup files are encrypted by Promoter Tracker and can only be restored inside the app.</p><p class="note" id="recoveryPasswordState">Same-phone restore uses this device's secure key. For a new phone, set a recovery password before creating a backup.</p><button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button></section>
  <p class="backup-status" id="backupSaveStatus" role="status" aria-live="polite">Choose Local or Google Drive, then save your automatic backup preference.</p>
@@ -1097,12 +1110,27 @@ $("driveRestoreSelected").onclick=()=>{
  $("driveBackupStatus").textContent="Downloading encrypted backup…";
  AppBackup.downloadDriveBackup(id);
 };
+let driveBackupFiles=[];
+function updateDriveDeleteSelection(){
+ const checked=[...$("driveBackupDeleteList").querySelectorAll('input[data-drive-backup-id]:checked')];
+ $("driveDeleteCount").textContent=checked.length+" of "+driveBackupFiles.length+" backups selected";
+ $("driveDeleteSelected").disabled=checked.length===0;
+ $("driveSelectAll").checked=driveBackupFiles.length>0&&checked.length===driveBackupFiles.length;
+ $("driveSelectAll").indeterminate=checked.length>0&&checked.length<driveBackupFiles.length;
+}
+$("driveSelectAll").addEventListener("change",()=>{
+ $("driveBackupDeleteList").querySelectorAll('input[data-drive-backup-id]').forEach(box=>box.checked=$("driveSelectAll").checked);
+ updateDriveDeleteSelection();
+});
+$("driveBackupDeleteList").addEventListener("change",e=>{
+ if(e.target&&e.target.matches('input[data-drive-backup-id]'))updateDriveDeleteSelection();
+});
 $("driveDeleteSelected").onclick=()=>{
- const id=$("driveBackupList").value;
- if(!id){toast("Choose a Drive backup to delete first.");return;}
- if(!confirm("Permanently delete this encrypted backup from Google Drive? This cannot be undone."))return;
- $("driveBackupStatus").textContent="Deleting selected Drive backup…";
- AppBackup.deleteDriveBackup(id);
+ const ids=[...$("driveBackupDeleteList").querySelectorAll('input[data-drive-backup-id]:checked')].map(box=>box.dataset.driveBackupId);
+ if(!ids.length){toast("Select one or more backups to delete.");return;}
+ if(!confirm("Permanently delete "+ids.length+" selected encrypted backup(s) from Google Drive? This cannot be undone."))return;
+ $("driveBackupStatus").textContent="Deleting "+ids.length+" selected Drive backup(s)…";
+ AppBackup.deleteSelectedDriveBackups(JSON.stringify(ids));
 };
 $("driveDeleteAll").onclick=()=>{
  if(!confirm("Permanently delete ALL Promoter Tracker backups stored in this app's private Google Drive area? This cannot be undone."))return;
@@ -1120,18 +1148,31 @@ window.onNativeDriveResult=async(action,status,data)=>{
   }
  if(status.startsWith("ERROR:")){$("driveBackupStatus").textContent=status;toast(status);return;}
  if(action==="backup"){$("driveBackupStatus").textContent=status;toast("Encrypted backup saved to Drive");return;}
- if(action==="delete"||action==="deleteAll"){
+ if(action==="delete"||action==="deleteSelected"||action==="deleteAll"){
   $("driveBackupStatus").textContent=status;
   toast(status);
+  $("driveSelectAll").checked=false;
   AppBackup.listDriveBackups();
   return;
  }
  if(action==="list"){
   try{
    const files=JSON.parse(data||"[]"),select=$("driveBackupList");
+   driveBackupFiles=files;
    select.replaceChildren();
-   const empty=document.createElement("option");empty.value="";empty.textContent=files.length?"Choose a backup":"No backups found";select.append(empty);
-   files.forEach(file=>{const option=document.createElement("option");option.value=file.id;option.textContent=file.name+" · "+new Date(file.createdTime).toLocaleString();select.append(option);});
+   const empty=document.createElement("option");empty.value="";empty.textContent=files.length?"Choose one backup to restore":"No backups found";select.append(empty);
+   const deleteList=$("driveBackupDeleteList");deleteList.replaceChildren();
+   files.forEach((file,index)=>{
+    const label=document.createElement("label");label.className="drive-backup-delete-item";
+    const checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.dataset.driveBackupId=file.id;checkbox.setAttribute("aria-label","Select "+file.name+" for deletion");
+    const details=document.createElement("span");details.className="drive-backup-delete-details";
+    const name=document.createElement("b");name.textContent=file.name;
+    const date=document.createElement("small");date.textContent=new Date(file.createdTime).toLocaleString();
+    details.append(name,date);label.append(checkbox,details);deleteList.append(label);
+    const option=document.createElement("option");option.value=file.id;option.textContent=file.name+" · "+new Date(file.createdTime).toLocaleString();select.append(option);
+   });
+   if(!files.length){const emptyText=document.createElement("p");emptyText.className="note";emptyText.textContent="No Google Drive backups found.";deleteList.append(emptyText);}
+   $("driveSelectAll").checked=false;updateDriveDeleteSelection();
    $("driveBackupStatus").textContent=files.length+" encrypted Drive backups available.";
   }catch(e){toast("Could not read Drive backup list.");}
  }
