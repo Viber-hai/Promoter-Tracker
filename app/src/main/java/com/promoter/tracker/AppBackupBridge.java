@@ -19,6 +19,21 @@ public class AppBackupBridge {
     }
 
     @JavascriptInterface
+    public String loadSnapshot() {
+        File snapshot = new File(context.getFilesDir(), "promoter_tracker_backup_snapshot.enc");
+        if (!snapshot.isFile()) return "EMPTY";
+        try {
+            byte[] encrypted = java.nio.file.Files.readAllBytes(snapshot.toPath());
+            String json = BackupCrypto.decryptLocal(context, encrypted);
+            return "OK|" + Base64.encodeToString(json.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+        } catch (Exception e) {
+            return "ERROR|" + (e.getMessage() == null
+                    ? "Could not recover the saved app snapshot."
+                    : e.getMessage());
+        }
+    }
+
+    @JavascriptInterface
     public String saveSnapshot(String json) {
         if (json == null || json.trim().isEmpty()) return "ERROR|No tracker data.";
         if (json.length() > 5 * 1024 * 1024) return "ERROR|Backup is larger than 5 MB.";
