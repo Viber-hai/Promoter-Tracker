@@ -51,6 +51,7 @@ public class MainActivity extends FragmentActivity {
     private static final int AUTO_FOLDER_REQUEST = 1002;
     private static final int MANUAL_FOLDER_REQUEST = 1003;
     private static final int GOOGLE_SIGN_IN_REQUEST = 1004;
+    static final int INSTALL_PERMISSION_REQUEST = 7103;
     private WebView web;
     private ValueCallback<Uri[]> filePathCallback;
     private String pendingFolderKind;
@@ -344,6 +345,14 @@ public class MainActivity extends FragmentActivity {
 
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
+        if (requestCode == INSTALL_PERMISSION_REQUEST) {
+            if (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls()) {
+                UpdateManager.installPending(this);
+            } else {
+                Toast.makeText(this, "Installation permission was not enabled. You can continue using Promoter Tracker and retry the update later.", Toast.LENGTH_LONG).show();
+            }
+            return;
+        }
         if (requestCode == GOOGLE_SIGN_IN_REQUEST) {
             try {
                 GoogleSignInAccount account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException.class);
@@ -384,7 +393,12 @@ public class MainActivity extends FragmentActivity {
         super.onResume();
         if(web!=null)web.onResume();
         BackupScheduler.ensureScheduled(this);
-        UpdateManager.installPending(this);
+        // Continue only when the user tapped the completed-download notification.
+        // Never relaunch the installer on every Activity resume.
+        if (getIntent() != null && getIntent().getBooleanExtra(UpdateManager.EXTRA_INSTALL_PENDING, false)) {
+            getIntent().removeExtra(UpdateManager.EXTRA_INSTALL_PENDING);
+            UpdateManager.installPending(this);
+        }
         if(web!=null && pageLoaded && SecurityStore.isEnabled(this) && pausedAt>0){
             long minutes=(SystemClock.elapsedRealtime()-pausedAt)/60000L;
             int timeout=SecurityStore.getLockTimeout(this);
