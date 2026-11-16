@@ -112,6 +112,12 @@ final class DriveBackupManager {
         return response.optJSONArray("files") == null ? new JSONArray() : response.getJSONArray("files");
     }
 
+    static void delete(Context context, String id) throws Exception {
+        if (id == null || !id.matches("[A-Za-z0-9_-]{8,200}"))
+            throw new IOException("Invalid backup identifier.");
+        request(context, "DELETE", BASE + "/" + id, null, null);
+    }
+
     static String downloadEncoded(Context context, String id) throws Exception {
         if (id == null || !id.matches("[A-Za-z0-9_-]{8,200}")) throw new IOException("Invalid backup identifier.");
         byte[] encrypted = request(context, "GET", BASE + "/" + id + "?alt=media", null, null);
