@@ -3,6 +3,9 @@ package com.promoter.tracker;
 import androidx.fragment.app.FragmentActivity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.app.DownloadManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
@@ -44,6 +47,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Executor;
 
 public class MainActivity extends FragmentActivity {
+    private BroadcastReceiver updateCompletionReceiver;
+    private boolean updateReceiverRegistered = false;
     private static final int FILE_CHOOSER_REQUEST = 1001;
     private static final int AUTO_FOLDER_REQUEST = 1002;
     private static final int MANUAL_FOLDER_REQUEST = 1003;
@@ -346,10 +351,33 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
     }
     @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
-    @Override protected void onPause(){pausedAt=SystemClock.elapsedRealtime();super.onPause();if(web!=null)web.onPause();}
+        private void registerUpdateCompletionReceiver(){
+        if(updateReceiverRegistered)return;
+        updateCompletionReceiver=new BroadcastReceiver(){
+            @Override public void onReceive(android.content.Context context,Intent intent){
+                if(!DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(intent.getAction()))return;
+                long id=intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID,-1);
+                long pending=getSharedPreferences(UpdateManager.PREFS,MODE_PRIVATE).getLong(UpdateManager.KEY_DOWNLOAD_ID,-2);
+                if(id>=0 && id==pending) UpdateManager.installPending(MainActivity.this);
+            }
+        };
+        IntentFilter filter=new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        if(Build.VERSION.SDK_INT>=33)registerReceiver(updateCompletionReceiver,filter,RECEIVER_NOT_EXPORTED);
+        else registerReceiver(updateCompletionReceiver,filter);
+        updateReceiverRegistered=true;
+    }
+
+@Override protected void onPause(){
+        if(updateReceiverRegistered && updateCompletionReceiver!=null){
+            try{unregisterReceiver(updateCompletionReceiver);}catch(Exception ignored){}
+            updateReceiverRegistered=false;
+        }
+        pausedAt=SystemClock.elapsedRealtime();super.onPause();if(web!=null)web.onPause();
+    }
     @Override protected void onResume(){
         super.onResume();
         if(web!=null)web.onResume();
+        registerUpdateCompletionReceiver();
         BackupScheduler.ensureScheduled(this);
         if(web!=null && pageLoaded && SecurityStore.isEnabled(this) && pausedAt>0){
             long minutes=(SystemClock.elapsedRealtime()-pausedAt)/60000L;
