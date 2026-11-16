@@ -167,6 +167,17 @@ public class MainActivity extends FragmentActivity {
                     sendDriveEvent("list", "OK", DriveBackupManager.list(this).toString());
                 } else if ("download".equals(action)) {
                     sendDriveEvent("download", "OK", DriveBackupManager.downloadEncoded(this, value));
+                } else if ("delete".equals(action)) {
+                    DriveBackupManager.delete(this, value);
+                    sendDriveEvent("delete", "OK", "Backup deleted from Google Drive.");
+                } else if ("deleteAll".equals(action)) {
+                    org.json.JSONArray files = DriveBackupManager.list(this);
+                    int deleted = 0;
+                    for (int i = 0; i < files.length(); i++) {
+                        String id = files.getJSONObject(i).optString("id", "");
+                        if (!id.isEmpty()) { DriveBackupManager.delete(this, id); deleted++; }
+                    }
+                    sendDriveEvent("deleteAll", "OK", deleted + " Google Drive backup(s) deleted.");
                 }
             } catch (Exception e) {
                 sendDriveEvent(action, "ERROR: " + (e.getMessage() == null ? "Google Drive request failed." : e.getMessage()), null);
