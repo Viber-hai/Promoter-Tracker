@@ -42,12 +42,14 @@ final class SecurityStore {
         if (pin == null || !pin.matches("[0-9]{6}")) throw new IllegalArgumentException("PIN must contain exactly 6 digits.");
         byte[] salt = new byte[16]; RANDOM.nextBytes(salt);
         byte[] hash = derive(pin.toCharArray(), salt);
-        c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        boolean saved = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putString(PIN_SALT, Base64.encodeToString(salt, Base64.NO_WRAP))
                 .putString(PIN_HASH, Base64.encodeToString(hash, Base64.NO_WRAP))
                 .putInt("pin_failed_attempts", 0).putLong("pin_locked_until", 0L)
-                .apply();
+                .commit();
         Arrays.fill(hash, (byte) 0);
+        if (!saved || !isPinConfigured() || !verifyPin(c, pin))
+            throw new IllegalStateException("Android could not confirm that the backup PIN was saved. Please try again.");
     }
     static boolean verifyPin(Context c, String pin) {
         if (pin == null || !pin.matches("[0-9]{6}")) return false;
