@@ -132,6 +132,12 @@ public class AppBackupBridge {
     public void deleteDriveBackup(String id) { activity.runDriveTask("delete", id); }
 
     @JavascriptInterface
+    public void deleteSelectedDriveBackups(String idsJson) {
+        if (idsJson == null || idsJson.length() > 200000) return;
+        activity.runDriveTask("deleteSelected", idsJson);
+    }
+
+    @JavascriptInterface
     public void deleteAllDriveBackups() { activity.runDriveTask("deleteAll", ""); }
 
     @JavascriptInterface
