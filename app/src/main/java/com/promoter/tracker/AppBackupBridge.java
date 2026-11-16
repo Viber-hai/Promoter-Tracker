@@ -153,14 +153,21 @@ public class AppBackupBridge {
         if ("drive".equals(destination) && !DriveBackupManager.connected(context))
             return "ERROR|Connect your Google account before enabling Google Drive automatic backups.";
         SharedPreferences prefs = context.getSharedPreferences(BackupWorker.PREFS, Context.MODE_PRIVATE);
-        prefs.edit()
-                .putBoolean(BackupWorker.KEY_ENABLED, "local".equals(destination))
-                .putString(BackupWorker.KEY_FREQUENCY, safeBackupFrequency(localFrequency))
-                .putBoolean("drive_auto_enabled", "drive".equals(destination))
-                .putString("drive_frequency", safeBackupFrequency(driveFrequency))
-                .commit();
-        BackupScheduler.configure(context);
-        return "OK";
+        try {
+            boolean saved = prefs.edit()
+                    .putBoolean(BackupWorker.KEY_ENABLED, "local".equals(destination))
+                    .putString(BackupWorker.KEY_FREQUENCY, safeBackupFrequency(localFrequency))
+                    .putBoolean("drive_auto_enabled", "drive".equals(destination))
+                    .putString("drive_frequency", safeBackupFrequency(driveFrequency))
+                    .commit();
+            if (!saved) return "ERROR|Android could not persist the automatic backup preference.";
+            BackupScheduler.configure(context);
+            return "OK";
+        } catch (Exception e) {
+            return "ERROR|" + (e.getMessage() == null
+                    ? "Android could not schedule the automatic backup."
+                    : e.getMessage());
+        }
     }
 
     @JavascriptInterface
