@@ -55,14 +55,18 @@ final class BackupCrypto {
         byte[] nonce = randomBytes(12);
         byte[] wrappingKey = deriveKey(password, salt);
         byte[] wrapped = aesEncrypt(wrappingKey, nonce, master, WRAP_AAD);
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        boolean saved = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                 .putString(RECOVERY_SALT, b64(salt))
                 .putString(RECOVERY_NONCE, b64(nonce))
                 .putString(RECOVERY_WRAP, b64(wrapped))
-                .apply();
+                .commit();
+        SharedPreferences check = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        boolean verified = saved && check.contains(RECOVERY_WRAP)
+                && check.contains(RECOVERY_SALT) && check.contains(RECOVERY_NONCE);
         Arrays.fill(master, (byte) 0);
         Arrays.fill(wrappingKey, (byte) 0);
         Arrays.fill(password, '\0');
+        if (!verified) throw new IllegalStateException("Android could not confirm that the new-phone recovery password was saved.");
     }
 
     static byte[] encryptBackup(Context context, String json) throws Exception {
