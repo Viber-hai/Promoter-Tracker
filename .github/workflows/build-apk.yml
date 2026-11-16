@@ -2,7 +2,17 @@ name: Build APK
 
 on:
   push:
+    branches:
+      - main
+      - feature/persistent-apk-signing
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promoter-tracker-release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -19,8 +29,83 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Build APK
+      - name: Check release signing secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub Actions secret: $name. Follow ANDROID_SIGNING_SETUP.md before building a release APK."
+              exit 1
+            fi
+          done
+
+      - name: Restore private release keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/promoter-tracker-release.jks"
+          test -s "$RUNNER_TEMP/promoter-tracker-release.jks"
+          keytool -list -v \
+            -keystore "$RUNNER_TEMP/promoter-tracker-release.jks" \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -alias "$ANDROID_KEY_ALIAS" > "$RUNNER_TEMP/release-certificate.txt"
+          EXPECTED_SHA1="76:8F:6F:60:E9:95:DC:28:7A:CE:DE:00:38:81:1C:36:BD:9C:BE:7D"
+          ACTUAL_SHA1="$(awk -F': ' '/SHA1:/{print toupper($2); exit}' "$RUNNER_TEMP/release-certificate.txt")"
+          if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
+            echo "::error::Release keystore SHA-1 does not match the Android OAuth client. Expected $EXPECTED_SHA1 but found $ACTUAL_SHA1."
+            exit 1
+          fi
+          echo "Release keystore SHA-1 matches the Google Cloud Android OAuth client."
+          grep "SHA256:" "$RUNNER_TEMP/release-certificate.txt"
+
+      - name: Build permanently signed APK
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/promoter-tracker-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: gradle assembleRelease --no-daemon
+
+      - name: Verify APK signature
+        run: |
+          set -euo pipefail
+          APK="$(find app/build/outputs/apk/release -maxdepth 1 -name '*.apk' -print -quit)"
+          test -n "$APK"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          SIGNATURE_REPORT="$("$APKSIGNER" verify --verbose --print-certs "$APK")"
+          printf '%s\n' "$SIGNATURE_REPORT"
+          EXPECTED_SHA1_COMPACT="768F6F60E995DC287ACEDE0038811C36BD9CBE7D"
+          APK_SHA1="$(printf '%s\n' "$SIGNATURE_REPORT" | awk -F': ' '/certificate SHA-1 digest:/{print toupper($NF); exit}' | tr -d ':')"
+          if [ "$APK_SHA1" != "$EXPECTED_SHA1_COMPACT" ]; then
+            echo "::error::Built APK signer SHA-1 does not match the configured Google Cloud Android OAuth client."
+            exit 1
+          fi
+          echo "Built APK signature matches the configured Google Cloud Android OAuth client."
+
+      - name: Prepare versioned release APK
+        run: |
+          set -euo pipefail
+          VERSION="1.0.${GITHUB_RUN_NUMBER}"
+          APK="$(find app/build/outputs/apk/release -maxdepth 1 -name '*.apk' -print -quit)"
+          cp "$APK" "app/build/outputs/apk/release/PromoterTracker-${VERSION}.apk"
+
+      - name: Publish signed APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Promoter Tracker v1.0.${{ github.run_number }}
+          generate_release_notes: true
+          files: app/build/outputs/apk/release/PromoterTracker-*.apk
+          fail_on_unmatched_files: true
 
       - uses: actions/upload-artifact@v4
         with:

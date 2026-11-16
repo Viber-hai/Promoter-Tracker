@@ -1,290 +1,1208 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark light">
-<title>Promoter Target Tracker</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f7fa">
+<title>Promoter Tracker — Liquid Glass V10 Exclusive Panels</title>
 <style>
-/* Layout: one summary hero, a sticky pair of category tabs, compact rows with big steppers, bottom sheets for add/options. */
-:root{--bg:#0f1424;--card:#171e33;--inp:#0f1424;--line:#2a3350;--tx:#e8ecf8;--mut:#8f9abb;--ac:#4f7cff;--acs:#4f7cff22;--ok:#2fc58a;--bad:#f0627f;--hov:#1c2540;--shade:rgba(0,0,0,.55);color-scheme:dark}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}}
-:root[data-theme="light"]{--bg:#f3f5fa;--card:#fff;--inp:#f6f8fc;--line:#dde2ee;--tx:#18203a;--mut:#667191;--ac:#2f5bea;--acs:#2f5bea18;--ok:#0b8f5f;--bad:#cf2c55;--hov:#f6f8fd;--shade:rgba(20,28,50,.45);color-scheme:light}
-*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{font-size:16px;-webkit-text-size-adjust:100%}
-body{margin:0;min-height:100vh;font-family:Sora,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-.app{max-width:640px;margin:0 auto}
-.k{font-size:.74rem;color:var(--mut)}
-.ok{color:var(--ok)}.bad{color:var(--bad)}
+:root{
+  color-scheme:light dark;
+  --red:#c8102e;--red2:#ed5269;--ink:#202027;--muted:#777985;
+  --bg:#f4f4f7;--glass:rgba(255,255,255,.72);--glass-strong:rgba(255,255,255,.91);
+  --line:rgba(255,255,255,.94);--surface:rgba(255,255,255,.72);--soft:rgba(35,35,45,.055);
+  --field:#fff;--shadow:0 14px 36px rgba(42,20,28,.075),inset 0 1px 0 rgba(255,255,255,.9);
+  --danger:#c52b3e;--good:#16875a;
+}
+@media(prefers-color-scheme:dark){
+ :root{
+  --ink:#f3f3f6;--muted:#a5a6b0;--bg:#101116;--glass:rgba(31,32,41,.72);
+  --glass-strong:rgba(29,30,38,.94);--line:rgba(255,255,255,.12);
+  --surface:rgba(255,255,255,.065);--soft:rgba(255,255,255,.075);--field:#20212a;
+  --shadow:0 14px 38px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.07);
+  --danger:#ff7789;--good:#61d5a0;
+ }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+ margin:0;min-height:100vh;padding:env(safe-area-inset-top) 14px calc(132px + env(safe-area-inset-bottom));
+ color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+ background:radial-gradient(ellipse at 4% 3%,rgba(200,16,46,.13),transparent 28rem),
+ radial-gradient(ellipse at 96% 34%,rgba(255,255,255,.82),transparent 25rem),
+ linear-gradient(145deg,var(--bg),var(--bg));
+}
+@media(prefers-color-scheme:dark){
+ body{background:radial-gradient(ellipse at 3% 2%,rgba(200,16,46,.19),transparent 28rem),radial-gradient(ellipse at 100% 30%,rgba(115,70,83,.10),transparent 26rem),linear-gradient(145deg,#101116,#171820 60%,#101116)}
+}
+button,input,select{font:inherit}button{cursor:pointer;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--red2);outline-offset:2px}
+.app{width:min(100%,560px);margin:auto}
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:25px;box-shadow:var(--shadow);backdrop-filter:blur(14px) saturate(1.18);-webkit-backdrop-filter:blur(14px) saturate(1.18)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 17px}
+.brand{display:flex;align-items:center;gap:11px}.mark{width:42px;height:42px;border-radius:15px;display:grid;place-items:center;color:#fff;font-weight:900;letter-spacing:-1px;background:linear-gradient(145deg,#ef6579,#ad0828);box-shadow:0 8px 20px #c8102e35,inset 0 1px 1px #ffffff88}
+.mark img{display:block;width:31px;height:31px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(200,16,46,.12))}.brand b{font-size:16px;letter-spacing:-.45px}.brand small{display:block;margin-top:3px;color:var(--muted);font-size:9px;letter-spacing:1.5px;font-weight:800}
+.icon{width:42px;height:42px;border:1px solid var(--line);border-radius:15px;background:var(--glass);box-shadow:0 7px 18px #1e14190d;font-size:22px}
+.hero{position:relative;overflow:hidden;padding:20px 18px 17px;background:linear-gradient(125deg,var(--glass-strong),var(--glass) 70%)}
+.hero:after{content:"";position:absolute;width:210px;height:210px;right:-100px;top:-125px;border-radius:50%;background:radial-gradient(circle,rgba(200,16,46,.17),transparent 70%);pointer-events:none}
+.hero>*{position:relative;z-index:1}.herohead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.eyebrow{color:var(--red2);font-size:9px;font-weight:850;letter-spacing:1.55px}
+.hero h1{font-size:21px;line-height:1.12;letter-spacing:-.75px;margin:7px 0 0}
+.tag{white-space:nowrap;border-radius:99px;padding:7px 9px;background:rgba(200,16,46,.09);border:1px solid rgba(200,16,46,.20);color:var(--red2);font-size:8px;font-weight:850;letter-spacing:.65px}
+.hero-main{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;gap:16px;margin-top:20px}
+.ring{width:104px;height:104px;flex:none;position:relative;min-width:0}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:8}.ring .track{stroke:rgba(200,16,46,.15)}.ring .value{stroke:var(--red2);stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;transition:stroke-dashoffset .25s ease}
+.ringtext{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;text-align:center;white-space:normal;overflow:hidden}.ringtext b{display:block;width:100%;font-size:clamp(15px,4.8vw,20px);font-weight:950;letter-spacing:-.8px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}.ringtext span{display:block;max-width:100%;font-size:7px;line-height:1.1;color:var(--muted);font-weight:850;letter-spacing:.55px;white-space:normal;overflow-wrap:anywhere}
+.label{font-size:10px;color:var(--muted);font-weight:650}.sales-number{font-size:25px;font-weight:800;letter-spacing:-1px;margin:3px 0 5px}
+.sub{font-size:10px;color:var(--muted);line-height:1.55}.sub b{color:var(--ink);font-weight:700}
+.incentive-line{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.incentive-label{font-size:10px;color:var(--muted);font-weight:650}
+.money{font-size:18px;font-weight:650;letter-spacing:-.35px;transition:filter .18s ease;display:inline-block;border:0;padding:0;background:transparent;color:var(--ink);font-family:inherit;cursor:pointer;text-align:left}
+.money.concealed{filter:blur(6px);user-select:none;-webkit-user-select:none}
+.money:focus-visible{outline:2px solid var(--red2);outline-offset:4px;border-radius:5px}
+.incentive-toggle{touch-action:manipulation}
+.stats{display:flex;gap:8px;margin-top:17px}.stat{flex:1;min-width:0;padding:10px 11px;border-radius:15px;background:var(--surface);border:1px solid var(--line)}
+.stat small{display:block;font-size:8px;color:var(--muted);font-weight:800;margin-bottom:5px;letter-spacing:.35px}.stat b{font-size:13px;font-weight:750}
+.heading{display:flex;justify-content:space-between;align-items:end;margin:22px 2px 11px}
+.heading h2{font-size:15px;letter-spacing:-.35px;margin:0;font-weight:820}.heading p{font-size:9px;color:var(--muted);margin:4px 0 0}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cat{text-align:left;padding:12px;border-radius:19px;border:1px solid var(--line);background:var(--glass);box-shadow:0 8px 20px rgba(25,20,30,.045);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.cat.active{background:var(--glass-strong);border-color:rgba(200,16,46,.42);box-shadow:0 9px 23px rgba(200,16,46,.10)}
+.catrow{display:flex;align-items:center;justify-content:space-between;min-height:32px}.caticon{width:29px;height:29px;border-radius:10px;display:grid;place-items:center;color:var(--red2);background:rgba(200,16,46,.10);font-size:16px}
+.pct{color:var(--red2);font-weight:950;font-size:20px;letter-spacing:-.8px;line-height:1}.catname{font-size:10px;font-weight:850;line-height:1.3;margin-top:8px;min-height:26px}
+.target{font-size:8px;color:var(--muted);margin-top:5px}.cat-sales{font-size:9px;color:var(--muted);margin-top:5px}.achievement-note{font-size:8px;color:var(--red2);font-weight:850;margin-top:5px;min-height:11px}
+.track{height:6px;border-radius:99px;background:var(--soft);overflow:hidden;margin-top:8px}.fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--red),var(--red2));width:0%;transition:width .2s ease}
 
-/* hero */
-.hero{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--card)}
-.hero-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
-h1{margin:0;font-size:1.05rem;font-weight:700;text-wrap:balance}
-.icon{width:44px;height:44px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:1.4rem;line-height:1;display:grid;place-items:center}
-.hero-main{display:flex;align-items:center;gap:18px}
-.ring{position:relative;width:108px;height:108px;flex:none;color:var(--bad)}
-.ring.ok{color:var(--ok)}
-.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.ring circle{fill:none;stroke-width:9}
-.ring .trk{stroke:var(--line)}
-.ring .val{stroke:currentColor;stroke-linecap:round;stroke-dasharray:282.7;stroke-dashoffset:282.7;transition:stroke-dashoffset .45s}
-.ringtxt{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:var(--tx)}
-.ringtxt b{font-size:1.35rem;font-variant-numeric:tabular-nums}
-.ringtxt span{font-size:.64rem;color:var(--mut)}
-.hero-side{min-width:0;display:grid;gap:3px}
-.big{font-size:1.9rem;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.hero-side .k b{color:var(--tx);font-variant-numeric:tabular-nums}
 
-/* sticky tabs */
-.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 0 8px}
-.bar.stuck{border-bottom:1px solid var(--line)}
-.mini{display:none;justify-content:space-between;gap:10px;font-size:.8rem;color:var(--mut);padding:0 4px 8px}
-.mini b{color:var(--tx);font-variant-numeric:tabular-nums}
-.bar.stuck .mini{display:flex}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tab{text-align:left;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card);min-height:68px;display:grid;gap:5px;align-content:center;min-width:0}
-.tab.on{border-color:var(--ac);background:var(--acs)}
-.tn{font-size:.76rem;font-weight:600;color:var(--mut)}
-.tab.on .tn{color:var(--tx)}
-.tp{font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.tbar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
-.tbar i{display:block;height:100%;width:0;background:var(--ac);transition:width .4s}
+.tools{display:flex;gap:8px;margin-bottom:10px}.searchwrap{position:relative;flex:1;min-width:0}.searchwrap span{position:absolute;left:12px;top:10px;color:var(--muted);font-size:18px}
+.search{width:100%;height:42px;border:1px solid var(--line);border-radius:14px;background:var(--glass);padding:0 10px 0 35px;outline:none;color:var(--ink);box-shadow:0 6px 15px rgba(25,20,30,.035)}
+.filter{border:1px solid var(--line);border-radius:14px;padding:0 11px;background:var(--glass);font-size:9px;font-weight:800;color:var(--muted)}
+.filter.active{color:var(--red2);background:rgba(200,16,46,.10);border-color:rgba(200,16,46,.30)}
+.list{padding-bottom:12px;display:grid;gap:8px}.model{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;padding:12px;border:1px solid var(--line);border-radius:18px;background:var(--glass);box-shadow:0 7px 17px rgba(25,20,30,.035);content-visibility:auto;contain-intrinsic-size:100px}
+.model.sold{background:var(--glass-strong)}.model-main{display:block;width:100%;min-width:0;padding:0;border:0;background:transparent;text-align:left;color:inherit;cursor:pointer}.model-top{display:flex;align-items:center;gap:7px;min-width:0}
+.modelname{font-size:12px;font-weight:820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta,.detailtext{font-size:8px;color:var(--muted);margin-top:4px}
+.stepper{display:flex;align-items:center;gap:6px;padding:4px;border-radius:12px;background:var(--soft);border:1px solid var(--line);align-self:center}
+.stepper button{width:27px;height:27px;border:0;border-radius:9px;background:var(--glass-strong);box-shadow:0 2px 6px rgba(20,20,25,.08);font-size:17px;color:var(--ink)}
+.stepper .plus{background:linear-gradient(145deg,#e64b64,#b80b2b);color:#fff;box-shadow:0 4px 9px #c8102e35}
+.stepper .qty-edit{min-width:29px;height:29px;padding:0 4px;border:1px solid var(--line);border-radius:9px;background:var(--glass-strong);color:var(--red2);font-size:13px;font-weight:950;text-align:center;font-variant-numeric:tabular-nums}.stepper .qty-manual{width:54px;height:29px;padding:0 4px;border:1px solid rgba(200,16,46,.42);border-radius:9px;background:var(--field);color:var(--ink);font-size:13px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;outline:none}
+.details{display:none;grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px;gap:9px;grid-template-columns:1fr 1fr}
+.model.open .details{display:grid}.details label{font-size:8px;color:var(--muted);font-weight:750;display:grid;gap:5px}
+.details input{width:100%;height:36px;border:1px solid var(--line);border-radius:10px;padding:0 9px;background:var(--field);color:var(--ink)}
+.detail-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px}.detail-note{font-size:8px;color:var(--muted)}
+.delete-model{border:1px solid rgba(197,43,62,.28);border-radius:10px;background:rgba(197,43,62,.09);color:var(--danger);font-size:9px;font-weight:850;padding:8px 11px}
+.empty{padding:24px;text-align:center;color:var(--muted);font-size:11px}
+.foot{text-align:center;color:var(--muted);font-size:8px;margin:16px 0 4px;opacity:.8}
+.fab{position:fixed;transition:opacity .18s ease,transform .18s ease;z-index:10;touch-action:manipulation;pointer-events:auto;right:max(20px,calc((100vw - 560px)/2 + 10px));bottom:calc(112px + env(safe-area-inset-bottom));width:53px;height:53px;border:0;border-radius:18px;color:#fff;font-size:28px;background:linear-gradient(145deg,#e84d65,#b20827);box-shadow:0 10px 23px #c8102e40}
+.fab.at-page-end{opacity:0;pointer-events:none;transform:translateY(10px) scale(.92)}
+.sticky-summary{position:fixed;z-index:6;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(calc(100% - 18px),560px);padding:10px 12px 9px;border:1px solid var(--line);border-radius:20px;background:var(--glass-strong);box-shadow:0 10px 35px rgba(15,12,20,.17),inset 0 1px 0 rgba(255,255,255,.25);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2)}
+.summary-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.summary-title{font-size:8px;font-weight:900;letter-spacing:1px;color:var(--muted)}
+.summary-percent{font-size:17px;font-weight:950;letter-spacing:-.5px;color:var(--red2)}
+.summary-track{height:4px;border-radius:99px;background:var(--soft);overflow:hidden;margin-bottom:8px}.summary-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:99px}
+.summary-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.summary-metric{min-width:0;border-right:1px solid var(--line);padding-right:6px}.summary-metric:last-child{border:0}
+.summary-metric small{display:block;font-size:7px;color:var(--muted);font-weight:850;letter-spacing:.5px;margin-bottom:3px}
+.summary-metric b{display:block;font-size:11px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.summary-incentive{display:flex;align-items:center;gap:5px}.summary-incentive .money{font-size:11px;font-weight:650}
+.sheet{position:fixed;inset:0;z-index:15;display:none;align-items:end;justify-content:center;padding:12px;background:rgba(15,12,18,.40);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sheet.show{display:flex}.panel{width:min(100%,510px);max-height:84vh;overflow:auto;border-radius:25px;padding:19px;background:var(--glass-strong);border:1px solid var(--line);box-shadow:0 24px 65px rgba(0,0,0,.28)}
+.grip{width:38px;height:4px;border-radius:99px;background:var(--muted);opacity:.35;margin:-7px auto 16px}
+.panel h2{font-size:18px;margin:0 0 14px;letter-spacing:-.45px}
+.settings-section-title{font-size:12px;font-weight:900;letter-spacing:.2px;margin:8px 0 0;color:var(--ink)}
+.field{display:grid;gap:5px;margin-bottom:11px;font-size:9px;color:var(--muted);font-weight:800}
+.field input,.field select{height:42px;border:1px solid var(--line);border-radius:12px;background:var(--field);padding:0 11px;color:var(--ink)}
+.fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.primary,.secondary,.danger-btn{width:100%;min-height:43px;border-radius:13px;font-size:11px;font-weight:850}
+.primary{border:0;color:#fff;background:linear-gradient(110deg,#d51b3b,#ad0928);box-shadow:0 7px 17px #c8102e2a}
+.secondary{margin-top:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.danger-btn{margin-top:8px;border:1px solid rgba(197,43,62,.28);background:rgba(197,43,62,.08);color:var(--danger)}
+.helper{font-size:9px;line-height:1.5;color:var(--muted);margin:10px 2px}
+.drive-delete-picker{margin-top:16px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.drive-delete-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px}
+.drive-select-all{display:flex;align-items:center;gap:7px;font-size:11px}
+.drive-select-all input,.drive-backup-delete-item input{width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+.drive-backup-delete-list{max-height:260px;overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.drive-backup-delete-item{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--line);min-width:0}
+.drive-backup-delete-item:last-child{border-bottom:0}
+.drive-backup-delete-details{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.drive-backup-delete-details b{font-size:11px;overflow-wrap:anywhere}
+.drive-backup-delete-details small{font-size:10px;color:var(--muted)}
+#driveDeleteSelected:disabled{opacity:.45;cursor:not-allowed}
+.toast{
+ position:fixed;z-index:100;left:50%;
+ bottom:calc(18px + env(safe-area-inset-bottom));
+ width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;
+ transform:translate(-50%,12px);opacity:0;pointer-events:none;
+ display:block;background:#252329;color:#fff;
+ padding:12px 16px;border:1px solid rgba(255,255,255,.12);border-radius:16px;
+ font-size:12px;font-weight:750;line-height:1.45;text-align:center;
+ white-space:normal;overflow-wrap:anywhere;word-break:normal;
+ box-shadow:0 8px 28px rgba(0,0,0,.24);
+ transition:opacity .16s,transform .16s;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:380px){.toast{max-width:calc(100vw - 24px);padding:11px 14px;font-size:11px}}
+.hidden-file{display:none}
+@media(min-width:700px){body{padding-top:20px}.hero{padding:23px}.hero-main{grid-template-columns:112px minmax(0,1fr)}.ring{width:112px;height:112px}}
+@media(max-width:360px){body{padding-left:9px;padding-right:9px}.hero{padding:17px 14px}.hero-main{grid-template-columns:88px minmax(0,1fr);gap:12px}.ring{width:88px;height:88px}.sales-number{font-size:22px}.tag{font-size:7px;padding:6px}.sticky-summary{width:calc(100% - 12px);padding:9px}.summary-metric b{font-size:10px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+ 
 
-/* category strip + tools */
-.cat{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px;align-items:end;padding:10px 2px 4px}
-.cat b{display:block;font-size:1rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.cat>div{min-width:0}
-input,select{font:inherit;font-size:1rem;color:var(--tx);background:var(--inp);border:1px solid var(--line);border-radius:10px;padding:0 10px;min-height:44px;width:100%;font-variant-numeric:tabular-nums;text-align:right}
-select,input.l{text-align:left}
-.tools{display:flex;gap:8px;padding:8px 0 10px}
-.tools input{flex:1;min-width:0}
-.chip{padding:0 16px;min-height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:.85rem;white-space:nowrap}
-.chip[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:#fff}
+/* Light-mode readability correction: Backup & Restore only. */
+@media(prefers-color-scheme:light){
+ #sBackup .panel{background:#f8f8fb;border-color:#d1d2da}
+ #sBackup .backup-source{background:#fff;border-color:#d2d3dc}
+ #sBackup .backup-source h3{color:#202027}
+ #sBackup .note,#sBackup .backup-status{color:#555762}
+ #sBackup .field{color:#454752}
+ #sBackup .secondary,#sBackup .restore-trigger{
+  background:#f0f0f4;border-color:#c6c7d1;color:#202027;
+ }
+ #sBackup #pasteBackup{background:#fff;border-color:#c6c7d1;color:#202027}
+ #sBackup #pasteBackup::placeholder{color:#777985;opacity:1}
+}
 
-/* rows */
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 8px;align-items:center;padding:8px 8px 8px 12px;margin-bottom:8px;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;background:var(--card)}
-.row.has{border-left-color:var(--ac)}
-.main{background:none;border:0;text-align:left;padding:6px 0;min-width:0;display:grid;gap:2px}
-.nm{font-weight:600;font-size:.98rem;overflow-wrap:anywhere}
-.sub{font-size:.74rem;color:var(--mut)}
-.sub2{font-size:.76rem;color:var(--ac);font-weight:600;font-variant-numeric:tabular-nums}
-.sub2:empty{display:none}
-.step{display:grid;grid-template-columns:44px 54px 44px;gap:4px}
-.step button{height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:1.35rem;font-weight:600;line-height:1}
-.step button:active{background:var(--acs);border-color:var(--ac)}
-.step input{height:44px;text-align:center;padding:0;font-weight:700}
-.edit{grid-column:1/-1;display:none;gap:8px;padding:10px 0 4px;margin-top:4px;border-top:1px solid var(--line)}
-.row.open .edit{display:grid;grid-template-columns:1fr 1fr}
-.edit label{display:grid;gap:4px;font-size:.72rem;color:var(--mut);min-width:0}
-.edit .full{grid-column:1/-1}
-.empty{padding:28px 8px;text-align:center;color:var(--mut);font-size:.9rem}
+/* Native Android backup controls retained inside the approved V10 panels. */
+/* Backup sheet: responsive destination accordions. */
+#sBackup{overflow-x:hidden;padding:10px;align-items:flex-end}
+#sBackup .backup-panel{width:min(100%,510px);max-width:100%;min-width:0;max-height:88vh;max-height:88dvh;overflow-x:hidden;overscroll-behavior:contain}
+#sBackup .backup-panel>*{min-width:0;max-width:100%}
+#sBackup .backup-source,#sBackup .backup-accordion{min-width:0;max-width:100%;overflow:hidden}
+.backup-intro{font-size:10px}
+.backup-destination-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.backup-destination-row label{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:10px 5px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:10px;font-weight:800}
+.backup-destination-row input{width:16px;height:16px;accent-color:var(--red2);flex:none}
+.backup-accordion{border:1px solid var(--line);border-radius:16px;background:var(--surface);margin:10px 0}
+.backup-accordion summary{display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;cursor:pointer;padding:14px;min-width:0}
+.backup-accordion summary::-webkit-details-marker{display:none}
+.backup-accordion summary span:first-child{display:grid;gap:4px;min-width:0}
+.backup-accordion summary b{font-size:12px}
+.backup-accordion summary small{font-size:9px;line-height:1.4;color:var(--muted);font-weight:500}
+.accordion-chevron{font-size:20px;color:var(--red2);transition:transform .15s}
+.backup-accordion[open] .accordion-chevron{transform:rotate(180deg)}
+.accordion-content{padding:0 12px 12px;display:grid;gap:8px;min-width:0}
+.accordion-content .field{min-width:0;width:100%;margin:0}
+.accordion-content select{width:100%;min-width:0;height:42px;border:1px solid var(--line);border-radius:12px;background:var(--field);padding:0 10px;color:var(--ink)}
+.backup-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.backup-actions>*{width:100%;min-width:0;margin:0}
+#sBackup .backup-row{flex-wrap:wrap;align-items:center}
+#sBackup .backup-row>*{min-width:0;max-width:100%}
+#sBackup .backup-row .field{flex:1 1 100%}
+#sBackup .backup-status,#sBackup .note{overflow-wrap:anywhere}
+#sBackup .restore-trigger{min-height:43px;padding:0 8px}
+@media(max-width:380px){.backup-destination-row label{font-size:9px;gap:3px;padding:9px 3px}.backup-actions{grid-template-columns:1fr}}
 
-/* buttons, fab, sheets, toast */
-.btn{min-height:48px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;padding:0 16px;width:100%}
-.btn.pri{background:var(--ac);border-color:var(--ac);color:#fff}
-.btn.dng{color:var(--bad)}
-.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:50%;border:0;background:var(--ac);color:#fff;font-size:2rem;line-height:1;box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:8;display:grid;place-items:center}
-.fab:active{transform:scale(.95)}
-body.typing .fab{display:none}
-.sheet{position:fixed;inset:0;z-index:20;display:none}
-.sheet.on{display:block}
-.back{position:absolute;inset:0;background:var(--shade)}
-.pane{position:absolute;left:0;right:0;bottom:0;max-width:640px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-left,0px)) calc(18px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow-y:auto;display:grid;gap:12px}
-.pane h2{margin:0;font-size:1.05rem}
-.fld{display:grid;gap:4px;font-size:.75rem;color:var(--mut);min-width:0}
-.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.note{margin:0;font-size:.8rem;line-height:1.5;color:var(--mut)}
-.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:none;align-items:center;gap:12px;max-width:calc(100% - 32px);padding:8px 8px 8px 16px;background:var(--tx);color:var(--bg);border-radius:12px;font-size:.88rem;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.3)}
-.toast.on{display:flex}
-.toast button{font-weight:700;color:var(--ac);background:var(--bg);border:0;border-radius:8px;padding:0 14px;min-height:40px}
-.toast button[hidden]{display:none}
-@media (min-width:700px){.row{padding:10px 12px}}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.backup-source{padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--surface);display:grid;gap:8px;margin:10px 0}
+.backup-source h3{font-size:11px;margin:0;color:var(--ink)}
+.backup-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.backup-row .secondary,.backup-row .primary{width:auto;flex:1;min-width:0;padding:0 8px;font-size:9px}
+.backup-status,.note{font-size:8px;line-height:1.5;color:var(--muted)}
+.backup-select{display:grid;gap:4px}
+.restore-trigger{position:relative;display:grid;place-items:center;cursor:pointer;text-align:center}
+.restore-trigger input[type=file]{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:pointer;font-size:0}
+#pasteBackup{width:100%;min-height:88px;resize:vertical;text-align:left;font:10px/1.5 ui-monospace,monospace;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--ink);background:var(--field)}
+#pasteBackup:focus{border-color:rgba(200,16,46,.48);box-shadow:0 0 0 3px rgba(200,16,46,.09);outline:0}
+
+/* Hidden reorder control: appears only after a long press on a model card. */
+.model-top{display:flex;align-items:center;gap:8px}
+.model-top .modelname{flex:1;min-width:0}
+.drag-handle{display:none;flex:none;width:30px;height:30px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted);font-size:20px;line-height:1;place-items:center;user-select:none;-webkit-user-select:none}
+.model.reorder-armed .drag-handle{display:grid}
+.model.reorder-armed{outline:1px dashed var(--red2)}
+.model.dragging{opacity:.48;outline:1px dashed var(--red2)}
+.model.drag-over{border-color:var(--red2);box-shadow:0 0 0 2px rgba(200,16,46,.12)}
+
+/* Version update indicator and changelog panel */
+.menu-with-update{position:relative}
+.update-dot{position:absolute;right:5px;top:5px;width:9px;height:9px;border-radius:50%;background:#d71935;border:2px solid var(--surface);box-shadow:0 0 0 1px rgba(215,25,53,.18);display:none}
+.update-dot.visible{display:block}
+.new-pill{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;padding:2px 6px;border-radius:99px;background:#d71935;color:#fff;font-size:8px;font-weight:850;letter-spacing:.4px}
+.change-entry{padding:12px 0;border-top:1px solid var(--line)}
+.change-version{font-size:11px;font-weight:850;color:var(--red2);margin-bottom:7px}
+.change-entry ul{margin:0;padding-left:18px;color:var(--text);font-size:11px;line-height:1.65}
+.change-entry li{margin:5px 0}
+
+.security-divider{height:1px;background:var(--line);margin:16px 0 10px}
+.security-setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.security-setting-row div{display:flex;flex-direction:column;gap:4px}.security-setting-row b{font-size:12px;color:var(--text)}.security-setting-row small{font-size:10px;color:var(--muted);line-height:1.4}
+.security-setting-row input{width:22px;height:22px;accent-color:var(--red2)}
+.security-status{font-size:10px;line-height:1.5;color:var(--muted);margin:9px 0}
+.security-lock{display:none;position:fixed;inset:0;z-index:10000;background:var(--bg);align-items:center;justify-content:center;padding:22px}
+.security-lock.show{display:flex}.security-lock-card{width:min(100%,360px);padding:26px 22px;border:1px solid var(--line);border-radius:22px;background:var(--surface);box-shadow:var(--shadow);text-align:center}
+.security-lock-brand{font-size:10px;letter-spacing:2px;font-weight:900;color:var(--muted)}.security-fingerprint{width:90px;height:90px;margin:22px auto 16px;border-radius:50%;display:grid;place-items:center;background:rgba(200,16,46,.09);color:var(--red2);font-size:52px}
+.security-lock-card h2{font-size:20px;margin:8px 0}.security-lock-card p{font-size:12px;color:var(--muted);line-height:1.5}.security-lock-card button{width:100%;margin-top:10px}.security-lock-card #pinUnlockArea[hidden]{display:none}\n</style>
+<style>
+/* Backup & Restore text must wrap inside the panel on narrow phones. */
+#sBackup .backup-panel{box-sizing:border-box;padding-left:16px;padding-right:16px}
+#sBackup .backup-panel p,#sBackup .backup-panel small,#sBackup .backup-panel label,
+#sBackup .backup-panel summary,#sBackup .backup-panel h2,#sBackup .backup-panel h3{
+ max-width:100%;min-width:0;white-space:normal;overflow-wrap:anywhere;word-break:normal;
+}
+#sBackup .backup-intro,#sBackup .backup-save-explainer{font-size:12px;line-height:1.55;margin:8px 0 12px}
+#sBackup .backup-status,#sBackup .note{line-height:1.5;text-align:left}
+#sBackup .backup-destination-row label{white-space:normal;text-align:center;line-height:1.3}
+#sBackup .backup-source,#sBackup .backup-accordion{box-sizing:border-box}
 </style>
 </head>
 <body>
 <div class="app">
- <header class="hero" id="hero">
-  <div class="hero-top"><h1>Promoter Target Tracker</h1><button class="icon" id="menu" aria-label="Options">&#8943;</button></div>
-  <div class="hero-main" aria-live="polite">
-   <div class="ring" id="ring"><svg viewBox="0 0 108 108" aria-hidden="true"><circle class="trk" cx="54" cy="54" r="45"/><circle class="val" id="rv" cx="54" cy="54" r="45"/></svg>
-    <div class="ringtxt"><b id="fs">0%</b><span>Final score</span></div></div>
-   <div class="hero-side">
-    <div class="k">Total incentive</div><div class="big" id="ti">0</div>
-    <div class="k">Sales <b id="ta">0</b> of <b id="tt">0</b></div>
-   </div>
-  </div>
+ <header class="top">
+  <div class="brand"><div class="mark" role="img" aria-label="Huawei logo"><img src="data:image/png;base64,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" alt="Huawei emblem"></div><div><b>Promoter Tracker</b><small>SALES & PERFORMANCE TRACKER</small></div></div>
+  <button class="icon menu-with-update" id="menu" type="button" aria-label="Open quick actions" aria-haspopup="dialog">⋯<span class="update-dot" id="changelogDot" aria-hidden="true"></span></button>
  </header>
 
- <nav class="bar" id="bar">
-  <div class="mini"><span>Score <b id="mfs">0%</b></span><span>Incentive <b id="mti">0</b></span></div>
-  <div class="tabs" role="tablist">
-   <button class="tab" role="tab" data-g="m"><span class="tn">Handset &amp; Tablet</span><span class="tp" id="mp">0%</span><i class="tbar"><i id="mb"></i></i></button>
-   <button class="tab" role="tab" data-g="w"><span class="tn">Audio &amp; Wearables</span><span class="tp" id="wp">0%</span><i class="tbar"><i id="wb"></i></i></button>
+ <section class="hero glass">
+  <div class="herohead">
+   <div><div class="eyebrow">PERFORMANCE OVERVIEW</div><h1>Your progress,<br>at a glance.</h1></div>
   </div>
- </nav>
+  <div class="hero-main">
+   <div class="ring"><svg viewBox="0 0 112 112" aria-hidden="true"><circle class="track" cx="56" cy="56" r="46"/><circle class="value" id="ring" cx="56" cy="56" r="46"/></svg><div class="ringtext"><b id="score">0%</b><span>SCORE</span></div></div>
+   <div>
+    <div class="label">Total sales</div><div class="sales-number" id="salesTotal">0</div>
+    <div class="sub">Target <b id="targetTotal">850,500</b> · <b id="remaining">850,500</b> remaining</div>
+    <div class="incentive-line"><span class="incentive-label">Total incentive</span><button class="money concealed incentive-toggle" id="heroIncentive" type="button" data-incentive-toggle aria-label="Tap to reveal total incentive">0</button></div>
+   </div>
+  </div>
+  <div class="stats">
+   <div class="stat"><small>HANDSET &amp; TABLET SALES</small><b id="handsetSales">0</b></div>
+   <div class="stat"><small>AUDIO &amp; WEARABLES SALES</small><b id="wearSales">0</b></div>
+  </div>
+ </section>
 
- <main>
-  <div class="cat">
-   <div><div class="k">Sold value</div><b id="ca">0</b></div>
-   <div><label class="k" for="tg">Target</label><input id="tg" inputmode="numeric" aria-label="Target for this category"></div>
-   <div><div class="k">Incentive</div><b id="ci">0</b></div>
-  </div>
-  <div class="tools">
-   <input id="q" type="search" class="l" placeholder="Search model" aria-label="Search model">
-   <button class="chip" id="sold" aria-pressed="false">Sold only</button>
-  </div>
-  <div id="rows"></div>
- </main>
+ <div class="heading"><div><h2>Sales categories</h2><p>Actual category progress · maximum 120% counted per category</p></div></div>
+ <section class="cats">
+  <button class="cat active" data-cat="m">
+   <div class="catrow"><span class="caticon" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10 18.2h4"/></svg></span><span class="pct" id="mPct">0%</span></div>
+   <div class="catname">Handset &amp; Tablet</div><div class="target">Target · <span id="mTarget">510,300</span></div>
+   <div class="cat-sales">Sales · <span id="mSales">0</span></div><div class="track"><div class="fill" id="mFill"></div></div><div class="achievement-note" id="mAchievement">0% of target achieved</div>
+  </button>
+  <button class="cat" data-cat="w">
+   <div class="catrow"><span class="caticon" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2.5h6l1 4H8l1-4ZM8 17.5h8l-1 4H9l-1-4Z"/><rect x="5.5" y="6.5" width="13" height="11" rx="3"/></svg></span><span class="pct" id="wPct">0%</span></div>
+   <div class="catname">Audio &amp; Wearables</div><div class="target">Target · <span id="wTarget">340,200</span></div>
+   <div class="cat-sales">Sales · <span id="wSales">0</span></div><div class="track"><div class="fill" id="wFill"></div></div><div class="achievement-note" id="wAchievement">0% of target achieved</div>
+  </button>
+ </section>
+
+ 
+
+ <div class="heading"><div><h2 id="listTitle">Handset &amp; Tablet</h2><p>Tap a model to open its details · tap its quantity to enter a value</p></div></div>
+ <div class="tools">
+  <div class="searchwrap"><span>⌕</span><input class="search" id="search" placeholder="Search models..." type="search" aria-label="Search models"></div>
+  <button class="filter" id="sold">Sold only</button>
+ </div>
+ <main class="list" id="models"></main>
 </div>
 
-<button class="fab" id="fab" aria-label="Add model">+</button>
+<button class="fab" id="add" type="button" aria-label="Add a model" title="Add a model">+</button>
 
-<div class="sheet" id="sAdd" role="dialog" aria-modal="true" aria-label="Add model">
- <div class="back" data-close="1"></div>
- <div class="pane">
-  <h2>Add model</h2>
-  <label class="fld">Model name<input id="an" class="l" autocomplete="off" placeholder="e.g. Nova 15"></label>
-  <label class="fld">Category<select id="ag"><option value="m">Handset &amp; Tablet</option><option value="w">Audio &amp; Wearables</option></select></label>
-  <div class="three">
-   <label class="fld">RRP<input id="ar" inputmode="numeric" placeholder="0"></label>
-   <label class="fld">Incentive / unit<input id="au" inputmode="numeric" placeholder="0"></label>
-   <label class="fld">Quantity<input id="aq" inputmode="numeric" placeholder="0"></label>
-  </div>
-  <button class="btn pri" id="ab">Add model</button>
+<div class="sticky-summary" aria-label="Always visible performance summary">
+ <div class="summary-top"><span class="summary-title">PERFORMANCE SCORE</span><span class="summary-percent" id="stickyPct">0%</span></div>
+ <div class="summary-track"><span id="stickyFill"></span></div>
+ <div class="summary-metrics">
+  <div class="summary-metric"><small>TOTAL SALES</small><b id="stickySales">0</b></div>
+  <div class="summary-metric"><small>UNITS SOLD</small><b id="stickyUnits">0</b></div>
+  <div class="summary-metric"><small>TOTAL INCENTIVE</small><div class="summary-incentive"><button class="money concealed incentive-toggle" id="stickyIncentive" type="button" data-incentive-toggle aria-label="Tap to reveal total incentive">0</button></div></div>
  </div>
 </div>
 
-<div class="sheet" id="sMenu" role="dialog" aria-modal="true" aria-label="Options">
- <div class="back" data-close="1"></div>
- <div class="pane">
-  <h2>Options</h2>
-  <button class="btn dng" id="clr">Clear all quantities</button>
-  <p class="note">Final score = 60% Handset &amp; Tablet achievement + 40% Audio &amp; Wearables achievement. Each category counts up to 120% and the score up to 110%. Incentive per model = incentive per unit &times; quantity &times; final score.</p>
-  <p class="note">Everything you enter saves automatically on this device.</p>
-  <button class="btn" data-close="1">Close</button>
+<div class="sheet" id="addSheet"><div class="panel"><div class="grip"></div><h2>Add a model</h2>
+ <label class="field">Model name<input id="newName" placeholder="e.g. New handset" maxlength="70"></label>
+ <label class="field">Category<select id="newCat"><option value="m">Handset &amp; Tablet</option><option value="w">Audio &amp; Wearables</option></select></label>
+ <div class="fieldrow"><label class="field">RRP / sales value<input id="newRrp" type="number" min="0" step="0.01" placeholder="0"></label><label class="field">Incentive per unit (AED)<input id="newInc" type="number" min="0" step="0.01" placeholder="0"></label></div>
+ <button class="primary" id="save">Add model</button><button class="secondary" data-close>Cancel</button>
+</div></div>
+
+<div class="sheet" id="menuSheet" role="dialog" aria-modal="true" aria-label="Quick actions"><div class="panel"><div class="grip"></div><h2>Quick actions</h2>
+  <button class="secondary" id="openOptions" type="button">Settings</button>
+  <button class="secondary" id="openChangelog" type="button">What’s new <span class="new-pill" id="newPill">NEW</span></button>
+  <button class="secondary" id="openBackup" type="button">Backup &amp; Restore</button>
+  <button class="secondary" id="checkUpdates" type="button">Check for updates</button>
+  <button class="secondary" data-close type="button">Close</button>
+ </div></div>
+ <div class="sheet" id="changelogSheet" role="dialog" aria-modal="true" aria-label="What’s new">
+ <div class="panel">
+  <div class="grip"></div>
+  <h2>What’s new</h2>
+  <p class="helper">Updates in this version of Promoter Tracker.</p>
+  <div class="change-entry"><div class="change-version">Google Drive backups</div><ul><li>Connect your Google account to keep encrypted backups in Drive.</li><li>Save a backup to Drive whenever you want, or restore a previous backup.</li><li>Choose Local or Google Drive as the single automatic backup destination.</li><li>Set separate schedules and storage options for each destination.</li></ul></div>
+  <div class="change-entry"><div class="change-version">Incentive privacy</div><ul>
+   <li>Incentives stay blurred until you choose to reveal them.</li>
+   <li>Unlock incentive amounts securely with your fingerprint.</li>
+   <li>Turn fingerprint verification for incentives on or off in Settings.</li>
+   <li>Tap a revealed incentive again to hide it.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">App security</div><ul>
+   <li>Protect the app with fingerprint unlock and a six-digit backup PIN.</li>
+   <li>Choose when the app locks after inactivity.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">Backup &amp; restore</div><ul>
+   <li>Keep your manual and automatic backups encrypted.</li>
+   <li>Restore encrypted backups on the same phone without entering a password.</li>
+   <li>Set a recovery password to restore backups on a new phone.</li>
+   <li>Choose backup folders and automatic backup schedules.</li>
+   <li>Import older JSON backups when moving to encrypted backups.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">Sales &amp; incentives</div><ul>
+   <li>Edit monthly Handset &amp; Tablet and Audio &amp; Wearables targets in Settings.</li>
+   <li>View sales progress, category performance, and your total incentive.</li>
+   <li>Calculate incentives using the full entered per-unit amount below 80% achievement and the weighted incentive formula from 80% onward.</li>
+   <li>Update model quantities and rearrange products by pressing and holding a card.</li>
+  </ul></div>
+  <div class="change-entry"><div class="change-version">Everyday improvements</div><ul>
+   <li>Keep the main screen focused on product cards, with management tools in the menu.</li>
+   <li>Use the app in light or dark mode with clearer backup and settings text.</li>
+   <li>See a red indicator when there are new features to explore.</li>
+  </ul></div>
+  <button class="primary" id="closeChangelog" type="button">Got it</button>
  </div>
 </div>
 
-<div class="toast" id="toast"><span id="tm"></span><button id="undo">Undo</button></div>
+ <div class="sheet" id="optionsSheet" role="dialog" aria-modal="true" aria-label="Settings"><div class="panel"><div class="grip"></div><h2>Settings</h2>
+  <h3 class="settings-section-title">Sales targets</h3>
+  <p class="helper">Update the monthly sales targets used for category progress and the overall performance score.</p>
+  <label class="field">Handset &amp; Tablet target (AED)<input id="targetHandset" type="number" min="1" step="1" inputmode="numeric"></label>
+  <label class="field">Audio &amp; Wearables target (AED)<input id="targetWearables" type="number" min="1" step="1" inputmode="numeric"></label>
+  <button class="primary" id="saveTargets" type="button">Save sales targets</button>
+  <div class="security-divider"></div><h3 class="settings-section-title">App security</h3>
+  <p class="helper">Protect this tracker with your phone's fingerprint and a private six-digit backup PIN.</p>
+  <div class="security-setting-row"><div><b>Fingerprint lock</b><small>Require your enrolled fingerprint when reopening the app.</small></div><input id="fingerprintEnabled" type="checkbox" aria-label="Enable fingerprint lock"></div>
+  <label class="field">Lock after inactivity<select id="lockTimeout"><option value="0">Immediately when leaving the app</option><option value="1">1 minute</option><option value="5">5 minutes</option><option value="15">15 minutes</option></select></label>
+  <div class="security-setting-row"><div><b>Fingerprint to reveal incentive</b><small>Incentive stays blurred until your fingerprint is verified. Enabled by default.</small></div><input id="incentiveFingerprintEnabled" type="checkbox" checked aria-label="Require fingerprint to reveal incentive"></div>
+  <p class="security-status" id="incentiveFingerprintStatus">Enabled · Tap either incentive amount to authenticate.</p>
+  <button class="secondary" id="configurePin" type="button">Set / Change backup PIN</button><p class="security-status" id="securitySettingsStatus">Fingerprint lock is off.</p>
+  <button class="primary" id="clr" type="button">Clear all quantities</button>
+  <button class="danger-btn" id="reset" type="button">Reset model list</button>
+  <p class="helper">Your changes save automatically on this device. Backup &amp; Restore is available as a separate action in the top-right menu. Score is calculated using the official 60/40 category weighting and achievement caps.</p>
+  <button class="secondary" data-close type="button">Close</button>
+ </div></div>
+ <div class="sheet" id="sBackup" role="dialog" aria-modal="true" aria-label="Backup and Restore"><div class="panel backup-panel"><div class="grip"></div><h2>Backup &amp; Restore</h2>
+ <p class="note backup-intro">Choose where automatic backups are saved. Only one automatic destination can be active at a time. Manual backups remain available for both destinations.</p>
+ <section class="backup-source"><h3>Automatic backup destination</h3><div class="backup-destination-row">
+ <label><input type="radio" name="backupDestination" id="destinationOff" value="off"> Off</label><label><input type="radio" name="backupDestination" id="destinationLocal" value="local"> Local</label><label><input type="radio" name="backupDestination" id="destinationDrive" value="drive"> Google Drive</label></div><p class="note">Select one destination. Its own frequency and settings will be used.</p></section>
+ <details class="backup-accordion" id="localBackupSettings"><summary><span><b>Local backup</b><small>Save encrypted files on this device or a folder you choose</small></span><span class="accordion-chevron">⌄</span></summary><div class="accordion-content">
+ <label class="field">Automatic frequency<select id="backupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select></label>
+ <div class="backup-row"><span class="note">Automatic backup folder</span><button class="secondary" id="chooseAutomaticFolder" type="button">Choose folder</button></div><p class="note" id="automaticFolder">Downloads / Promoter Tracker / Automatic Backups</p>
+ <div class="backup-row"><span class="note">Manual backup folder</span><button class="secondary" id="chooseManualFolder" type="button">Choose folder</button></div><p class="note" id="manualFolder">Downloads / Promoter Tracker / Manual Backups</p>
+ <div class="backup-actions"><button class="primary" id="localBackup" type="button">Back up locally now</button><label class="secondary restore-trigger" for="restoreFile"><span>Restore local backup</span><input id="restoreFile" type="file" accept=".ptbackup,.json,application/octet-stream,application/json,text/plain" aria-label="Choose local backup to restore"></label></div>
+ <p class="backup-status" id="restoreStatus" role="status" aria-live="polite">Choose an encrypted .ptbackup file. Older JSON backups can still be imported.</p><p class="note">Files are saved in Downloads / Promoter Tracker by default, unless you choose another folder. Android may delay scheduled work.</p></div></details>
+ <details class="backup-accordion" id="driveBackupSettings"><summary><span><b>Google Drive</b><small>Private encrypted cloud backups in your Google account</small></span><span class="accordion-chevron">⌄</span></summary><div class="accordion-content">
+ <p class="note" id="driveAccountStatus">Not connected</p><div class="backup-actions"><button class="secondary" id="driveConnect" type="button">Connect Google Drive</button><button class="secondary" id="driveDisconnect" type="button">Disconnect</button></div>
+ <label class="field">Automatic frequency<select id="driveBackupFrequency"><option value="daily">Daily — every 24 hours</option><option value="weekly">Weekly — every 7 days</option><option value="monthly">Monthly — every 30 days</option><option value="yearly">Yearly — every 365 days</option></select></label>
+ <button class="primary" id="driveManualBackup" type="button">Back up to Drive now</button><button class="secondary" id="driveRestore" type="button">Find Drive backups</button>
+ <label class="field">Backup to restore (choose one)<select id="driveBackupList"><option value="">Connect and find backups</option></select></label><button class="secondary" id="driveRestoreSelected" type="button">Restore selected backup</button>
+ <div class="drive-delete-picker"><div class="drive-delete-heading"><b>Choose backups to delete</b><label class="drive-select-all"><input id="driveSelectAll" type="checkbox"> Select all</label></div><p class="note" id="driveDeleteCount">0 backups selected</p><div id="driveBackupDeleteList" class="drive-backup-delete-list" aria-label="Select multiple backups for deletion"><p class="note">Find Drive backups to load the list.</p></div><button class="danger-btn" id="driveDeleteSelected" type="button" disabled>Delete selected backups</button></div>
+ <button class="danger-btn" id="driveDeleteAll" type="button">Delete all app backups from Drive</button>
+ <p class="note">Google Drive backups are stored in Promoter Tracker's private app-data area. They do not appear in your normal Drive folders. Internet access is required.</p><p class="backup-status" id="driveBackupStatus">No Google Drive backup yet</p></div></details>
+ <section class="backup-source" id="backupEncryptionInfo"><div class="backup-row"><h3>Encrypted backups</h3><span class="backup-status">AES-256-GCM</span></div><p class="note">Backup files are encrypted by Promoter Tracker and can only be restored inside the app.</p><p class="note" id="recoveryPasswordState">Same-phone restore uses this device's secure key. For a new phone, set a recovery password before creating a backup.</p><button class="secondary" id="setRecoveryPassword" type="button">Set / Change new-phone recovery password</button></section>
+ <p class="backup-status" id="backupSaveStatus" role="status" aria-live="polite">Choose Local or Google Drive, then save your automatic backup preference.</p>
+ <p class="backup-status" id="backupStatus">Last backup: Not yet created</p><button class="primary" id="saveBackupSettings" type="button">Save backup settings</button><button class="secondary" data-close type="button">Close</button>
+</div></div>
+<div class="sheet" id="pinSetupSheet" role="dialog" aria-modal="true" aria-label="Set backup PIN"><div class="panel"><div class="grip"></div><h2>Set backup PIN</h2><p class="helper">Create a six-digit PIN. It is stored as a salted PBKDF2 hash, not as readable text.</p><label class="field">New PIN<input id="pinNew" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="6 digits"></label><label class="field">Confirm PIN<input id="pinConfirm" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="Repeat PIN"></label><p class="security-status" id="pinSetupStatus"></p><button class="primary" id="savePin" type="button">Save PIN</button><button class="secondary" data-close type="button">Cancel</button></div></div>
+<div class="sheet" id="recoverySetupSheet" role="dialog" aria-modal="true" aria-label="Set recovery password"><div class="panel"><div class="grip"></div><h2>New-phone recovery password</h2><p class="helper">Used only if you restore a backup on a different phone. It is never needed for normal restoration on this phone. Keep it safe: without the original phone or this password, encrypted backups cannot be recovered.</p><label class="field">Recovery password<input id="recoveryNew" type="password" autocomplete="new-password" placeholder="At least 10 characters"></label><label class="field">Confirm recovery password<input id="recoveryConfirm" type="password" autocomplete="new-password" placeholder="Repeat password"></label><p class="security-status" id="recoverySetupStatus"></p><button class="primary" id="saveRecovery" type="button">Save recovery password</button><button class="secondary" data-close type="button">Cancel</button></div></div>
+<div class="sheet" id="restorePasswordSheet" role="dialog" aria-modal="true" aria-label="Unlock encrypted backup"><div class="panel"><div class="grip"></div><h2>Unlock encrypted backup</h2><p class="helper">This backup was created on another phone. Enter the recovery password you set when creating it.</p><label class="field">Recovery password<input id="restoreRecoveryPassword" type="password" autocomplete="current-password" placeholder="Enter recovery password"></label><p class="security-status" id="restorePasswordStatus"></p><button class="primary" id="decryptRestore" type="button">Decrypt &amp; restore</button><button class="secondary" data-close type="button">Cancel</button></div></div>
+<div class="security-lock" id="securityLock" aria-hidden="true"><div class="security-lock-card"><div class="security-lock-brand">PROMOTER TRACKER</div><div class="security-fingerprint">◎</div><h2>App locked</h2><p>Authenticate to open your sales tracker.</p><button class="primary" id="unlockFingerprint" type="button">Unlock with fingerprint</button><button class="secondary" id="showPinUnlock" type="button">Use backup PIN</button><div id="pinUnlockArea" hidden><label class="field">Six-digit PIN<input id="pinUnlockValue" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password"></label><button class="primary" id="unlockPin" type="button">Unlock</button></div><p class="security-status" id="lockStatus"></p></div></div>
+<div class="toast" id="toast" role="status">Saved</div>
 
 <script>
+"use strict";
+const STORAGE_KEY="ptt";
 const M=[["Mate X7",4999],["Mate 80 Pro",80],["Pura 90s Pro",100],["Pura 90s Pro Max",3999],["Pura 90s Pro Max 256",3499],["Pura 80",60],["Mate XT",150],["Nova 15 Max",1199],["Nova 14i",799],["Matepad 11.5",1299],["Matepad SE 11",774],["Matepad 11.5s",1799]];
 const W=[["GT6 Pro",20],["GT6",699],["Watch Buds",0],["GT7",899],["GT7 Pro",1299],["FIT5",599],["Watch Ultimate",3099],["Bank 11 Pro",249],["Freeclip 2s",749],["Freeclip 2",649],["SE2",74],["SE4",189],["SE3",139]];
+const INITIAL=[{"id":"m1","n":"Mate X7","r":4999,"u":0,"q":0,"g":"m"},{"id":"m2","n":"Mate 80 Pro","r":80,"u":0,"q":0,"g":"m"},{"id":"m3","n":"Pura 90s Pro","r":100,"u":0,"q":0,"g":"m"},{"id":"m4","n":"Pura 90s Pro Max","r":3999,"u":0,"q":0,"g":"m"},{"id":"m5","n":"Pura 90s Pro Max 256","r":3499,"u":0,"q":0,"g":"m"},{"id":"m6","n":"Pura 80","r":60,"u":0,"q":0,"g":"m"},{"id":"m7","n":"Mate XT","r":150,"u":0,"q":0,"g":"m"},{"id":"m8","n":"Nova 15 Max","r":1199,"u":0,"q":0,"g":"m"},{"id":"m9","n":"Nova 14i","r":799,"u":0,"q":0,"g":"m"},{"id":"m10","n":"Matepad 11.5","r":1299,"u":0,"q":0,"g":"m"},{"id":"m11","n":"Matepad SE 11","r":774,"u":0,"q":0,"g":"m"},{"id":"m12","n":"Matepad 11.5s","r":1799,"u":0,"q":0,"g":"m"},{"id":"w1","n":"GT6 Pro","r":20,"u":0,"q":0,"g":"w"},{"id":"w2","n":"GT6","r":699,"u":0,"q":0,"g":"w"},{"id":"w3","n":"Watch Buds","r":0,"u":0,"q":0,"g":"w"},{"id":"w4","n":"GT7","r":899,"u":0,"q":0,"g":"w"},{"id":"w5","n":"GT7 Pro","r":1299,"u":0,"q":0,"g":"w"},{"id":"w6","n":"FIT5","r":599,"u":0,"q":0,"g":"w"},{"id":"w7","n":"Watch Ultimate","r":3099,"u":0,"q":0,"g":"w"},{"id":"w8","n":"Bank 11 Pro","r":249,"u":0,"q":0,"g":"w"},{"id":"w9","n":"Freeclip 2s","r":749,"u":0,"q":0,"g":"w"},{"id":"w10","n":"Freeclip 2","r":649,"u":0,"q":0,"g":"w"},{"id":"w11","n":"SE2","r":74,"u":0,"q":0,"g":"w"},{"id":"w12","n":"SE4","r":189,"u":0,"q":0,"g":"w"},{"id":"w13","n":"SE3","r":139,"u":0,"q":0,"g":"w"}];
 const KEY={m:"tm",w:"tw"};
-let S={tm:510300,tw:340200,rows:[...M.map(([n,r])=>({n,r,u:0,q:0,g:"m"})),...W.map(([n,r])=>({n,r,u:0,q:0,g:"w"}))]},g="m",openI=-1,undoFn=null,tt,cur=null;
-try{const s=JSON.parse(localStorage.getItem("ptt")||"null");if(s&&s.rows){if(s.tm==null){s.tm=Math.round(s.target*s.share/100);s.tw=s.target-s.tm}S=s}}catch(e){}
-try{if(localStorage.getItem("ptt_g")==="w")g="w"}catch(e){}
-const $=id=>document.getElementById(id),f=n=>Math.round(n).toLocaleString("en-US"),num=v=>Math.max(0,parseFloat(String(v).replace(/,/g,""))||0);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const save=()=>{S.ts=Date.now();try{localStorage.setItem("ptt",JSON.stringify(S))}catch(e){}};
-const subTxt=x=>`RRP ${f(x.r)} · Incentive ${f(x.u||0)}/unit`;
-
-const rowH=(x,i)=>`<div class="row${x.q>0?" has":""}${i===openI?" open":""}" data-i="${i}">
-<button class="main" data-x="1" aria-expanded="${i===openI}" aria-label="Edit ${esc(x.n)}"><span class="nm">${esc(x.n)}</span><span class="sub">${subTxt(x)}</span><span class="sub2"></span></button>
-<div class="step"><button data-s="-1" aria-label="Decrease ${esc(x.n)}">−</button><input data-f="q" inputmode="numeric" value="${x.q}" aria-label="${esc(x.n)} quantity"><button data-s="1" aria-label="Increase ${esc(x.n)}">+</button></div>
-<div class="edit"><label class="full">Model name<input class="l" data-f="n" value="${esc(x.n)}"></label><label>RRP<input data-f="r" inputmode="numeric" value="${f(x.r)}"></label><label>Incentive / unit<input data-f="u" inputmode="numeric" value="${f(x.u||0)}"></label><button class="btn dng full" data-d="1">Delete model</button></div></div>`;
-
-function renderRows(){
- const k=$("q").value.trim().toLowerCase(),only=$("sold").getAttribute("aria-pressed")==="true";
- const h=S.rows.map((x,i)=>x.g===g&&(!k||x.n.toLowerCase().includes(k))&&(!only||x.q>0)?rowH(x,i):"").join("");
- $("rows").innerHTML=h||`<p class="empty">${only?"Nothing sold yet in this category.":"No models found. Tap + to add one."}</p>`;
- sum();
-}
-function sum(){
- const tg={m:S.tm,w:S.tw},a={m:0,w:0},b={m:0,w:0};
- S.rows.forEach(x=>{a[x.g]+=x.r*x.q;b[x.g]+=(x.u||0)*x.q});
- const cp=k=>tg[k]?Math.min(a[k]/tg[k],1.2):0,p=Math.min(.6*cp("m")+.4*cp("w"),1.1);
- document.querySelectorAll("#rows .row").forEach(r=>{const x=S.rows[r.dataset.i];if(x)r.querySelector(".sub2").textContent=x.q>0?`Sold ${f(x.r*x.q)} · Earn ${f((x.u||0)*x.q*p)}`:""});
- const pc=(p*100).toFixed(1)+"%";
- $("fs").textContent=pc;$("mfs").textContent=pc;
- $("ring").className="ring"+(p>=.8?" ok":"");
- $("rv").style.strokeDashoffset=282.7*(1-Math.min(p,1));
- const ti=f((b.m+b.w)*p);$("ti").textContent=ti;$("mti").textContent=ti;
- $("ta").textContent=f(a.m+a.w);$("tt").textContent=f(tg.m+tg.w);
- for(const k of["m","w"]){$(k+"p").textContent=(cp(k)*100).toFixed(1)+"%";$(k+"b").style.width=Math.min(cp(k),1)*100+"%"}
- $("ca").textContent=f(a[g]);$("ci").textContent=f(b[g]*p);
-}
-function setTab(k){
- g=k;openI=-1;try{localStorage.setItem("ptt_g",k)}catch(e){}
- document.querySelectorAll(".tab").forEach(t=>{const on=t.dataset.g===k;t.classList.toggle("on",on);t.setAttribute("aria-selected",on)});
- $("tg").value=f(S[KEY[k]]);renderRows();
-}
-function toast(m,fn){$("tm").textContent=m;undoFn=fn||null;$("undo").hidden=!fn;$("toast").classList.add("on");clearTimeout(tt);tt=setTimeout(hideToast,6000)}
-function hideToast(){$("toast").classList.remove("on");undoFn=null}
-$("undo").onclick=()=>{const fn=undoFn;hideToast();if(fn)fn()};
-
-/* sheets: a hash entry lets the phone's Back button close them */
-function openSheet(id){closeSheet(true);cur=id;$(id).classList.add("on");try{if(location.hash!=="#sheet")location.hash="sheet"}catch(e){}}
-function closeSheet(quiet){if(!cur)return;$(cur).classList.remove("on");cur=null;if(!quiet){try{if(location.hash==="#sheet")history.back()}catch(e){}}}
-addEventListener("hashchange",()=>{if(location.hash!=="#sheet"&&cur){$(cur).classList.remove("on");cur=null}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
-document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target.dataset.close)closeSheet()}));
-$("fab").onclick=()=>{$("ag").value=g;openSheet("sAdd");setTimeout(()=>$("an").focus(),60)};
-$("menu").onclick=()=>openSheet("sMenu");
-
-/* rows */
-$("rows").addEventListener("input",e=>{
- const r=e.target.closest(".row"),k=e.target.dataset.f;if(!r||!k)return;
- const x=S.rows[r.dataset.i];x[k]=k==="n"?e.target.value:num(e.target.value);
- if(k==="q")r.classList.toggle("has",x.q>0);
- else{r.querySelector(".nm").textContent=x.n||"Model";r.querySelector(".sub").textContent=subTxt(x)}
- sum();save();
-});
-$("rows").addEventListener("focusin",e=>{if(e.target.dataset&&e.target.dataset.f==="q"){const t=e.target;setTimeout(()=>t.select(),0)}});
-$("rows").addEventListener("focusout",e=>{
- const r=e.target.closest(".row");if(!r)return;const x=S.rows[r.dataset.i],k=e.target.dataset.f;if(!x)return;
- if(k==="r")e.target.value=f(x.r);
- if(k==="u")e.target.value=f(x.u||0);
- if(k==="q")e.target.value=x.q;
- if(k==="n"){x.n=x.n.trim()||"Model";e.target.value=x.n;r.querySelector(".nm").textContent=x.n;save()}
-});
-$("rows").addEventListener("click",e=>{
- const r=e.target.closest(".row"),b=e.target.closest("button");if(!r||!b)return;
- const i=+r.dataset.i,x=S.rows[i];
- if(b.dataset.d){const rm=S.rows.splice(i,1)[0];openI=-1;renderRows();save();toast(`Deleted ${rm.n}`,()=>{S.rows.splice(i,0,rm);renderRows();save()})}
- else if(b.dataset.s){x.q=Math.max(0,x.q+ +b.dataset.s);r.querySelector('[data-f="q"]').value=x.q;r.classList.toggle("has",x.q>0);sum();save()}
- else if(b.dataset.x){openI=openI===i?-1:i;renderRows()}
-});
-
-/* tabs, target, search, filter */
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setTab(t.dataset.g)));
-$("tg").addEventListener("input",e=>{S[KEY[g]]=num(e.target.value);sum();save()});
-$("tg").addEventListener("blur",e=>e.target.value=f(S[KEY[g]]));
-$("tg").addEventListener("focus",e=>{const t=e.target;setTimeout(()=>t.select(),0)});
-$("q").addEventListener("input",renderRows);
-$("sold").addEventListener("click",e=>{const b=e.currentTarget;b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true");renderRows()});
-
-/* add + clear */
-function add(){
- const n=$("an").value.trim();if(!n){$("an").focus();return}
- const k=$("ag").value;S.rows.unshift({n,r:num($("ar").value),u:num($("au").value),q:num($("aq").value),g:k});
- ["an","ar","au","aq"].forEach(i=>$(i).value="");$("q").value="";$("sold").setAttribute("aria-pressed","false");
- closeSheet();setTab(k);save();toast(`Added ${n}`);
- $("rows").scrollIntoView({block:"start",behavior:"smooth"});
-}
-$("ab").onclick=add;
-["an","ar","au","aq"].forEach(i=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")add()}));
-$("clr").onclick=()=>{
- const prev=S.rows.map(x=>x.q);closeSheet();
- if(!prev.some(q=>q>0)){toast("No quantities to clear");return}
- S.rows.forEach(x=>x.q=0);renderRows();save();
- toast("Quantities cleared",()=>{S.rows.forEach((x,i)=>{if(i<prev.length)x.q=prev[i]});renderRows();save()});
+const INCENTIVE_RULES={
+ mobileWeight:0.60,wearableWeight:0.40,categoryAchievementCap:120,
+ totalAchievementCap:110,minimumAchievement:80,kpiPackageAED:600,
+ maximumPayoutAED:10000
 };
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2});
+const fmtAED=n=>"AED "+fmt(n);
+const safeNum=v=>Math.max(0,Number(v)||0);
+const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function loadState(){
+ try{
+  const parsed=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+  if(parsed&&Array.isArray(parsed.rows)){
+   return {
+    tm:safeNum(parsed.tm??510300)||510300,
+    tw:safeNum(parsed.tw??340200)||340200,
+    rows:parsed.rows.map((m,i)=>({id:String(m.id||("restored-"+i)),n:String(m.n||"Untitled model").slice(0,70),r:safeNum(m.r),u:safeNum(m.u),q:Math.floor(safeNum(m.q)),g:m.g==="w"?"w":"m"})),
+    ts:parsed.ts||Date.now()
+   };
+  }
+  const preview=JSON.parse(localStorage.getItem("promoter-tracker-liquid-glass-preview-v2")||"null");
+  if(preview&&Array.isArray(preview.models)){
+   return {tm:510300,tw:340200,rows:preview.models.map((m,i)=>({id:String(m.id||("migrated-"+i)),n:String(m.n||"Untitled model").slice(0,70),r:safeNum(m.r),u:safeNum(m.u),q:Math.floor(safeNum(m.q)),g:m.g==="w"?"w":"m"}))};
+  }
+ }catch(e){}
+ return {tm:510300,tw:340200,rows:INITIAL.map(x=>({...x}))};
+}
+let S=loadState();
+let data=S.rows.map((m,i)=>({...m,id:String(m.id||("model-"+i))}));
+let cat="m",g="m",only=false,incentiveVisible=false,toastTimer=null,expandedId=null,openI=-1;
+const TARGETS={m:S.tm,w:S.tw};
+function saveData(){
+ S.tm=TARGETS.m;S.tw=TARGETS.w;
+ S.rows=data.map(m=>({id:m.id,n:m.n,r:m.r,u:m.u,q:m.q,g:m.g}));
+ S.ts=Date.now();
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));syncNativeSnapshot();}
+ catch(e){toast("Storage unavailable — create a backup");}
+}
+function totals(){
+ const t={sales:0,perUnitIncentive:0,incentive:0,units:0,m:{sales:0,units:0,incentive:0},w:{sales:0,units:0,incentive:0}};
+ for(const m of data){
+  const sales=m.r*m.q,inc=m.u*m.q;
+  t.sales+=sales;t.perUnitIncentive+=inc;t.units+=m.q;
+  t[m.g].sales+=sales;t[m.g].incentive+=inc;t[m.g].units+=m.q;
+ }
+ // Keep visible sales progress uncapped so actual achievement above 100% remains visible.
+ t.progress=TARGETS.m+TARGETS.w>0?t.sales/(TARGETS.m+TARGETS.w)*100:0;
 
-/* keyboard: hide the + button while typing; show compact summary once the hero scrolls away */
-document.addEventListener("focusin",e=>{if(e.target.matches&&e.target.matches("input,select"))document.body.classList.add("typing")});
-document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!a.matches||!a.matches("input,select"))document.body.classList.remove("typing")},60));
-try{new IntersectionObserver(([en])=>$("bar").classList.toggle("stuck",!en.isIntersecting),{threshold:0}).observe($("hero"))}catch(e){}
+ // Official rules: cap each category at 120%, apply 60/40 weighting, then cap total at 110%.
+ const mobileRaw=TARGETS.m>0?t.m.sales/TARGETS.m*100:0;
+ const wearableRaw=TARGETS.w>0?t.w.sales/TARGETS.w*100:0;
+ const mobileUsed=Math.min(INCENTIVE_RULES.categoryAchievementCap,mobileRaw);
+ const wearableUsed=Math.min(INCENTIVE_RULES.categoryAchievementCap,wearableRaw);
+ const mobileWeighted=mobileUsed*INCENTIVE_RULES.mobileWeight;
+ const wearableWeighted=wearableUsed*INCENTIVE_RULES.wearableWeight;
+ const weightedBeforeTotalCap=mobileWeighted+wearableWeighted;
+ const achievementUsed=Math.min(INCENTIVE_RULES.totalAchievementCap,weightedBeforeTotalCap);
+ const eligible=achievementUsed>=INCENTIVE_RULES.minimumAchievement;
+ const amountBeforeCap=eligible
+  ?(INCENTIVE_RULES.kpiPackageAED+t.perUnitIncentive)*(achievementUsed/100)
+  :0;
+ const preThresholdEarned=Math.min(INCENTIVE_RULES.maximumPayoutAED,t.perUnitIncentive);
+ t.incentive=eligible
+  ?Math.min(INCENTIVE_RULES.maximumPayoutAED,amountBeforeCap)
+  :preThresholdEarned;
+ t.calculation={
+  mobileRaw,mobileUsed,mobileWeighted,
+  wearableRaw,wearableUsed,wearableWeighted,
+  weightedBeforeTotalCap,achievementUsed,eligible,
+  amountBeforeCap,perUnitIncentive:t.perUnitIncentive,
+  kpiPackageAED:INCENTIVE_RULES.kpiPackageAED,
+  payoutCapApplied:amountBeforeCap>INCENTIVE_RULES.maximumPayoutAED,
+  maximumPayoutAED:INCENTIVE_RULES.maximumPayoutAED
+ };
+ return t;
+}
+function pct(n,target){return target?(n/target*100):0;}
+function toast(message){
+ $("toast").textContent=message;$("toast").classList.add("show");
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.remove("show"),1700);
+}
+function updateIncentiveVisibility(){
+ document.querySelectorAll("[data-incentive-toggle]").forEach(el=>{
+  el.classList.toggle("concealed",!incentiveVisible);
+  el.setAttribute("aria-label",incentiveVisible?"Tap to hide total incentive":"Tap to reveal total incentive");
+ });
+}
+function updateDashboard(){
+ const t=totals(),target=TARGETS.m+TARGETS.w,overall=t.calculation.achievementUsed,ringProgress=Math.min(100,Math.max(0,overall)),remaining=Math.max(0,target-t.sales);
+ $("salesTotal").textContent=fmt(t.sales);$("targetTotal").textContent=fmt(target);$("remaining").textContent=fmt(remaining);
+ $("heroIncentive").textContent=fmtAED(t.incentive);$("stickyIncentive").textContent=fmtAED(t.incentive);
+ $("handsetSales").textContent=fmt(t.m.sales);$("wearSales").textContent=fmt(t.w.sales);
+ $("score").textContent=overall.toFixed(1)+"%";$("stickyPct").textContent=overall.toFixed(1)+"%";
+ // The headline and sticky score show the official weighted score, capped at 110%. Category cards retain actual achievement.
+ $("ring").style.strokeDashoffset=String(289-(289*ringProgress/100));
+ $("stickyFill").style.width=Math.min(100,Math.max(0,overall))+"%";
+ $("stickySales").textContent=fmt(t.sales);$("stickyUnits").textContent=fmt(t.units);
+ for(const key of ["m","w"]){
+  const progress=pct(t[key].sales,TARGETS[key]),visualProgress=Math.min(100,Math.max(0,progress));
+  $(key+"Pct").textContent=progress.toFixed(1)+"%";
+  $(key+"Target").textContent=fmt(TARGETS[key]);
+  $(key+"Sales").textContent=fmt(t[key].sales);
+  $(key+"Fill").style.width=visualProgress+"%";
+  $(key+"Achievement").textContent=progress>INCENTIVE_RULES.categoryAchievementCap
+   ?(progress.toFixed(1)+"% actual · 120% counted for incentive")
+   :(progress.toFixed(1)+"% of target achieved");
+ }
 
-setTab(g);
+ updateIncentiveVisibility();
+}
+function render(){
+ const query=$("search").value.toLowerCase().trim();
+ const rows=data.map((m,i)=>({...m,index:i})).filter(m=>m.g===cat&&(!query||m.n.toLowerCase().includes(query))&&(!only||m.q>0));
+ $("models").innerHTML=rows.length?rows.map(m=>`
+  <article class="model ${m.q>0?"sold":""} ${expandedId===m.id?"open":""}" data-index="${m.index}">
+   <button class="model-main" type="button" data-action="toggle" aria-expanded="${expandedId===m.id}">
+    <div class="model-top"><div class="modelname" title="${escapeHTML(m.n)}">${escapeHTML(m.n)}</div></div>
+    <div class="meta">RRP ${fmt(m.r)} · Incentive ${fmt(m.u)} / unit</div>
+    <div class="detailtext">${m.q?`Sales ${fmt(m.r*m.q)} · Units sold ${m.q}`:"No sales recorded yet"}</div>
+   </button>
+   <div class="stepper"><button data-action="step" data-step="-1" aria-label="Decrease ${escapeHTML(m.n)} quantity">−</button><button class="qty-edit" data-action="edit-quantity" type="button" aria-label="Tap to enter quantity manually for ${escapeHTML(m.n)}">${m.q}</button><button class="plus" data-action="step" data-step="1" aria-label="Increase ${escapeHTML(m.n)} quantity">+</button></div>
+   <div class="details">
+    <label>RRP / sales value<input data-field="r" type="number" min="0" step="0.01" value="${m.r}" aria-label="RRP for ${escapeHTML(m.n)}"></label>
+    <label>Incentive per unit (AED)<input data-field="u" type="number" min="0" step="0.01" value="${m.u}" aria-label="Incentive per unit for ${escapeHTML(m.n)}"></label>
+    <div class="detail-actions"><span class="detail-note">Changes save automatically on this browser.</span><button class="delete-model" data-action="delete" type="button">Delete model</button></div>
+   </div>
+  </article>`).join(""):'<div class="glass empty">No models found in this category.</div>';
+ updateDashboard();
+ updateFabVisibility();
+}
+function setCategory(next){
+ cat=next;g=next;
+ document.querySelectorAll(".cat").forEach(b=>b.classList.toggle("active",b.dataset.cat===cat));
+ $("listTitle").textContent=cat==="m"?"Handset & Tablet":"Audio & Wearables";
+ render();
+}
+function setTab(next){setCategory(next);}
+function renderRows(){render();}
+function updateFabVisibility(){
+ const fab=$("add");
+ if(!fab)return;
+ const root=document.documentElement;
+ const scrollable=root.scrollHeight>window.innerHeight+120;
+ const atEnd=scrollable&&(window.scrollY+window.innerHeight>=root.scrollHeight-28);
+ fab.classList.toggle("at-page-end",atEnd);
+ fab.setAttribute("aria-hidden",atEnd?"true":"false");
+ fab.disabled=atEnd;
+}
+window.addEventListener("scroll",updateFabVisibility,{passive:true});
+window.addEventListener("resize",updateFabVisibility);
+function openSheet(id){
+ // Keep the Add Model form and Data & Options panel mutually exclusive.
+ document.querySelectorAll(".sheet.show").forEach(sheet=>{
+  if(sheet.id!==id) sheet.classList.remove("show");
+ });
+ const target=$(id);
+ if(target) target.classList.add("show");
+}
+function closeSheet(sheet){
+ if(sheet){sheet.classList.remove("show");return;}
+ document.querySelectorAll(".sheet.show").forEach(x=>x.classList.remove("show"));
+}
+document.querySelectorAll(".cat").forEach(b=>b.addEventListener("click",()=>setCategory(b.dataset.cat)));
+$("search").addEventListener("input",render);
+$("sold").addEventListener("click",()=>{only=!only;$("sold").classList.toggle("active",only);render();});
+// Incentive taps are handled by the fingerprint-aware listener below.
+
+
+const INCENTIVE_FINGERPRINT_KEY="pt_incentive_fingerprint_required_v1";
+let incentiveFingerprintRequired=true;
+try{incentiveFingerprintRequired=localStorage.getItem(INCENTIVE_FINGERPRINT_KEY)!=="false";}catch(e){}
+$("incentiveFingerprintEnabled").checked=incentiveFingerprintRequired;
+function updateIncentiveFingerprintSetting(){
+ $("incentiveFingerprintStatus").textContent=incentiveFingerprintRequired
+  ?"Enabled · Tap either incentive amount to authenticate."
+  :"Disabled · Tap either incentive amount to reveal it normally.";
+}
+updateIncentiveFingerprintSetting();
+$("incentiveFingerprintEnabled").addEventListener("change",e=>{
+ incentiveFingerprintRequired=e.target.checked;
+ incentiveVisible=false;updateIncentiveVisibility();
+ try{localStorage.setItem(INCENTIVE_FINGERPRINT_KEY,String(incentiveFingerprintRequired));}catch(err){}
+ updateIncentiveFingerprintSetting();
+});
+let biometricPurpose=null;
+document.querySelectorAll("[data-incentive-toggle]").forEach(el=>el.addEventListener("click",()=>{
+ if(incentiveVisible){incentiveVisible=false;updateIncentiveVisibility();return;}
+ if(!incentiveFingerprintRequired){incentiveVisible=true;updateIncentiveVisibility();return;}
+ if(!window.AppBackup){toast("Fingerprint verification requires the Android app.");return;}
+ if(!AppBackup.isBiometricAvailable()){toast("Set up a strong fingerprint in Android settings first.");return;}
+ biometricPurpose="incentive";
+ AppBackup.authenticateBiometric();
+}));
+document.addEventListener("visibilitychange",()=>{if(document.hidden){incentiveVisible=false;updateIncentiveVisibility();}});
+
+let holdTimer=null,holdCard=null,holdFrom=null,reorderActive=false,lastHoverCard=null,suppressModelClick=false;
+function moveModelTo(fromIndex,toIndex){
+ if(fromIndex===null||toIndex===null||fromIndex===toIndex)return false;
+ const from=data[fromIndex],to=data[toIndex];
+ if(!from||!to||from.g!==to.g)return false;
+ const [moved]=data.splice(fromIndex,1);
+ data.splice(toIndex,0,moved);
+ saveData();render();toast("Model order saved");return true;
+}
+function clearHold(){if(holdTimer!==null){clearTimeout(holdTimer);holdTimer=null;}}
+function clearReorderVisuals(){document.querySelectorAll(".model").forEach(card=>card.classList.remove("dragging","drag-over"));lastHoverCard=null;}
+function beginHold(card,event){
+ clearHold();holdCard=card;holdFrom=Number(card.dataset.index);reorderActive=false;
+ const pt=event?.touches?.[0]||event;card._holdStart=pt?{x:pt.clientX,y:pt.clientY}:null;
+ holdTimer=setTimeout(()=>{if(!holdCard)return;reorderActive=true;holdCard.classList.add("dragging");if(navigator.vibrate)navigator.vibrate(20);},500);
+}
+function updateDropTarget(x,y){
+ const under=document.elementFromPoint(x,y)?.closest(".model");
+ document.querySelectorAll(".model.drag-over").forEach(card=>card.classList.remove("drag-over"));
+ if(under&&under!==holdCard&&under.dataset.index!==undefined&&data[Number(under.dataset.index)]?.g===data[holdFrom]?.g){under.classList.add("drag-over");lastHoverCard=under;}else lastHoverCard=null;
+}
+function finishHold(){
+ clearHold();const from=holdFrom,to=lastHoverCard?Number(lastHoverCard.dataset.index):null,wasActive=reorderActive;
+ if(holdCard)holdCard.classList.remove("dragging");clearReorderVisuals();holdCard=null;holdFrom=null;reorderActive=false;
+ if(wasActive&&to!==null){suppressModelClick=true;moveModelTo(from,to);setTimeout(()=>{suppressModelClick=false;},350);}
+}
+$("models").addEventListener("mousedown",e=>{
+ const card=e.target.closest(".model");
+ if(!card||e.target.closest(".stepper,input,select,[data-action='delete']"))return;
+ beginHold(card,e);
+});
+document.addEventListener("mousemove",e=>{
+ if(!holdCard)return;
+ if(!reorderActive){if(holdCard._holdStart&&(Math.abs(e.clientX-holdCard._holdStart.x)+Math.abs(e.clientY-holdCard._holdStart.y)>12))clearHold();return;}
+ updateDropTarget(e.clientX,e.clientY);
+});
+document.addEventListener("mouseup",()=>{if(holdCard)finishHold();});
+$("models").addEventListener("touchstart",e=>{
+ const card=e.target.closest(".model");
+ if(!card||e.target.closest(".stepper,input,select,[data-action='delete']"))return;
+ beginHold(card,e);
+},{passive:true});
+$("models").addEventListener("touchmove",e=>{
+ if(!holdCard)return;const touch=e.touches[0];if(!touch)return;
+ if(!reorderActive){if(holdCard._holdStart&&(Math.abs(touch.clientX-holdCard._holdStart.x)+Math.abs(touch.clientY-holdCard._holdStart.y)>12))clearHold();return;}
+ e.preventDefault();updateDropTarget(touch.clientX,touch.clientY);
+},{passive:false});
+$("models").addEventListener("touchend",()=>{if(holdCard)finishHold();},{passive:true});
+$("models").addEventListener("touchcancel",()=>{
+ clearHold();if(holdCard)holdCard.classList.remove("dragging");clearReorderVisuals();holdCard=null;holdFrom=null;reorderActive=false;
+},{passive:true});
+
+$("models").addEventListener("click",e=>{
+ if(suppressModelClick){e.preventDefault();e.stopPropagation();return;}
+ const card=e.target.closest(".model");if(!card)return;
+ const index=Number(card.dataset.index),m=data[index],action=e.target.closest("[data-action]")?.dataset.action;
+ if(action==="step"){
+  m.q=Math.max(0,m.q+Number(e.target.closest("[data-action]").dataset.step));saveData();render();toast("Quantity saved");return;
+ }
+ if(action==="edit-quantity"){
+  const stepper=e.target.closest(".stepper");
+  stepper.innerHTML=`<button data-action="step" data-step="-1" aria-label="Decrease ${escapeHTML(m.n)} quantity">−</button><input class="qty-manual" type="number" min="0" step="1" inputmode="numeric" value="${m.q}" aria-label="Enter quantity for ${escapeHTML(m.n)}"><button class="plus" data-action="step" data-step="1" aria-label="Increase ${escapeHTML(m.n)} quantity">+</button>`;
+  const input=stepper.querySelector(".qty-manual");input.focus();input.select();return;
+ }
+ if(action==="toggle"){
+  expandedId=expandedId===m.id?null:m.id;render();return;
+ }
+ if(action==="delete"){
+  if(confirm(`Delete "${m.n}" and its recorded quantity from this tracker? This cannot be undone unless you have a backup.`)){
+   if(expandedId===m.id)expandedId=null;
+   data.splice(index,1);saveData();render();toast("Model deleted");
+  }
+ }
+});
+function commitManualQuantity(input){
+ const card=input.closest(".model");if(!card||!input.isConnected)return;
+ const m=data[Number(card.dataset.index)];
+ const next=Math.floor(safeNum(input.value));
+ m.q=next;saveData();render();toast("Manual quantity saved");
+}
+$("models").addEventListener("keydown",e=>{
+ if(!e.target.classList.contains("qty-manual"))return;
+ if(e.key==="Enter"){e.preventDefault();e.target.blur();}
+ if(e.key==="Escape"){e.preventDefault();render();}
+});
+$("models").addEventListener("change",e=>{
+ if(e.target.classList.contains("qty-manual")){commitManualQuantity(e.target);return;}
+ const card=e.target.closest(".model"),field=e.target.dataset.field;if(!card||!field)return;
+ const m=data[Number(card.dataset.index)];
+ m[field]=safeNum(e.target.value);
+ saveData();render();toast(field==="r"?"RRP saved":"Incentive saved");
+});
+$("add").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();openSheet("addSheet");requestAnimationFrame(()=>{const field=$("newName");if(field)field.focus({preventScroll:true});});});
+$("menu").addEventListener("click",e=>{e.preventDefault();openSheet("menuSheet");});
+const CHANGELOG_VERSION="v10-drive-backup-1";
+const CHANGELOG_SEEN_KEY="pt_changelog_seen_version";
+function syncChangelogIndicator(){
+ const seen=localStorage.getItem(CHANGELOG_SEEN_KEY);
+ $("changelogDot")?.classList.toggle("visible",seen!==CHANGELOG_VERSION);
+ $("newPill")?.classList.toggle("visible",seen!==CHANGELOG_VERSION);
+}
+function openChangelog(){
+ localStorage.setItem(CHANGELOG_SEEN_KEY,CHANGELOG_VERSION);
+ syncChangelogIndicator();
+ closeSheet($("menuSheet"));
+ openSheet("changelogSheet");
+}
+$("openChangelog").addEventListener("click",openChangelog);
+$("checkUpdates").addEventListener("click",()=>{closeSheet($("menuSheet"));if(window.AppUpdates)AppUpdates.checkForUpdates();else toast("Update checking is available in the installed Android app.");});
+$("closeChangelog").addEventListener("click",()=>closeSheet($("changelogSheet")));
+$("changelogDot").addEventListener("click",openChangelog);
+
+$("openOptions").addEventListener("click",()=>{closeSheet($("menuSheet"));$("targetHandset").value=String(TARGETS.m);$("targetWearables").value=String(TARGETS.w);openSheet("optionsSheet");});
+document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeSheet(b.closest(".sheet"))));
+document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheet(s);}));
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape"){
+  const open=document.querySelector(".sheet.show");
+  if(open) closeSheet(open);
+ }
+});
+$("save").addEventListener("click",()=>{
+ const name=$("newName").value.trim();if(!name){$("newName").focus();return;}
+ data.unshift({id:"model-"+Date.now(),n:name.slice(0,70),r:safeNum($("newRrp").value),u:safeNum($("newInc").value),q:0,g:$("newCat").value});
+ setCategory($("newCat").value);saveData();closeSheet($("addSheet"));
+ ["newName","newRrp","newInc"].forEach(id=>$(id).value="");toast("Model added and saved");
+});
+let pendingEnableFingerprint=false;
+function syncSecuritySettings(){
+ if(!window.AppBackup)return;
+ $("fingerprintEnabled").checked=!!AppBackup.isSecurityEnabled();
+ $("lockTimeout").value=String(AppBackup.getLockTimeoutMinutes());
+ $("securitySettingsStatus").textContent=AppBackup.isSecurityEnabled()?"Fingerprint lock is enabled. A backup PIN is configured.":"Fingerprint lock is off.";
+ $("recoveryPasswordState").textContent=AppBackup.hasRecoveryPassword()?"New-phone recovery password is configured. Same-phone restores need no password.":"No new-phone recovery password set. Same-phone restores work; set a recovery password before creating a backup you may move to another phone.";
+}
+$("pinSetupSheet").querySelector("[data-close]").addEventListener("click",()=>{pendingEnableFingerprint=false;});
+$("configurePin").addEventListener("click",()=>{$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="";openSheet("pinSetupSheet");});
+$("savePin").addEventListener("click",()=>{
+ const pin=$("pinNew").value,confirmPin=$("pinConfirm").value;
+ if(!/^[0-9]{6}$/.test(pin)){$("pinSetupStatus").textContent="Enter exactly six digits.";return;}
+ if(pin!==confirmPin){$("pinSetupStatus").textContent="The PINs do not match.";return;}
+ if(!window.AppBackup){$("pinSetupStatus").textContent="PIN setup requires the installed Android app.";return;}
+ const result=String(AppBackup.setPin(pin));
+ if(!result.startsWith("OK")){$("pinSetupStatus").textContent=result.replace(/^ERROR\|/,"");return;}
+ if(!AppBackup.isPinConfigured()||!AppBackup.verifyPin(pin)){
+  $("pinSetupStatus").textContent="Android did not confirm the saved PIN. Please try again.";
+  return;
+ }
+ $("pinSetupStatus").textContent="PIN saved and verified on this phone.";
+ $("pinNew").value="";$("pinConfirm").value="";closeSheet($("pinSetupSheet"));
+ if(pendingEnableFingerprint){pendingEnableFingerprint=false;const enabled=String(AppBackup.setBiometricEnabled(true));if(enabled.startsWith("OK")){syncSecuritySettings();lockPromoterTracker();}else toast(enabled.replace(/^ERROR\|/,""));}
+ else{syncSecuritySettings();toast("Backup PIN saved and verified.");}
+});
+$("fingerprintEnabled").addEventListener("change",e=>{
+ if(!window.AppBackup){e.target.checked=false;toast("Fingerprint authentication requires the installed Android app.");return;}
+ if(e.target.checked){
+  if(!AppBackup.isPinConfigured()){pendingEnableFingerprint=true;e.target.checked=false;$("pinNew").value="";$("pinConfirm").value="";$("pinSetupStatus").textContent="Set a six-digit PIN first. It is your fallback if fingerprint is unavailable.";openSheet("pinSetupSheet");return;}
+  const result=String(AppBackup.setBiometricEnabled(true));
+  if(!result.startsWith("OK")){e.target.checked=false;toast(result.replace(/^ERROR\|/,""));return;}
+  lockPromoterTracker();
+ }else AppBackup.setBiometricEnabled(false);
+ syncSecuritySettings();
+});
+$("lockTimeout").addEventListener("change",e=>{if(window.AppBackup)AppBackup.setLockTimeoutMinutes(Number(e.target.value));scheduleIdleLock();});
+$("setRecoveryPassword").addEventListener("click",()=>{$("recoveryNew").value="";$("recoveryConfirm").value="";$("recoverySetupStatus").textContent="";openSheet("recoverySetupSheet");});
+$("saveRecovery").addEventListener("click",()=>{
+ const a=$("recoveryNew").value,b=$("recoveryConfirm").value;
+ if(a.length<10){$("recoverySetupStatus").textContent="Use at least 10 characters.";return;}
+ if(a!==b){$("recoverySetupStatus").textContent="The passwords do not match.";return;}
+ if(!window.AppBackup){$("recoverySetupStatus").textContent="Recovery-password setup requires the installed Android app.";return;}
+ const result=String(AppBackup.setRecoveryPassword(a));
+ if(!result.startsWith("OK")){$("recoverySetupStatus").textContent=result.replace(/^ERROR\|/,"");return;}
+ if(!AppBackup.hasRecoveryPassword()){
+  $("recoverySetupStatus").textContent="Android did not confirm the saved recovery password. Please try again.";
+  return;
+ }
+ $("recoverySetupStatus").textContent="Recovery password saved and verified on this phone.";
+ $("recoveryNew").value="";$("recoveryConfirm").value="";closeSheet($("recoverySetupSheet"));syncSecuritySettings();toast("New-phone recovery password saved and verified.");
+});
+$("decryptRestore").addEventListener("click",async()=>{
+ try{const done=await finishEncryptedRestore(pendingEncryptedRestore,$("restoreRecoveryPassword").value);if(done){pendingEncryptedRestore="";$("restoreRecoveryPassword").value="";closeSheet($("restorePasswordSheet"));}}
+ catch(e){$("restorePasswordStatus").textContent=e.message;}
+});
+$("unlockFingerprint").addEventListener("click",()=>{if(window.AppBackup)AppBackup.authenticateBiometric();else $("lockStatus").textContent="Fingerprint unlock works in the installed Android app.";});
+$("showPinUnlock").addEventListener("click",()=>{$("pinUnlockArea").hidden=false;$("pinUnlockValue").focus();});
+$("unlockPin").addEventListener("click",()=>{
+ if(!window.AppBackup){$("lockStatus").textContent="PIN unlock requires the installed Android app.";return;}
+ if(AppBackup.verifyPin($("pinUnlockValue").value)){unlockPromoterTracker();$("pinUnlockValue").value="";}
+ else{$("lockStatus").textContent="Incorrect PIN. Try again.";$("pinUnlockValue").value="";}
+});
+let idleLockTimer=null;
+function scheduleIdleLock(){
+ if(idleLockTimer!==null)clearTimeout(idleLockTimer);
+ idleLockTimer=null;
+ if(!window.AppBackup||!AppBackup.isSecurityEnabled())return;
+ const minutes=Number(AppBackup.getLockTimeoutMinutes());
+ if(minutes>0)idleLockTimer=setTimeout(()=>lockPromoterTracker(),minutes*60000);
+}
+function lockPromoterTracker(){
+ biometricPurpose=null;incentiveVisible=false;updateIncentiveVisibility();
+ if(idleLockTimer!==null)clearTimeout(idleLockTimer);idleLockTimer=null;
+ $("securityLock").classList.add("show");$("securityLock").setAttribute("aria-hidden","false");$("lockStatus").textContent="Authenticate to continue.";
+}
+function unlockPromoterTracker(){
+ $("securityLock").classList.remove("show");$("securityLock").setAttribute("aria-hidden","true");$("lockStatus").textContent="";
+ syncNativeSnapshot();scheduleIdleLock();
+}
+["pointerdown","touchstart","keydown","scroll","click"].forEach(eventName=>document.addEventListener(eventName,()=>{if(!$("securityLock").classList.contains("show"))scheduleIdleLock();},{passive:true}));
+window.lockPromoterTracker=lockPromoterTracker;
+window.onNativeBiometricResult=(success,message)=>{
+ if(biometricPurpose==="incentive"){
+  biometricPurpose=null;
+  if(success && !$("securityLock").classList.contains("show")){incentiveVisible=true;updateIncentiveVisibility();}
+  else if(!success)toast(message||"Fingerprint verification cancelled.");
+  return;
+ }
+ if(success)unlockPromoterTracker();
+ else $("lockStatus").textContent=message||"Fingerprint not recognized. Use your PIN if needed.";
+};
+async function recoverNativeSnapshot(){
+ if(!window.AppBackup||typeof AppBackup.loadSnapshot!=="function")return false;
+ try{
+  const response=String(AppBackup.loadSnapshot());
+  if(response==="EMPTY"||response.startsWith("ERROR|")){if(response.startsWith("ERROR|"))console.warn(response);return false;}
+  if(!response.startsWith("OK|"))return false;
+  const json=base64ToUtf8(response.slice(3)),snapshot=JSON.parse(json);
+  const recovered=snapshot&&snapshot.app==="Promoter Tracker"&&snapshot.data;
+  if(!recovered||!Array.isArray(recovered.rows))return false;
+  let stored=null;
+  try{stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");}catch(e){}
+  const storedTime=Number(stored&&stored.ts)||0,recoveredTime=Number(recovered.ts)||0;
+  const storedHasRows=!!(stored&&Array.isArray(stored.rows)&&stored.rows.length);
+  const recoveredHasRows=recovered.rows.length>0;
+  // Recover only when browser storage is missing, invalid, or older than the encrypted native snapshot.
+  if(stored&&storedHasRows&&storedTime>=recoveredTime)return false;
+  if(!recoveredHasRows&&storedHasRows)return false;
+  const next={
+   tm:safeNum(recovered.tm??510300)||510300,
+   tw:safeNum(recovered.tw??340200)||340200,
+   rows:recovered.rows.map((m,i)=>({id:String(m.id||("recovered-"+i)),n:String(m.n||"Untitled model").slice(0,70),r:safeNum(m.r),u:safeNum(m.u),q:Math.floor(safeNum(m.q)),g:m.g==="w"?"w":"m"})),
+   ts:recoveredTime||Date.now()
+  };
+  S=next;data=next.rows.map(m=>({...m}));TARGETS.m=next.tm;TARGETS.w=next.tw;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+  return true;
+ }catch(e){console.warn("Native snapshot recovery failed",e);return false;}
+}
+window.onNativeAppReady=async()=>{
+ if(window.AppBackup){
+  syncSecuritySettings();
+  const recovered=await recoverNativeSnapshot();
+  if(recovered){expandedId=null;setCategory(cat);toast("Your saved sales data has been restored.");}
+  else setCategory(cat);
+  if(AppBackup.isSecurityEnabled())lockPromoterTracker();
+  else syncNativeSnapshot();
+ }else setCategory(cat);
+};
+$("saveTargets").addEventListener("click",()=>{
+ const handset=Number($("targetHandset").value),wearables=Number($("targetWearables").value);
+ if(!Number.isFinite(handset)||!Number.isFinite(wearables)||handset<=0||wearables<=0){toast("Enter valid targets greater than zero");return;}
+ TARGETS.m=handset;TARGETS.w=wearables;saveData();render();closeSheet($("optionsSheet"));toast("Sales targets updated and saved");
+});
+$("clr").addEventListener("click",()=>{
+ if(!data.some(m=>m.q>0)){toast("No quantities to clear");return;}
+ if(!confirm("Clear all recorded quantities? Your model list and RRP values will remain."))return;
+ data.forEach(m=>m.q=0);expandedId=null;saveData();render();closeSheet($("optionsSheet"));toast("All quantities cleared");
+});
+$("reset").addEventListener("click",()=>{
+ if(!confirm("Reset the tracker to its original model list and clear all quantities? Current custom models and quantities will be replaced."))return;
+ data=INITIAL.map(x=>({...x}));expandedId=null;saveData();setCategory("m");closeSheet($("optionsSheet"));toast("Model list reset");
+});
+/* Backup & Restore: local JSON export/import; Drive actions remain clearly marked as requiring native setup. */
+const BACKUP_SETTINGS_KEY="ptt_backup_settings";
+function backupPayload(){return {app:"Promoter Tracker",version:1,createdAt:new Date().toISOString(),data:S};}
+function setBackupStatus(message){$("backupStatus").textContent="Last backup: "+message;}
+function loadBackupSettings(){
+ try{
+  const p=readBackupSettings(),native=window.AppBackup;
+  const localEnabled=native?!!native.isAutoBackupEnabled():p.destination==="local"||!!p.enabled&&!p.driveEnabled;
+  const driveEnabled=native?!!native.isDriveAutoBackupEnabled():p.destination==="drive"||!!p.driveEnabled;
+  const destination=localEnabled?"local":driveEnabled?"drive":"off";
+  $("destinationOff").checked=destination==="off";
+  $("destinationLocal").checked=destination==="local";
+  $("destinationDrive").checked=destination==="drive";
+  $("backupFrequency").value=(native&&native.getAutoBackupFrequency())||p.frequency||"weekly";
+  $("driveBackupFrequency").value=(native&&native.getDriveAutoBackupFrequency&&native.getDriveAutoBackupFrequency())||p.driveFrequency||"weekly";
+  $("localBackupSettings").open=destination==="local";
+  $("driveBackupSettings").open=destination==="drive";
+  if(native){
+   $("automaticFolder").textContent=native.getBackupFolderName("automatic");
+   $("manualFolder").textContent=native.getBackupFolderName("manual");
+   refreshDriveStatus();
+  }
+  const last=native&&native.getLastBackupStatus?native.getLastBackupStatus():p.lastBackup;
+  if(last)setBackupStatus(last);
+ }catch(e){console.warn("Backup settings could not be loaded",e);}
+}
+function setBackupSaveFeedback(message,isError=false){
+ const status=$("backupSaveStatus");
+ if(status){status.textContent=message;status.style.color=isError?"var(--red2)":"var(--muted)";}
+}
+function saveBackupSettings(){
+ const old=readBackupSettings();
+ const selectedDestination=document.querySelector('input[name="backupDestination"]:checked');
+ const destination=selectedDestination?selectedDestination.value:"off";
+ const frequency=$("backupFrequency").value,driveFrequency=$("driveBackupFrequency").value;
+ const p={...old,destination,frequency,driveFrequency,enabled:destination==="local",driveEnabled:destination==="drive"};
+ setBackupSaveFeedback("Saving automatic backup settings…");
+ try{
+  if(window.AppBackup){
+   const result=String(window.AppBackup.configureAutoBackup(destination,frequency,driveFrequency));
+   if(result.startsWith("ERROR|")){
+    const message=result.slice(6);
+    setBackupSaveFeedback("Not saved: "+message,true);toast(message);return;
+   }
+   if(result!=="OK"){
+    setBackupSaveFeedback("Not saved: Android did not confirm the setting.",true);
+    toast("Android did not confirm the backup setting.");return;
+   }
+   const localActive=!!window.AppBackup.isAutoBackupEnabled();
+   const driveActive=!!window.AppBackup.isDriveAutoBackupEnabled();
+   if(localActive!==(destination==="local")||driveActive!==(destination==="drive")){
+    const message="Not saved: Android settings do not match the selected destination. Please try again.";
+    setBackupSaveFeedback(message,true);toast(message);return;
+   }
+  }
+  localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));
+  const label=destination==="local"?"Local":destination==="drive"?"Google Drive":"No";
+  const message=label+" automatic backup setting saved. First scheduled backup is due after "+(destination==="drive"?driveFrequency:frequency)+".";
+  setBackupSaveFeedback(message);toast(message);
+ }catch(e){
+  const message="Could not save backup settings: "+(e&&e.message?e.message:String(e));
+  setBackupSaveFeedback(message,true);toast(message);
+ }
+}
+function readBackupSettings(){try{return JSON.parse(localStorage.getItem(BACKUP_SETTINGS_KEY)||"{}")}catch(e){return {}}}
+function recordBackupStatus(message){
+ setBackupStatus(message);
+ try{localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify({...readBackupSettings(),lastBackup:message}))}catch(e){}
+}
+function syncNativeSnapshot(){
+ if(!window.AppBackup)return;
+ try{
+  const result=String(window.AppBackup.saveSnapshot(JSON.stringify(backupPayload())));
+  if(result.startsWith("ERROR|"))console.warn(result);
+ }catch(e){console.warn("App snapshot sync failed",e);}
+}
+function createBackupFile(){
+ const blob=new Blob([JSON.stringify(backupPayload(),null,2)],{type:"application/json"});
+ const name="promoter-tracker-backup-"+new Date().toISOString().replace(/[:.]/g,"-")+".json";
+ return {blob,name};
+}
+async function trySaveFilePicker(blob,name){
+ if(typeof window.showSaveFilePicker!=="function")return false;
+ const handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:"JSON backup",accept:{"application/json":[".json"]}}]});
+ const writable=await handle.createWritable();await writable.write(blob);await writable.close();
+ recordBackupStatus("Saved to selected folder · "+new Date().toLocaleString());
+ toast("Backup saved to the selected folder");return true;
+}
+async function shareBackupFile(){
+ if(window.AppBackup){
+  const result=String(window.AppBackup.createManualBackup(JSON.stringify(backupPayload(),null,2)));
+  if(result.startsWith("OK|")){recordBackupStatus("Saved on device · "+new Date().toLocaleString());toast("Backup saved on device in "+result.slice(3));}
+  else{toast("Backup failed: "+result.replace(/^ERROR\\|/,""));setBackupStatus("FAILED · "+result.replace(/^ERROR\\|/,""));}
+  return;
+ }
+ const {blob,name}=createBackupFile();
+ try{
+  if(await trySaveFilePicker(blob,name))return;
+  const file=new File([blob],name,{type:"application/json"});
+  if(!navigator.share||!navigator.canShare||!navigator.canShare({files:[file]})){toast("Folder saving is available in the installed app.");return;}
+  await navigator.share({files:[file],title:"Promoter Tracker backup"});
+  recordBackupStatus("Shared to device · "+new Date().toLocaleString());
+  toast("Backup shared. Check the destination you selected.");
+ }catch(e){if(e.name!=="AbortError")toast("Unable to save backup: "+e.message);}
+}
+async function downloadLocalBackup(){
+ const json=JSON.stringify(backupPayload(),null,2);
+ if(window.AppBackup){
+  try{
+   const result=String(window.AppBackup.createManualBackup(json));
+   if(result.startsWith("OK|")){recordBackupStatus("Saved on device · "+new Date().toLocaleString());toast("Backup saved on device in "+result.slice(3));}
+   else{toast("Backup failed: "+result.replace(/^ERROR\\|/,""));setBackupStatus("FAILED · "+result.replace(/^ERROR\\|/,""));}
+  }catch(e){toast("Device backup failed: "+e.message);setBackupStatus("FAILED · "+e.message);}
+  return;
+ }
+ const {blob,name}=createBackupFile();
+ try{
+  if(await trySaveFilePicker(blob,name))return;
+  toast("Device folder saving is available in the installed app. Use your device's Save dialog here.");
+ }catch(e){toast("Could not save backup: "+e.message);}
+}
+async function copyBackupText(){
+ if(window.AppBackup){toast("For security, backups are encrypted .ptbackup files. Use Back up locally.");return;}
+ const data=JSON.stringify(backupPayload(),null,2);
+ try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(data);toast("Preview JSON copied.");return;}}catch(e){}
+ const area=$("pasteBackup");area.value=data;area.focus();area.select();
+ try{if(document.execCommand("copy")){toast("Preview JSON copied.");return;}}catch(e){}
+ toast("Preview data shown in the text box.");
+}
+function validateBackup(parsed){
+ const incoming=parsed&&parsed.data?parsed.data:parsed;
+ if(!incoming||typeof incoming!=="object"||!Array.isArray(incoming.rows)||incoming.rows.length>5000)throw Error("Invalid backup format");
+ const validAmount=v=>typeof v==="number"&&Number.isFinite(v)&&v>=0;
+ if(!validAmount(incoming.tm)||!validAmount(incoming.tw)||
+  !incoming.rows.every(x=>x&&typeof x==="object"&&typeof x.n==="string"&&x.n.length<=250&&validAmount(x.r)&&validAmount(x.q)&&Number.isInteger(x.q)&&validAmount(x.u??0)&&(x.g==="m"||x.g==="w")))throw Error("Invalid tracker values in backup");
+ return {tm:incoming.tm,tw:incoming.tw,rows:incoming.rows.map(x=>({n:x.n.trim()||"Model",r:x.r,u:x.u??0,q:x.q,g:x.g}))};
+}
+function restoreBackupText(text){
+ let incoming;
+ try{incoming=validateBackup(JSON.parse(text))}catch(e){$("restoreStatus").textContent="Import rejected: "+e.message;toast("Invalid JSON backup: "+e.message);return;}
+ if(!confirm("Import this backup? Current models, quantities and targets will be replaced.")){ $("restoreStatus").textContent="Import cancelled. Existing data unchanged."; return; }
+ const previous=S;
+ const next={...previous,...incoming};
+ try{
+  // Persist first; don't change live state if storage rejects the import.
+  localStorage.setItem("ptt",JSON.stringify({...next,ts:Date.now()}));
+  S={...next,ts:Date.now()};
+  data=S.rows.map((x,i)=>({...x,id:String(x.id||("restored-"+i))}));
+  TARGETS.m=S.tm;TARGETS.w=S.tw;
+  syncNativeSnapshot();openI=-1;expandedId=null;setTab(g);
+  recordBackupStatus("Imported from local backup · "+new Date().toLocaleString());
+  $("restoreStatus").textContent="Success: backup imported and saved in this app.";
+  toast("Backup imported successfully");
+ }catch(e){S=previous;$("restoreStatus").textContent="Import failed: app storage blocked or full. Existing data unchanged.";toast("Import failed: browser storage blocked or full. Data unchanged.");}
+}
+let pendingEncryptedRestore="";
+function bytesToBase64(buffer){const bytes=new Uint8Array(buffer);let binary="";for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary);}
+function base64ToUtf8(value){const binary=atob(value);const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return new TextDecoder().decode(bytes);}
+async function finishEncryptedRestore(encoded,password){
+ const result=String(window.AppBackup.decryptBackup(encoded,password||""));
+ if(result.startsWith("PASSWORD_REQUIRED|")){
+  pendingEncryptedRestore=encoded;closeSheet($("sBackup"));$("restoreRecoveryPassword").value="";
+  $("restorePasswordStatus").textContent="Enter the recovery password for this backup.";
+  openSheet("restorePasswordSheet");return false;
+ }
+ if(!result.startsWith("OK|"))throw Error(result.replace(/^ERROR\|/,""));
+ restoreBackupText(base64ToUtf8(result.slice(3)));return true;
+}
+async function restoreLocalBackup(file){
+ if(!file){$("restoreStatus").textContent="No file selected. Choose an encrypted backup.";return;}
+ $("restoreStatus").textContent="Reading selected backup: "+file.name;
+ if(file.size>6*1024*1024){toast("Backup file too large (limit 6 MB)");return;}
+ try{
+  if(window.AppBackup){
+   const encoded=bytesToBase64(await file.arrayBuffer());
+   const header=atob(encoded.slice(0,Math.min(encoded.length,32))).trimStart();
+   if(header.startsWith("{")){
+    if(!confirm("This is an older unencrypted JSON backup. Import it once to migrate your data? New backups will be encrypted."))return;
+    restoreBackupText(await file.text());return;
+   }
+   await finishEncryptedRestore(encoded,"");return;
+  }
+  restoreBackupText(await file.text());
+ }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
+}
+
+// Destination selection is deliberately separate from saving.
+// Opening an accordion must never silently change or overwrite the chosen destination.
+function selectBackupDestination(destination){
+ const radio=$(destination==="local"?"destinationLocal":destination==="drive"?"destinationDrive":"destinationOff");
+ if(!radio)return;
+ radio.checked=true;
+ $("localBackupSettings").open=destination==="local";
+ $("driveBackupSettings").open=destination==="drive";
+}
+function showBackupSelection(){
+ const selected=document.querySelector('input[name="backupDestination"]:checked');
+ const value=selected?selected.value:"off";
+ const label=value==="local"?"Local":value==="drive"?"Google Drive":"Off";
+ setBackupSaveFeedback(label+" selected. Press “Save backup settings” to store this choice.");
+}
+$("destinationOff").addEventListener("change",()=>{if($("destinationOff").checked)showBackupSelection();});
+$("destinationLocal").addEventListener("change",()=>{if($("destinationLocal").checked){$("localBackupSettings").open=true;$("driveBackupSettings").open=false;showBackupSelection();}});
+$("destinationDrive").addEventListener("change",()=>{if($("destinationDrive").checked){$("driveBackupSettings").open=true;$("localBackupSettings").open=false;showBackupSelection();}});
+$("saveBackupSettings").onclick=saveBackupSettings;
+$("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
+function refreshDriveStatus(){
+ if(!window.AppBackup){$("driveAccountStatus").textContent="Google Drive is available in the Android app.";return;}
+ const email=AppBackup.getDriveAccount();
+ $("driveAccountStatus").textContent=email?"Connected: "+email:"Not connected · Sign in to enable Drive backups.";
+ $("driveConnect").textContent=email?"Switch Google account":"Connect Google Drive";
+ $("driveBackupStatus").textContent=AppBackup.getLastDriveBackupStatus();
+ $("driveBackupFrequency").value=AppBackup.getDriveAutoBackupFrequency?AppBackup.getDriveAutoBackupFrequency():$("driveBackupFrequency").value;
+}
+$("driveConnect").onclick=()=>{if(window.AppBackup)AppBackup.connectDrive();else toast("Install the Android app to connect Google Drive.");};
+$("driveDisconnect").onclick=()=>{if(!window.AppBackup)return;if(confirm("Disconnect Google Drive? Your existing backups will stay in Drive."))AppBackup.disconnectDrive();};
+$("driveManualBackup").onclick=()=>{
+ if(!window.AppBackup){toast("Google Drive requires the Android app.");return;}
+ if(!AppBackup.isDriveConnected()){toast("Connect Google Drive first.");return;}
+ $("driveBackupStatus").textContent="Uploading encrypted backup…";
+ AppBackup.backupToDrive(JSON.stringify(backupPayload()));
+};
+$("driveRestore").onclick=()=>{
+ if(!window.AppBackup||!AppBackup.isDriveConnected()){toast("Connect Google Drive first.");return;}
+ $("driveBackupStatus").textContent="Loading available backups…";
+ AppBackup.listDriveBackups();
+};
+$("driveRestoreSelected").onclick=()=>{
+ const id=$("driveBackupList").value;
+ if(!id){toast("Choose a Drive backup first.");return;}
+ if(!confirm("Restore this Google Drive backup? Your current tracker data will be replaced."))return;
+ $("driveBackupStatus").textContent="Downloading encrypted backup…";
+ AppBackup.downloadDriveBackup(id);
+};
+let driveBackupFiles=[];
+function updateDriveDeleteSelection(){
+ const checked=[...$("driveBackupDeleteList").querySelectorAll('input[data-drive-backup-id]:checked')];
+ $("driveDeleteCount").textContent=checked.length+" of "+driveBackupFiles.length+" backups selected";
+ $("driveDeleteSelected").disabled=checked.length===0;
+ $("driveSelectAll").checked=driveBackupFiles.length>0&&checked.length===driveBackupFiles.length;
+ $("driveSelectAll").indeterminate=checked.length>0&&checked.length<driveBackupFiles.length;
+}
+$("driveSelectAll").addEventListener("change",()=>{
+ $("driveBackupDeleteList").querySelectorAll('input[data-drive-backup-id]').forEach(box=>box.checked=$("driveSelectAll").checked);
+ updateDriveDeleteSelection();
+});
+$("driveBackupDeleteList").addEventListener("change",e=>{
+ if(e.target&&e.target.matches('input[data-drive-backup-id]'))updateDriveDeleteSelection();
+});
+$("driveDeleteSelected").onclick=()=>{
+ const ids=[...$("driveBackupDeleteList").querySelectorAll('input[data-drive-backup-id]:checked')].map(box=>box.dataset.driveBackupId);
+ if(!ids.length){toast("Select one or more backups to delete.");return;}
+ if(!confirm("Permanently delete "+ids.length+" selected encrypted backup(s) from Google Drive? This cannot be undone."))return;
+ $("driveBackupStatus").textContent="Deleting "+ids.length+" selected Drive backup(s)…";
+ AppBackup.deleteSelectedDriveBackups(JSON.stringify(ids));
+};
+$("driveDeleteAll").onclick=()=>{
+ if(!confirm("Permanently delete ALL Promoter Tracker backups stored in this app's private Google Drive area? This cannot be undone."))return;
+ $("driveBackupStatus").textContent="Deleting all Promoter Tracker backups from Drive…";
+ AppBackup.deleteAllDriveBackups();
+};
+window.onNativeDriveResult=async(action,status,data)=>{
+ if(action==="connection"){
+   if(status.startsWith("Connected:")){
+    $("destinationDrive").checked=true;$("destinationLocal").checked=false;$("destinationOff").checked=false;
+    $("driveBackupSettings").open=true;$("localBackupSettings").open=false;
+    setBackupSaveFeedback("Google Drive connected and selected. Tap Save backup settings to enable automatic Drive backups.");
+   }
+   toast(status);refreshDriveStatus();return;
+  }
+ if(status.startsWith("ERROR:")){$("driveBackupStatus").textContent=status;toast(status);return;}
+ if(action==="backup"){$("driveBackupStatus").textContent=status;toast("Encrypted backup saved to Drive");return;}
+ if(action==="delete"||action==="deleteSelected"||action==="deleteAll"){
+  $("driveBackupStatus").textContent=status;
+  toast(status);
+  $("driveSelectAll").checked=false;
+  AppBackup.listDriveBackups();
+  return;
+ }
+ if(action==="list"){
+  try{
+   const files=JSON.parse(data||"[]"),select=$("driveBackupList");
+   driveBackupFiles=files;
+   select.replaceChildren();
+   const empty=document.createElement("option");empty.value="";empty.textContent=files.length?"Choose one backup to restore":"No backups found";select.append(empty);
+   const deleteList=$("driveBackupDeleteList");deleteList.replaceChildren();
+   files.forEach((file,index)=>{
+    const label=document.createElement("label");label.className="drive-backup-delete-item";
+    const checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.dataset.driveBackupId=file.id;checkbox.setAttribute("aria-label","Select "+file.name+" for deletion");
+    const details=document.createElement("span");details.className="drive-backup-delete-details";
+    const name=document.createElement("b");name.textContent=file.name;
+    const date=document.createElement("small");date.textContent=new Date(file.createdTime).toLocaleString();
+    details.append(name,date);label.append(checkbox,details);deleteList.append(label);
+    const option=document.createElement("option");option.value=file.id;option.textContent=file.name+" · "+new Date(file.createdTime).toLocaleString();select.append(option);
+   });
+   if(!files.length){const emptyText=document.createElement("p");emptyText.className="note";emptyText.textContent="No Google Drive backups found.";deleteList.append(emptyText);}
+   $("driveSelectAll").checked=false;updateDriveDeleteSelection();
+   $("driveBackupStatus").textContent=files.length+" encrypted Drive backups available.";
+  }catch(e){toast("Could not read Drive backup list.");}
+ }
+ if(action==="download"){
+  try{await finishEncryptedRestore(data,"");$("driveBackupStatus").textContent="Backup downloaded. Follow any recovery password prompt.";}
+  catch(e){$("driveBackupStatus").textContent="Restore failed: "+e.message;toast("Could not restore this Drive backup.");}
+ }
+};
+$("localBackup").onclick=downloadLocalBackup;
+$("shareBackup").onclick=shareBackupFile;
+$("copyBackup").onclick=copyBackupText;
+if(window.AppBackup){$("copyBackup").style.display="none";$("pasteBackup").closest("label").style.display="none";$("importPasted").style.display="none";}
+$("importPasted").onclick=()=>{if(window.AppBackup){toast("Import encrypted .ptbackup files using Restore locally.");return;}restoreBackupText($("pasteBackup").value.trim());};
+// Use the actual file input as the touch target. Android WebViews sometimes block
+// a synthetic .click() on a visually hidden input.
+$("restoreFile").addEventListener("pointerdown",()=>{$("restoreStatus").textContent="Opening Android file picker… If nothing opens, use Import pasted backup.";});
+$("restoreFile").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0];restoreLocalBackup(file);e.target.value="";});
+$("restoreFile").addEventListener("cancel",()=>{$("restoreStatus").textContent="File selection cancelled or unavailable. Try Import pasted backup.";});
+ $("saveBackupSettings").onclick=saveBackupSettings;
+$("chooseAutomaticFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.chooseBackupFolder("automatic");else toast("Folder selection is available in the installed app.");};
+$("chooseManualFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.chooseBackupFolder("manual");else toast("Folder selection is available in the installed app.");};
+window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automaticFolder":"manualFolder");if(el)el.textContent=name;toast((kind==="automatic"?"Automatic":"Manual")+" backup folder updated.");};
+
+
+
+setCategory(cat);
+syncChangelogIndicator();
+syncSecuritySettings();
+updateFabVisibility();
 </script>
-</body>
-</html>
+
