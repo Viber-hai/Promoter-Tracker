@@ -1015,22 +1015,30 @@ async function restoreLocalBackup(file){
  }catch(e){$("restoreStatus").textContent="Restore failed: "+e.message;toast("Could not decrypt or read this backup.");}
 }
 
-// The destination radio buttons are the single source of truth.
-// Opening or closing an accordion must never silently change the selected destination.
+// Keep the radio selection and accordion interaction synchronized.
+// Opening a section selects its destination; closing it leaves the selection unchanged.
+function selectBackupDestination(destination, feedback){
+ const radio=$(destination==="local"?"destinationLocal":destination==="drive"?"destinationDrive":"destinationOff");
+ if(!radio)return;
+ radio.checked=true;
+ $("localBackupSettings").open=destination==="local";
+ $("driveBackupSettings").open=destination==="drive";
+ setBackupSaveFeedback(feedback);
+}
 $("destinationOff").addEventListener("change",()=>{
- if(!$("destinationOff").checked)return;
- $("localBackupSettings").open=false;$("driveBackupSettings").open=false;
- setBackupSaveFeedback("Automatic backups are off. Save to confirm.");
+ if($("destinationOff").checked)selectBackupDestination("off","Automatic backups are off. Save to confirm.");
 });
 $("destinationLocal").addEventListener("change",()=>{
- if(!$("destinationLocal").checked)return;
- $("localBackupSettings").open=true;$("driveBackupSettings").open=false;
- setBackupSaveFeedback("Local selected. Save to enable automatic local backups.");
+ if($("destinationLocal").checked)selectBackupDestination("local","Local selected. Save to enable automatic local backups.");
 });
 $("destinationDrive").addEventListener("change",()=>{
- if(!$("destinationDrive").checked)return;
- $("driveBackupSettings").open=true;$("localBackupSettings").open=false;
- setBackupSaveFeedback("Google Drive selected. Save to enable automatic Drive backups.");
+ if($("destinationDrive").checked)selectBackupDestination("drive","Google Drive selected. Save to enable automatic Drive backups.");
+});
+$("localBackupSettings").querySelector("summary").addEventListener("click",()=>{
+ if(!$("localBackupSettings").open)selectBackupDestination("local","Local selected. Save to enable automatic local backups.");
+});
+$("driveBackupSettings").querySelector("summary").addEventListener("click",()=>{
+ if(!$("driveBackupSettings").open)selectBackupDestination("drive","Google Drive selected. Save to enable automatic Drive backups.");
 });
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 function refreshDriveStatus(){
