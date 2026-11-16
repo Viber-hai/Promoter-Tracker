@@ -139,7 +139,7 @@ public class MainActivity extends FragmentActivity {
                     final String releaseNotes = notes;
                     new AlertDialog.Builder(this)
                             .setTitle("Promoter Tracker update available · " + version)
-                            .setMessage(releaseNotes + "\\n\\nCurrent version: " + current + "\\nNew version: " + latest)
+                            .setMessage(releaseNotes + "\n\nCurrent version: " + current + "\nNew version: " + latest)
                             .setPositiveButton("Download & Update", (dialog, which) -> {
                                 try {
                                     String apk = UpdateManager.apkUrl(release);
@@ -319,8 +319,7 @@ public class MainActivity extends FragmentActivity {
         super.onResume();
         if(web!=null)web.onResume();
         BackupScheduler.ensureScheduled(this);
-        if (Build.VERSION.SDK_INT >= 26 && getPackageManager().canRequestPackageInstalls())
-            UpdateManager.installPending(this);
+        UpdateManager.installPending(this);
         if(web!=null && pageLoaded && SecurityStore.isEnabled(this) && pausedAt>0){
             long minutes=(SystemClock.elapsedRealtime()-pausedAt)/60000L;
             int timeout=SecurityStore.getLockTimeout(this);
