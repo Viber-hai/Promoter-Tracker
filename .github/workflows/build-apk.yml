@@ -2,10 +2,16 @@ name: Build APK
 
 on:
   push:
+    branches:
+      - feature/persistent-apk-signing
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: promoter-tracker-release-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
