@@ -9,8 +9,6 @@ import android.content.pm.PackageManager;
 import android.provider.Settings;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.app.NotificationChannelCompat;
-import androidx.core.app.NotificationManagerCompat;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
