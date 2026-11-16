@@ -187,7 +187,9 @@ final class UpdateManager {
         install.setDataAndType(uri, "application/vnd.android.package-archive");
         install.setClipData(ClipData.newRawUri("Promoter Tracker update", uri));
         install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-        try { context.startActivity(install); }
-        catch (Exception e) { Toast.makeText(context, "Could not open Android installer: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
+        try {
+            NotificationManagerCompat.from(context).cancel(READY_NOTIFICATION_ID);
+            context.startActivity(install);
+        } catch (Exception e) { Toast.makeText(context, "Could not open Android installer: " + e.getMessage(), Toast.LENGTH_LONG).show(); }
     }
 }
