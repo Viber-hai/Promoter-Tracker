@@ -108,6 +108,20 @@ public class MainActivity extends FragmentActivity {
             }
         });
         web.loadUrl("file:///android_asset/index.html");
+        handleUpdateInstallIntent(getIntent());
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleUpdateInstallIntent(intent);
+    }
+
+    private void handleUpdateInstallIntent(Intent intent) {
+        if (intent != null && UpdateManager.ACTION_INSTALL_DOWNLOADED.equals(intent.getAction())) {
+            intent.setAction(null);
+            UpdateManager.installPending(this);
+        }
     }
 
     @JavascriptInterface
@@ -319,7 +333,6 @@ public class MainActivity extends FragmentActivity {
         super.onResume();
         if(web!=null)web.onResume();
         BackupScheduler.ensureScheduled(this);
-        UpdateManager.installPending(this);
         if(web!=null && pageLoaded && SecurityStore.isEnabled(this) && pausedAt>0){
             long minutes=(SystemClock.elapsedRealtime()-pausedAt)/60000L;
             int timeout=SecurityStore.getLockTimeout(this);
