@@ -170,6 +170,19 @@ public class MainActivity extends FragmentActivity {
                 } else if ("delete".equals(action)) {
                     DriveBackupManager.delete(this, value);
                     sendDriveEvent("delete", "OK", "Backup deleted from Google Drive.");
+                } else if ("deleteSelected".equals(action)) {
+                    org.json.JSONArray ids = new org.json.JSONArray(value);
+                    if (ids.length() == 0 || ids.length() > 1000)
+                        throw new Exception("Select between 1 and 1,000 backups.");
+                    int deleted = 0;
+                    for (int i = 0; i < ids.length(); i++) {
+                        String id = ids.optString(i, "");
+                        if (!id.matches("[A-Za-z0-9_-]{8,200}"))
+                            throw new Exception("The selected backup list contains an invalid item.");
+                        DriveBackupManager.delete(this, id);
+                        deleted++;
+                    }
+                    sendDriveEvent("deleteSelected", "OK", deleted + " selected Google Drive backup(s) deleted.");
                 } else if ("deleteAll".equals(action)) {
                     org.json.JSONArray files = DriveBackupManager.list(this);
                     int deleted = 0;
