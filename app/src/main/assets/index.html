@@ -67,8 +67,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .heading{display:flex;justify-content:space-between;align-items:end;margin:22px 2px 11px}
 .heading h2{font-size:15px;letter-spacing:-.35px;margin:0;font-weight:820}.heading p{font-size:9px;color:var(--muted);margin:4px 0 0}
 .cats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.cat{text-align:left;padding:12px;border-radius:19px;border:1px solid var(--line);background:var(--glass);box-shadow:0 8px 20px rgba(25,20,30,.045);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.cat.active{background:var(--glass-strong);border-color:rgba(200,16,46,.42);box-shadow:0 9px 23px rgba(200,16,46,.10)}
+.cat{text-align:left;padding:12px;border-radius:19px;border:1px solid var(--line);background:var(--glass);box-shadow:0 8px 20px rgba(25,20,30,.045);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:.68;filter:saturate(.62);transform:translateY(0);transition:opacity .24s ease,filter .24s ease,transform .24s ease,background-color .24s ease,border-color .24s ease,box-shadow .24s ease}
+.cat.active{opacity:1;filter:saturate(1);transform:translateY(-1px);background:var(--glass-strong);border-color:rgba(200,16,46,.48);box-shadow:0 9px 23px rgba(200,16,46,.12),0 0 0 1px rgba(200,16,46,.06)}
+.cat:active{transform:scale(.985)}
+.cat:focus-visible{outline:2px solid var(--red2);outline-offset:3px}
+#listTitle{transition:opacity .18s ease,transform .18s ease}
+.list.category-switching{animation:categoryListEnter .28s ease both}
+@keyframes categoryListEnter{from{opacity:.55;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.cat,#listTitle,.list.category-switching{transition:none;animation:none!important}}
 .catrow{display:flex;align-items:center;justify-content:space-between;min-height:32px}.caticon{width:29px;height:29px;border-radius:10px;display:grid;place-items:center;color:var(--red2);background:rgba(200,16,46,.10);font-size:16px}
 .pct{color:var(--red2);font-weight:950;font-size:20px;letter-spacing:-.8px;line-height:1}.catname{font-size:10px;font-weight:850;line-height:1.3;margin-top:8px;min-height:26px}
 .target{font-size:8px;color:var(--muted);margin-top:5px}.cat-sales{font-size:9px;color:var(--muted);margin-top:5px}.achievement-note{font-size:8px;color:var(--red2);font-weight:850;margin-top:5px;min-height:11px}
@@ -272,12 +278,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
  <div class="heading"><div><h2>Sales categories</h2><p>Actual category progress · maximum 120% counted per category</p></div></div>
  <section class="cats">
-  <button class="cat active" data-cat="m">
+  <button class="cat active" data-cat="m" aria-pressed="true">
    <div class="catrow"><span class="caticon" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10 18.2h4"/></svg></span><span class="pct" id="mPct">0%</span></div>
    <div class="catname">Handset &amp; Tablet</div><div class="target">Target · <span id="mTarget">510,300</span></div>
    <div class="cat-sales">Sales · <span id="mSales">0</span></div><div class="track"><div class="fill" id="mFill"></div></div><div class="achievement-note" id="mAchievement">0% of target achieved</div>
   </button>
-  <button class="cat" data-cat="w">
+  <button class="cat" data-cat="w" aria-pressed="false">
    <div class="catrow"><span class="caticon" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2.5h6l1 4H8l1-4ZM8 17.5h8l-1 4H9l-1-4Z"/><rect x="5.5" y="6.5" width="13" height="11" rx="3"/></svg></span><span class="pct" id="wPct">0%</span></div>
    <div class="catname">Audio &amp; Wearables</div><div class="target">Target · <span id="wTarget">340,200</span></div>
    <div class="cat-sales">Sales · <span id="wSales">0</span></div><div class="track"><div class="fill" id="wFill"></div></div><div class="achievement-note" id="wAchievement">0% of target achieved</div>
@@ -543,9 +549,22 @@ function render(){
  updateFabVisibility();
 }
 function setCategory(next){
+ if(next!== "m" && next!== "w") return;
+ const changed=cat!==next;
  cat=next;g=next;
- document.querySelectorAll(".cat").forEach(b=>b.classList.toggle("active",b.dataset.cat===cat));
- $("listTitle").textContent=cat==="m"?"Handset & Tablet":"Audio & Wearables";
+ document.querySelectorAll(".cat").forEach(b=>{
+  const selected=b.dataset.cat===cat;
+  b.classList.toggle("active",selected);
+  b.setAttribute("aria-pressed",selected?"true":"false");
+ });
+ const title=$("listTitle");
+ title.textContent=cat==="m"?"Handset & Tablet":"Audio & Wearables";
+ if(changed){
+  const list=$("models");
+  list.classList.remove("category-switching");
+  void list.offsetWidth;
+  list.classList.add("category-switching");
+ }
  render();
 }
 function setTab(next){setCategory(next);}
