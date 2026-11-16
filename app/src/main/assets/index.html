@@ -777,7 +777,44 @@ window.onNativeBiometricResult=(success,message)=>{
  if(success)unlockPromoterTracker();
  else $("lockStatus").textContent=message||"Fingerprint not recognized. Use your PIN if needed.";
 };
-window.onNativeAppReady=()=>{if(window.AppBackup){syncSecuritySettings();if(AppBackup.isSecurityEnabled())lockPromoterTracker();else syncNativeSnapshot();}else syncNativeSnapshot();};
+async function recoverNativeSnapshot(){
+ if(!window.AppBackup||typeof AppBackup.loadSnapshot!=="function")return false;
+ try{
+  const response=String(AppBackup.loadSnapshot());
+  if(response==="EMPTY"||response.startsWith("ERROR|")){if(response.startsWith("ERROR|"))console.warn(response);return false;}
+  if(!response.startsWith("OK|"))return false;
+  const json=base64ToUtf8(response.slice(3)),snapshot=JSON.parse(json);
+  const recovered=snapshot&&snapshot.app==="Promoter Tracker"&&snapshot.data;
+  if(!recovered||!Array.isArray(recovered.rows))return false;
+  let stored=null;
+  try{stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");}catch(e){}
+  const storedTime=Number(stored&&stored.ts)||0,recoveredTime=Number(recovered.ts)||0;
+  const storedHasRows=!!(stored&&Array.isArray(stored.rows)&&stored.rows.length);
+  const recoveredHasRows=recovered.rows.length>0;
+  // Recover only when browser storage is missing, invalid, or older than the encrypted native snapshot.
+  if(stored&&storedHasRows&&storedTime>=recoveredTime)return false;
+  if(!recoveredHasRows&&storedHasRows)return false;
+  const next={
+   tm:safeNum(recovered.tm??510300)||510300,
+   tw:safeNum(recovered.tw??340200)||340200,
+   rows:recovered.rows.map((m,i)=>({id:String(m.id||("recovered-"+i)),n:String(m.n||"Untitled model").slice(0,70),r:safeNum(m.r),u:safeNum(m.u),q:Math.floor(safeNum(m.q)),g:m.g==="w"?"w":"m"})),
+   ts:recoveredTime||Date.now()
+  };
+  S=next;data=next.rows.map(m=>({...m}));TARGETS.m=next.tm;TARGETS.w=next.tw;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+  return true;
+ }catch(e){console.warn("Native snapshot recovery failed",e);return false;}
+}
+window.onNativeAppReady=async()=>{
+ if(window.AppBackup){
+  syncSecuritySettings();
+  const recovered=await recoverNativeSnapshot();
+  if(recovered){expandedId=null;setCategory(cat);toast("Your saved sales data has been restored.");}
+  else setCategory(cat);
+  if(AppBackup.isSecurityEnabled())lockPromoterTracker();
+  else syncNativeSnapshot();
+ }else setCategory(cat);
+};
 $("saveTargets").addEventListener("click",()=>{
  const handset=Number($("targetHandset").value),wearables=Number($("targetWearables").value);
  if(!Number.isFinite(handset)||!Number.isFinite(wearables)||handset<=0||wearables<=0){toast("Enter valid targets greater than zero");return;}
@@ -838,6 +875,12 @@ function saveBackupSettings(){
    if(result!=="OK"){
     setBackupSaveFeedback("Not saved: Android did not confirm the setting.",true);
     toast("Android did not confirm the backup setting.");return;
+   }
+   const localActive=!!window.AppBackup.isAutoBackupEnabled();
+   const driveActive=!!window.AppBackup.isDriveAutoBackupEnabled();
+   if(localActive!==(destination==="local")||driveActive!==(destination==="drive")){
+    const message="Not saved: Android settings do not match the selected destination. Please try again.";
+    setBackupSaveFeedback(message,true);toast(message);return;
    }
   }
   localStorage.setItem(BACKUP_SETTINGS_KEY,JSON.stringify(p));
@@ -976,8 +1019,20 @@ $("driveBackupSettings").querySelector("summary").addEventListener("click",()=>{
 $("destinationOff").addEventListener("change",()=>{$("localBackupSettings").open=false;$("driveBackupSettings").open=false;});
 $("destinationLocal").addEventListener("change",()=>{$("localBackupSettings").open=true;$("driveBackupSettings").open=false;});
 $("destinationDrive").addEventListener("change",()=>{$("driveBackupSettings").open=true;$("localBackupSettings").open=false;});
-$("localBackupSettings").addEventListener("toggle",()=>{if($("localBackupSettings").open)$("driveBackupSettings").open=false;});
-$("driveBackupSettings").addEventListener("toggle",()=>{if($("driveBackupSettings").open)$("localBackupSettings").open=false;});
+$("localBackupSettings").addEventListener("toggle",()=>{
+ if($("localBackupSettings").open){
+  $("driveBackupSettings").open=false;
+  $("destinationLocal").checked=true;$("destinationOff").checked=false;$("destinationDrive").checked=false;
+  setBackupSaveFeedback("Local selected. Save to enable automatic local backups.");
+ }
+});
+$("driveBackupSettings").addEventListener("toggle",()=>{
+ if($("driveBackupSettings").open){
+  $("localBackupSettings").open=false;
+  $("destinationDrive").checked=true;$("destinationOff").checked=false;$("destinationLocal").checked=false;
+  setBackupSaveFeedback("Google Drive selected. Save to enable automatic Drive backups.");
+ }
+});
 $("openBackup").onclick=()=>{closeSheet($("menuSheet"));openSheet("sBackup");loadBackupSettings()};
 function refreshDriveStatus(){
  if(!window.AppBackup){$("driveAccountStatus").textContent="Google Drive is available in the Android app.";return;}
@@ -1012,7 +1067,7 @@ window.onNativeDriveResult=async(action,status,data)=>{
    if(status.startsWith("Connected:")){
     $("destinationDrive").checked=true;$("destinationLocal").checked=false;$("destinationOff").checked=false;
     $("driveBackupSettings").open=true;$("localBackupSettings").open=false;
-    setBackupSaveFeedback("Google Drive connected. Save to enable automatic Drive backups.");
+    setBackupSaveFeedback("Google Drive connected and selected. Tap Save backup settings to enable automatic Drive backups.");
    }
    toast(status);refreshDriveStatus();return;
   }
