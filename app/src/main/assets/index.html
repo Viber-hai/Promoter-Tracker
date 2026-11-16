@@ -317,6 +317,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <button class="secondary" id="openOptions" type="button">Settings</button>
   <button class="secondary" id="openChangelog" type="button">What’s new <span class="new-pill" id="newPill">NEW</span></button>
   <button class="secondary" id="openBackup" type="button">Backup &amp; Restore</button>
+  <button class="secondary" id="checkUpdates" type="button">Check for updates</button>
   <button class="secondary" data-close type="button">Close</button>
  </div></div>
  <div class="sheet" id="changelogSheet" role="dialog" aria-modal="true" aria-label="What’s new">
@@ -714,6 +715,7 @@ function openChangelog(){
  openSheet("changelogSheet");
 }
 $("openChangelog").addEventListener("click",openChangelog);
+$("checkUpdates").addEventListener("click",()=>{closeSheet($("menuSheet"));if(window.AppUpdates)AppUpdates.checkForUpdates();else toast("Update checking is available in the installed Android app.");});
 $("closeChangelog").addEventListener("click",()=>closeSheet($("changelogSheet")));
 $("changelogDot").addEventListener("click",openChangelog);
 
