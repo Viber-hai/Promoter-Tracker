@@ -93,6 +93,19 @@ final class UpdateManager {
         try { NotificationManagerCompat.from(context).notify(7101, n); } catch (SecurityException ignored) {}
     }
 
+    static void notifyDownloadReady(Context context) {
+        ensureChannel(context);
+        Intent open = new Intent(context, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent pi = PendingIntent.getActivity(context, 7102, open,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        android.app.Notification n = new NotificationCompat.Builder(context, CHANNEL)
+                .setSmallIcon(context.getApplicationInfo().icon)
+                .setContentTitle("Promoter Tracker update downloaded")
+                .setContentText("Tap to continue installation.")
+                .setContentIntent(pi).setAutoCancel(true).build();
+        try { NotificationManagerCompat.from(context).notify(7102, n); } catch (SecurityException ignored) {}
+    }
+
     static long download(Context context, String apkUrl, String version) {
         DownloadManager dm = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
         DownloadManager.Request req = new DownloadManager.Request(Uri.parse(apkUrl))
