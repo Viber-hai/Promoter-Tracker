@@ -103,7 +103,8 @@ jobs:
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: Promoter Tracker v1.0.${{ github.run_number }}
-          generate_release_notes: true
+          generate_release_notes: false
+          body: "Bug fixes and improvements. See the in-app update prompt for the version number."
           files: app/build/outputs/apk/release/PromoterTracker-*.apk
           fail_on_unmatched_files: true
 
