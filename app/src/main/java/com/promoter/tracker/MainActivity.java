@@ -15,6 +15,15 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import android.app.AlertDialog;
+import android.webkit.JavascriptInterface;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import java.util.concurrent.TimeUnit;
 
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
@@ -42,6 +51,7 @@ public class MainActivity extends FragmentActivity {
     private String pendingFolderKind;
     private long pausedAt = 0L;
     private boolean pageLoaded = false;
+    private boolean updateDialogShowing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +67,13 @@ public class MainActivity extends FragmentActivity {
         s.setAllowContentAccess(true);
         s.setTextZoom(100);
         web.addJavascriptInterface(new AppBackupBridge(this), "AppBackup");
+        web.addJavascriptInterface(this, "AppUpdates");
         BackupScheduler.ensureScheduled(this);
+        scheduleUpdateChecks();
+        UpdateManager.ensureChannel(this);
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 7102);
+        checkForUpdates(false);
         web.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                 if (filePathCallback != null) filePathCallback.onReceiveValue(null);
@@ -92,6 +108,55 @@ public class MainActivity extends FragmentActivity {
             }
         });
         web.loadUrl("file:///android_asset/index.html");
+    }
+
+    @JavascriptInterface
+    public void checkForUpdates() { checkForUpdates(true); }
+
+    private void scheduleUpdateChecks() {
+        PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(UpdateWorker.class, 24, TimeUnit.HOURS).build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("promoter_tracker_update_check",
+                ExistingPeriodicWorkPolicy.KEEP, request);
+    }
+
+    private void checkForUpdates(boolean manual) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                JSONObject release = UpdateManager.fetchLatestRelease();
+                int latest = UpdateManager.releaseVersionCode(release);
+                int current = UpdateManager.currentVersionCode(this);
+                runOnUiThread(() -> {
+                    if (isFinishing()) return;
+                    if (latest <= current) {
+                        if (manual) Toast.makeText(this, "You're using the latest version of Promoter Tracker.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    if (updateDialogShowing) return;
+                    updateDialogShowing = true;
+                    String version = release.optString("tag_name", "New version");
+                    String notes = release.optString("body", "Bug fixes and improvements.");
+                    if (notes.length() > 1400) notes = notes.substring(0, 1400) + "…";
+                    final String releaseNotes = notes;
+                    new AlertDialog.Builder(this)
+                            .setTitle("Promoter Tracker update available · " + version)
+                            .setMessage(releaseNotes + "\\n\\nCurrent version: " + current + "\\nNew version: " + latest)
+                            .setPositiveButton("Download & Update", (dialog, which) -> {
+                                try {
+                                    String apk = UpdateManager.apkUrl(release);
+                                    UpdateManager.download(this, apk, version);
+                                    Toast.makeText(this, "Update downloading. Android will ask you to install it when ready.", Toast.LENGTH_LONG).show();
+                                } catch (Exception e) {
+                                    Toast.makeText(this, "Could not start update: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            })
+                            .setNegativeButton("Later", null)
+                            .setOnDismissListener(dialog -> updateDialogShowing = false)
+                            .show();
+                });
+            } catch (Exception e) {
+                if (manual) runOnUiThread(() -> Toast.makeText(this, "Could not check updates. Check your internet connection and try again.", Toast.LENGTH_LONG).show());
+            }
+        });
     }
 
     boolean isBiometricAvailable() {
@@ -254,6 +319,8 @@ public class MainActivity extends FragmentActivity {
         super.onResume();
         if(web!=null)web.onResume();
         BackupScheduler.ensureScheduled(this);
+        if (Build.VERSION.SDK_INT >= 26 && getPackageManager().canRequestPackageInstalls())
+            UpdateManager.installPending(this);
         if(web!=null && pageLoaded && SecurityStore.isEnabled(this) && pausedAt>0){
             long minutes=(SystemClock.elapsedRealtime()-pausedAt)/60000L;
             int timeout=SecurityStore.getLockTimeout(this);
