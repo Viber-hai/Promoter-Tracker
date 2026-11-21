@@ -254,6 +254,37 @@ body.editing-model .sticky-summary{opacity:0;pointer-events:none;transform:trans
 #sBackup .backup-status,#sBackup .note{line-height:1.5;text-align:left}
 #sBackup .backup-destination-row label{white-space:normal;text-align:center;line-height:1.3}
 #sBackup .backup-source,#sBackup .backup-accordion{box-sizing:border-box}
+
+/* Home and Analytics: keep the existing dashboard intact. */
+body{padding-bottom:76px}
+.pt-bottom-nav{position:fixed;z-index:8;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;padding:7px 14px calc(7px + env(safe-area-inset-bottom));background:var(--glass-strong);border-top:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.pt-bottom-nav button{width:min(46%,250px);border:0;background:transparent;color:var(--muted);border-radius:14px;padding:7px 10px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:850}
+.pt-bottom-nav button.active{background:var(--soft);color:var(--red)}
+.pt-bottom-nav svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+body.pt-analytics-active .app,body.pt-analytics-active .fab,body.pt-analytics-active .sticky-summary{display:none!important}
+#ptAnalytics{display:none;max-width:560px;margin:0 auto;padding:20px 14px 95px}
+body.pt-analytics-active #ptAnalytics{display:block}
+.pt-analytics-head h1{margin:0;font-size:25px;letter-spacing:-.7px}.pt-analytics-head p{font-size:12px;color:var(--muted);margin:6px 0 16px}
+.pt-switch{display:flex;padding:4px;background:var(--soft);border-radius:15px;gap:4px}
+.pt-switch button{flex:1;border:0;border-radius:12px;background:transparent;color:var(--muted);padding:11px 4px;font-size:12px;font-weight:800}
+.pt-switch button.active{background:var(--glass-strong);color:var(--red);box-shadow:0 2px 9px #0000000d}
+.pt-period{display:flex;align-items:center;justify-content:space-between;margin:15px 0}
+.pt-period button{border:1px solid var(--line);background:var(--glass-strong);border-radius:12px;padding:9px 14px;color:var(--ink);font-size:18px}
+.pt-period strong{font-size:15px}.pt-history-card{border:1px solid var(--line);border-radius:21px;background:var(--glass-strong);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.pt-history-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pt-history-metric{background:var(--soft);border-radius:14px;padding:13px;min-width:0}
+.pt-history-metric small{display:block;color:var(--muted);font-size:10px;margin-bottom:7px}.pt-history-metric b{font-size:19px;overflow-wrap:anywhere}
+.pt-history-title{font-size:15px;font-weight:900;margin:21px 2px 10px}
+.pt-history-progress{height:8px;background:var(--soft);border-radius:12px;overflow:hidden;margin-top:14px}.pt-history-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--red2));border-radius:12px}
+.pt-history-bars{display:flex;align-items:end;justify-content:space-around;gap:7px;min-height:150px}
+.pt-history-bar{flex:1;min-width:0;text-align:center}.pt-history-pair{height:112px;display:flex;align-items:end;justify-content:center;gap:3px}
+.pt-history-pair i{width:32%;max-width:23px;min-height:2px;border-radius:5px 5px 0 0;background:var(--red2)}.pt-history-pair i:first-child{background:var(--soft);border:1px solid var(--line)}
+.pt-history-bar small{font-size:9px;color:var(--muted)}
+.pt-history-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:12px}.pt-history-row:last-child{border:0}
+.pt-history-note{font-size:11px;color:var(--muted);line-height:1.6}
+body.pt-home-active .sticky-summary{bottom:calc(66px + env(safe-area-inset-bottom))}
+body.pt-home-active .fab{bottom:calc(152px + env(safe-area-inset-bottom))}
+body.pt-overview-visible .sticky-summary{opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,16px)}
+.sticky-summary{transition:opacity .3s ease,transform .38s cubic-bezier(.22,.8,.25,1),visibility .3s}
 </style>
 </head>
 <body>
@@ -317,6 +348,29 @@ body.editing-model .sticky-summary{opacity:0;pointer-events:none;transform:trans
  </div>
 </div>
 
+
+<section id="ptAnalytics" aria-label="Performance history">
+ <div class="pt-analytics-head"><h1>Performance History</h1><p>Overall sales, targets and incentives over time</p></div>
+ <div class="pt-switch" role="tablist" aria-label="History period">
+  <button type="button" data-history-mode="daily">Daily</button>
+  <button type="button" data-history-mode="monthly" class="active">Monthly</button>
+  <button type="button" data-history-mode="yearly">Yearly</button>
+ </div>
+ <div class="pt-period"><button id="ptHistoryPrev" type="button" aria-label="Previous period">‹</button><strong id="ptHistoryLabel"></strong><button id="ptHistoryNext" type="button" aria-label="Next period">›</button></div>
+ <div class="pt-history-card"><div class="pt-history-grid">
+  <div class="pt-history-metric"><small>Target (AED)</small><b id="ptHistoryTarget">—</b></div>
+  <div class="pt-history-metric"><small>Sales (AED)</small><b id="ptHistorySales">—</b></div>
+  <div class="pt-history-metric"><small>Units sold</small><b id="ptHistoryUnits">—</b></div>
+  <div class="pt-history-metric"><small>Incentive (AED)</small><b id="ptHistoryIncentive">••••••</b></div>
+ </div><div class="pt-history-progress"><i id="ptHistoryFill" style="width:0"></i></div><p id="ptHistoryAchievement" class="pt-history-note"></p></div>
+ <div class="pt-history-title">Sales vs Target</div><div class="pt-history-card"><div id="ptHistoryChart" class="pt-history-bars"></div><p class="pt-history-note">Light bars: target · Red bars: sales</p></div>
+ <div class="pt-history-title">Category breakdown</div><div class="pt-history-card" id="ptHistoryCategories"></div>
+ <p class="pt-history-note">History starts when this update is installed. Older daily sales cannot be reconstructed. Sales and units are tracked from changes recorded on this device; historical targets are saved automatically. This history is stored locally and is not yet included in existing backup files.</p>
+</section>
+<nav class="pt-bottom-nav" aria-label="Main navigation">
+ <button id="ptHomeTab" type="button" class="active" aria-current="page"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10h-7v-7h-4v7H3z"/></svg>Home</button>
+ <button id="ptAnalyticsTab" type="button"><svg viewBox="0 0 24 24"><path d="M4 20V11m5 9V5m5 15v-8m5 8V3"/></svg>Analytics</button>
+</nav>
 <div class="sheet" id="addSheet"><div class="panel"><div class="grip"></div><h2>Add a model</h2>
  <label class="field">Model name<input id="newName" placeholder="e.g. New handset" maxlength="70"></label>
  <label class="field">Category<select id="newCat"><option value="m">Handset &amp; Tablet</option><option value="w">Audio &amp; Wearables</option></select></label>
@@ -458,6 +512,7 @@ function saveData(){
  S.tm=TARGETS.m;S.tw=TARGETS.w;
  S.rows=data.map(m=>({id:m.id,n:m.n,r:m.r,u:m.u,q:m.q,g:m.g}));
  S.ts=Date.now();
+ ptCaptureHistory();
  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(S));syncNativeSnapshot();}
  catch(e){toast("Storage unavailable — create a backup");}
 }
@@ -1261,6 +1316,90 @@ $("chooseManualFolder").onclick=()=>{if(window.AppBackup)window.AppBackup.choose
 window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automaticFolder":"manualFolder");if(el)el.textContent=name;toast((kind==="automatic"?"Automatic":"Manual")+" backup folder updated.");};
 
 
+
+
+/* Automatic local history. Daily deltas begin at installation; no invented backfill. */
+const PT_HISTORY_KEY="pt_performance_history_v1";
+let ptHistory={days:{},baseline:null};
+try{const saved=JSON.parse(localStorage.getItem(PT_HISTORY_KEY)||"null");if(saved&&saved.days&&typeof saved.days==="object")ptHistory=saved;}catch(e){}
+const ptDayKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
+function ptSnapshot(){const t=totals();return {sales:t.sales,units:t.units,incentive:t.incentive,m:t.m.sales,w:t.w.sales,tm:TARGETS.m,tw:TARGETS.w};}
+function ptCaptureHistory(){
+ const now=new Date(),key=ptDayKey(now),cur=ptSnapshot(),old=ptHistory.baseline;
+ if(!old){ptHistory.baseline={...cur,date:key};}
+ else {
+  const prior=ptHistory.days[key]||{sales:0,units:0,incentive:0,m:0,w:0,tm:cur.tm,tw:cur.tw};
+  // A new date must not attribute previous days' totals to today.
+  for(const field of ["sales","units","incentive","m","w"])prior[field]+=(cur[field]-(Number(old[field])||0));
+  prior.tm=cur.tm;prior.tw=cur.tw;
+  ptHistory.days[key]=prior;
+  ptHistory.baseline={...cur,date:key};
+ }
+ try{localStorage.setItem(PT_HISTORY_KEY,JSON.stringify(ptHistory));}catch(e){}
+}
+let ptMode="monthly",ptOffset=0,ptCurrentTab="home";
+function ptPeriodDate(mode,offset){const d=new Date();if(mode==="daily")d.setDate(d.getDate()+offset);else if(mode==="monthly"){d.setDate(1);d.setMonth(d.getMonth()+offset);}else{d.setMonth(0,1);d.setFullYear(d.getFullYear()+offset);}return d;}
+function ptPeriodKey(mode,d){return mode==="daily"?ptDayKey(d):mode==="monthly"?ptDayKey(d).slice(0,7):String(d.getFullYear());}
+function ptAggregate(mode,d){
+ const prefix=ptPeriodKey(mode,d),keys=Object.keys(ptHistory.days).filter(k=>mode==="daily"?k===prefix:k.startsWith(prefix));
+ const r={sales:0,units:0,incentive:0,m:0,w:0,tm:0,tw:0,days:keys.length};
+ keys.sort();
+ for(const key of keys){const x=ptHistory.days[key];for(const k of ["sales","units","incentive","m","w"])r[k]+=Number(x[k])||0;r.tm=Number(x.tm)||0;r.tw=Number(x.tw)||0;}
+ if(mode!=="daily"&&keys.length){r.tm*=mode==="monthly"?1:12;r.tw*=mode==="monthly"?1:12;}
+ // For the active month/year, current targets are authoritative.
+ const now=new Date();if(ptPeriodKey(mode,d)===ptPeriodKey(mode,now)){
+  const snap=ptSnapshot();r.tm=snap.tm*(mode==="yearly"?12:1);r.tw=snap.tw*(mode==="yearly"?12:1);
+ }
+ return r;
+}
+function ptRenderHistory(){
+ const d=ptPeriodDate(ptMode,ptOffset),r=ptAggregate(ptMode,d);
+ const label=ptMode==="daily"?d.toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"}):ptMode==="monthly"?d.toLocaleDateString(undefined,{month:"long",year:"numeric"}):String(d.getFullYear());
+ $("ptHistoryLabel").textContent=label;
+ document.querySelectorAll("[data-history-mode]").forEach(b=>b.classList.toggle("active",b.dataset.historyMode===ptMode));
+ $("ptHistoryTarget").textContent=r.days?fmt(r.tm+r.tw):"—";
+ $("ptHistorySales").textContent=r.days?fmt(r.sales):"—";
+ $("ptHistoryUnits").textContent=r.days?fmt(r.units):"—";
+ $("ptHistoryIncentive").textContent=r.days?(incentiveVisible?fmt(r.incentive):"••••••"):"—";
+ const achievement=r.tm+r.tw?100*r.sales/(r.tm+r.tw):0;
+ $("ptHistoryFill").style.width=Math.min(100,Math.max(0,achievement))+"%";
+ $("ptHistoryAchievement").textContent=r.days?achievement.toFixed(1)+"% of recorded period target · "+r.days+" day(s) recorded":"No recorded data for this period.";
+ const cats=$("ptHistoryCategories");cats.innerHTML=r.days?[["Handset & Tablet",r.m,r.tm],["Audio & Wearables",r.w,r.tw]].map(([name,sales,target])=>'<div class="pt-history-row"><span>'+name+'</span><strong>'+fmt(sales)+' / '+fmt(target)+'</strong></div>').join(""):'<p class="pt-history-note">No category history recorded.</p>';
+ const count=ptMode==="daily"?7:ptMode==="monthly"?4:12;
+ let chart="";
+ for(let i=0;i<count;i++){
+  const period=ptPeriodDate(ptMode,ptOffset);
+  if(ptMode==="daily")period.setDate(period.getDate()-(count-i-1));
+  if(ptMode==="monthly")period.setDate(Math.max(1,period.getDate()-(count-i-1)*7));
+  if(ptMode==="yearly"){period.setMonth(i,1);}
+  const sample=ptAggregate(ptMode==="yearly"?"monthly":"daily",period);
+  const target=sample.tm+sample.tw;
+  const scale=Math.max(target,sample.sales,1);
+  const sh=Math.max(2,Math.round(100*sample.sales/scale)),th=Math.max(2,Math.round(100*target/scale));
+  const tick=ptMode==="yearly"?period.toLocaleDateString(undefined,{month:"short"}):ptMode==="monthly"?"W"+(i+1):String(period.getDate());
+  chart+='<div class="pt-history-bar"><div class="pt-history-pair"><i style="height:'+th+'px"></i><i style="height:'+sh+'px"></i></div><small>'+tick+'</small></div>';
+ }
+ $("ptHistoryChart").innerHTML=chart;
+}
+function ptSetMainTab(tab){
+ ptCurrentTab=tab;
+ document.body.classList.toggle("pt-analytics-active",tab==="analytics");
+ document.body.classList.toggle("pt-home-active",tab==="home");
+ $("ptHomeTab").classList.toggle("active",tab==="home");
+ $("ptAnalyticsTab").classList.toggle("active",tab==="analytics");
+ $("ptHomeTab").setAttribute("aria-current",tab==="home"?"page":"false");
+ $("ptAnalyticsTab").setAttribute("aria-current",tab==="analytics"?"page":"false");
+ if(tab==="analytics")ptRenderHistory();
+ window.scrollTo({top:0,behavior:"instant"});
+}
+$("ptHomeTab").addEventListener("click",()=>ptSetMainTab("home"));
+$("ptAnalyticsTab").addEventListener("click",()=>ptSetMainTab("analytics"));
+document.querySelectorAll("[data-history-mode]").forEach(b=>b.addEventListener("click",()=>{ptMode=b.dataset.historyMode;ptOffset=0;ptRenderHistory();}));
+$("ptHistoryPrev").addEventListener("click",()=>{ptOffset--;ptRenderHistory();});
+$("ptHistoryNext").addEventListener("click",()=>{if(ptOffset<0)ptOffset++;ptRenderHistory();});
+const ptRing=document.querySelector(".hero .ring");
+if(ptRing&&"IntersectionObserver" in window){new IntersectionObserver(entries=>{document.body.classList.toggle("pt-overview-visible",entries[0].isIntersecting);},{threshold:0.08}).observe(ptRing);}
+ptCaptureHistory();ptSetMainTab("home");
 
 setCategory(cat);
 syncChangelogIndicator();
