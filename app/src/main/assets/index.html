@@ -365,7 +365,7 @@ body.pt-overview-visible .sticky-summary{opacity:0;visibility:hidden;pointer-eve
  </div><div class="pt-history-progress"><i id="ptHistoryFill" style="width:0"></i></div><p id="ptHistoryAchievement" class="pt-history-note"></p></div>
  <div class="pt-history-title">Sales vs Target</div><div class="pt-history-card"><div id="ptHistoryChart" class="pt-history-bars"></div><p class="pt-history-note">Light bars: target · Red bars: sales</p></div>
  <div class="pt-history-title">Category breakdown</div><div class="pt-history-card" id="ptHistoryCategories"></div>
- <p class="pt-history-note">History starts when this update is installed. Older daily sales cannot be reconstructed. Sales and units are tracked from changes recorded on this device; historical targets are saved automatically. This history is stored locally and is not yet included in existing backup files.</p>
+ <p class="pt-history-note">Existing sales appear in the current month and year as an opening balance. Older daily sales cannot be reconstructed. New daily changes are tracked on this device; historical targets are saved automatically. This history is stored locally and is not yet included in existing backup files.</p>
 </section>
 <nav class="pt-bottom-nav" aria-label="Main navigation">
  <button id="ptHomeTab" type="button" class="active" aria-current="page"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10h-7v-7h-4v7H3z"/></svg>Home</button>
@@ -1328,7 +1328,12 @@ const ptDayKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String
 function ptSnapshot(){const t=totals();return {sales:t.sales,units:t.units,incentive:t.incentive,m:t.m.sales,w:t.w.sales,tm:TARGETS.m,tw:TARGETS.w};}
 function ptCaptureHistory(){
  const now=new Date(),key=ptDayKey(now),cur=ptSnapshot(),old=ptHistory.baseline;
- if(!old){ptHistory.baseline={...cur,date:key};}
+ if(!old){
+  // Preserve the current dashboard as an opening balance, without inventing past dates.
+  ptHistory.opening={...cur,date:key};
+  ptHistory.baseline={...cur,date:key};
+  ptHistory.days[key]={sales:0,units:0,incentive:0,m:0,w:0,tm:cur.tm,tw:cur.tw};
+ }
  else {
   const prior=ptHistory.days[key]||{sales:0,units:0,incentive:0,m:0,w:0,tm:cur.tm,tw:cur.tw};
   // A new date must not attribute previous days' totals to today.
@@ -1344,9 +1349,25 @@ function ptPeriodDate(mode,offset){const d=new Date();if(mode==="daily")d.setDat
 function ptPeriodKey(mode,d){return mode==="daily"?ptDayKey(d):mode==="monthly"?ptDayKey(d).slice(0,7):String(d.getFullYear());}
 function ptAggregate(mode,d){
  const prefix=ptPeriodKey(mode,d),keys=Object.keys(ptHistory.days).filter(k=>mode==="daily"?k===prefix:k.startsWith(prefix));
- const r={sales:0,units:0,incentive:0,m:0,w:0,tm:0,tw:0,days:keys.length};
+ const r={sales:0,units:0,incentive:0,m:0,w:0,tm:0,tw:0,days:keys.length,openingIncluded:false};
+ // Upgrade existing installations that already saved a baseline but no history.
+ if(!ptHistory.opening&&ptHistory.baseline){
+  ptHistory.opening={...ptHistory.baseline};
+  const k=ptHistory.baseline.date||ptDayKey(new Date());
+  if(!ptHistory.days[k])ptHistory.days[k]={sales:0,units:0,incentive:0,m:0,w:0,tm:ptHistory.baseline.tm,tw:ptHistory.baseline.tw};
+  try{localStorage.setItem(PT_HISTORY_KEY,JSON.stringify(ptHistory));}catch(e){}
+ }
  keys.sort();
  for(const key of keys){const x=ptHistory.days[key];for(const k of ["sales","units","incentive","m","w"])r[k]+=Number(x[k])||0;r.tm=Number(x.tm)||0;r.tw=Number(x.tw)||0;}
+ // Include the existing sales only in the period containing the opening snapshot.
+ // Do not misrepresent those sales as newly made on the installation day.
+ const opening=ptHistory.opening;
+ if(opening&&mode!=="daily"&&String(opening.date||"").startsWith(prefix)){
+  for(const k of ["sales","units","incentive","m","w"])r[k]+=Number(opening[k])||0;
+  r.openingIncluded=true;
+  r.days=Math.max(1,r.days);
+ }
+ if(mode==="daily"&&opening&&opening.date===prefix&&keys.length===0){r.days=1;r.tm=Number(opening.tm)||0;r.tw=Number(opening.tw)||0;}
  if(mode!=="daily"&&keys.length){r.tm*=mode==="monthly"?1:12;r.tw*=mode==="monthly"?1:12;}
  // For the active month/year, current targets are authoritative.
  const now=new Date();if(ptPeriodKey(mode,d)===ptPeriodKey(mode,now)){
@@ -1355,6 +1376,7 @@ function ptAggregate(mode,d){
  return r;
 }
 function ptRenderHistory(){
+ ptCaptureHistory();
  const d=ptPeriodDate(ptMode,ptOffset),r=ptAggregate(ptMode,d);
  const label=ptMode==="daily"?d.toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"}):ptMode==="monthly"?d.toLocaleDateString(undefined,{month:"long",year:"numeric"}):String(d.getFullYear());
  $("ptHistoryLabel").textContent=label;
@@ -1365,7 +1387,7 @@ function ptRenderHistory(){
  $("ptHistoryIncentive").textContent=r.days?(incentiveVisible?fmt(r.incentive):"••••••"):"—";
  const achievement=r.tm+r.tw?100*r.sales/(r.tm+r.tw):0;
  $("ptHistoryFill").style.width=Math.min(100,Math.max(0,achievement))+"%";
- $("ptHistoryAchievement").textContent=r.days?achievement.toFixed(1)+"% of recorded period target · "+r.days+" day(s) recorded":"No recorded data for this period.";
+ $("ptHistoryAchievement").textContent=r.days?achievement.toFixed(1)+"% of recorded period target"+(r.openingIncluded?" · includes opening balance":"")+" · "+r.days+" day(s) recorded":"No recorded data for this period.";
  const cats=$("ptHistoryCategories");cats.innerHTML=r.days?[["Handset & Tablet",r.m,r.tm],["Audio & Wearables",r.w,r.tw]].map(([name,sales,target])=>'<div class="pt-history-row"><span>'+name+'</span><strong>'+fmt(sales)+' / '+fmt(target)+'</strong></div>').join(""):'<p class="pt-history-note">No category history recorded.</p>';
  const count=ptMode==="daily"?7:ptMode==="monthly"?4:12;
  let chart="";
@@ -1374,7 +1396,7 @@ function ptRenderHistory(){
   if(ptMode==="daily")period.setDate(period.getDate()-(count-i-1));
   if(ptMode==="monthly")period.setDate(Math.max(1,period.getDate()-(count-i-1)*7));
   if(ptMode==="yearly"){period.setMonth(i,1);}
-  const sample=ptAggregate(ptMode==="yearly"?"monthly":"daily",period);
+  const sample=ptAggregate(ptMode==="yearly"?"monthly":ptMode==="monthly"?"monthly":"daily",period);
   const target=sample.tm+sample.tw;
   const scale=Math.max(target,sample.sales,1);
   const sh=Math.max(2,Math.round(100*sample.sales/scale)),th=Math.max(2,Math.round(100*target/scale));
