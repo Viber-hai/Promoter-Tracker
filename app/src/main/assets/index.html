@@ -257,8 +257,8 @@ body.editing-model .sticky-summary{opacity:0;pointer-events:none;transform:trans
 
 /* Home and Analytics: keep the existing dashboard intact. */
 body{padding-bottom:76px}
-.pt-bottom-nav{position:fixed;z-index:8;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;padding:7px 14px calc(7px + env(safe-area-inset-bottom));background:var(--glass-strong);border-top:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.pt-bottom-nav button{width:min(46%,250px);border:0;background:transparent;color:var(--muted);border-radius:14px;padding:7px 10px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:850}
+.pt-bottom-nav{position:fixed;z-index:30;pointer-events:auto;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:8px;padding:7px 14px calc(7px + env(safe-area-inset-bottom));background:var(--glass-strong);border-top:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.pt-bottom-nav button{touch-action:manipulation;cursor:pointer;pointer-events:auto;width:min(46%,250px);border:0;background:transparent;color:var(--muted);border-radius:14px;padding:7px 10px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:850}
 .pt-bottom-nav button.active{background:var(--soft);color:var(--red)}
 .pt-bottom-nav svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 body.pt-analytics-active .app,body.pt-analytics-active .fab,body.pt-analytics-active .sticky-summary{display:none!important}
@@ -1318,6 +1318,8 @@ window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automa
 
 
 
+</script>
+<script>
 /* Automatic local history. Daily deltas begin at installation; no invented backfill. */
 const PT_HISTORY_KEY="pt_performance_history_v1";
 let ptHistory={days:{},baseline:null};
@@ -1390,7 +1392,7 @@ function ptSetMainTab(tab){
  $("ptHomeTab").setAttribute("aria-current",tab==="home"?"page":"false");
  $("ptAnalyticsTab").setAttribute("aria-current",tab==="analytics"?"page":"false");
  if(tab==="analytics")ptRenderHistory();
- window.scrollTo({top:0,behavior:"instant"});
+ window.scrollTo(0,0);
 }
 $("ptHomeTab").addEventListener("click",()=>ptSetMainTab("home"));
 $("ptAnalyticsTab").addEventListener("click",()=>ptSetMainTab("analytics"));
@@ -1400,10 +1402,8 @@ $("ptHistoryNext").addEventListener("click",()=>{if(ptOffset<0)ptOffset++;ptRend
 const ptRing=document.querySelector(".hero .ring");
 if(ptRing&&"IntersectionObserver" in window){new IntersectionObserver(entries=>{document.body.classList.toggle("pt-overview-visible",entries[0].isIntersecting);},{threshold:0.08}).observe(ptRing);}
 ptCaptureHistory();ptSetMainTab("home");
-
-setCategory(cat);
-syncChangelogIndicator();
-syncSecuritySettings();
-updateFabVisibility();
+</script>
+<script>
+try{setCategory(cat);syncChangelogIndicator();syncSecuritySettings();updateFabVisibility();}catch(e){console.error('Dashboard startup:',e);}
 </script>
 
