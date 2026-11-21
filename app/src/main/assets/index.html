@@ -363,7 +363,25 @@ body.pt-overview-visible .sticky-summary{opacity:0;visibility:hidden;pointer-eve
   <div class="pt-history-metric"><small>Units sold</small><b id="ptHistoryUnits">—</b></div>
   <div class="pt-history-metric"><small>Incentive (AED)</small><b id="ptHistoryIncentive">••••••</b></div>
  </div><div class="pt-history-progress"><i id="ptHistoryFill" style="width:0"></i></div><p id="ptHistoryAchievement" class="pt-history-note"></p></div>
- <div class="pt-history-title">Sales vs Target</div><div class="pt-history-card"><div id="ptHistoryChart" class="pt-history-bars"></div><p class="pt-history-note">Light bars: target · Red bars: sales</p></div>
+ <style>
+.pt-fold{margin:12px 0;border:1px solid var(--border,#e5e3e7);border-radius:15px;overflow:hidden;background:var(--card,#fff)}
+.pt-fold>summary{list-style:none;cursor:pointer;padding:15px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.pt-fold>summary::-webkit-details-marker{display:none}.pt-fold>summary:after{content:"⌄";font-size:21px;opacity:.6}.pt-fold[open]>summary:after{transform:rotate(180deg)}
+.pt-fold-content{padding:12px 14px;border-top:1px solid #9993}
+.pt-model-search{width:100%;box-sizing:border-box;padding:12px;border:1px solid #9995;border-radius:10px;background:transparent;color:inherit}
+.pt-model-line{padding:12px 0;border-bottom:1px solid #9993}.pt-model-line:last-child{border:0}
+.pt-model-line strong{display:block}.pt-model-line small{display:block;opacity:.75;margin-top:4px}
+.pt-model-line details{margin-top:8px}.pt-model-line details summary{cursor:pointer;font-size:12px}
+</style>
+<details class="pt-fold"><summary>📈 Performance breakdown</summary><div class="pt-fold-content" id="ptPerformanceDetails"></div></details>
+<details class="pt-fold"><summary>💰 Incentive calculation</summary><div class="pt-fold-content" id="ptIncentiveDetails"></div></details>
+<details class="pt-fold" id="ptModelFold"><summary>📱 Model-wise analytics</summary><div class="pt-fold-content">
+<input id="ptModelSearch" class="pt-model-search" placeholder="Search models…" aria-label="Search models">
+<div id="ptModelFilters" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
+<button type="button" data-pt-cat="all">All</button><button type="button" data-pt-cat="m">Handsets & tablets</button><button type="button" data-pt-cat="w">Audio & wearables</button><button type="button" data-pt-cat="sold">Sold only</button></div>
+<div id="ptModelRows"></div></div></details>
+<details class="pt-fold"><summary>🏆 Top-selling models</summary><div class="pt-fold-content" id="ptTopModels"></div></details>
+<div class="pt-history-title">Sales vs Target</div><div class="pt-history-card"><div id="ptHistoryChart" class="pt-history-bars"></div><p class="pt-history-note">Light bars: target · Red bars: sales</p></div>
  <div class="pt-history-title">Category breakdown</div><div class="pt-history-card" id="ptHistoryCategories"></div>
  <p class="pt-history-note">Existing sales appear in the current month and year as an opening balance. Older daily sales cannot be reconstructed. New daily changes are tracked on this device; historical targets are saved automatically. This history is stored locally and is not yet included in existing backup files.</p>
 </section>
@@ -1322,22 +1340,30 @@ window.onBackupFolderChanged=(kind,name)=>{const el=$(kind==="automatic"?"automa
 <script>
 /* Automatic local history. Daily deltas begin at installation; no invented backfill. */
 const PT_HISTORY_KEY="pt_performance_history_v1";
+let ptModelCategory="all";
 let ptHistory={days:{},baseline:null};
 try{const saved=JSON.parse(localStorage.getItem(PT_HISTORY_KEY)||"null");if(saved&&saved.days&&typeof saved.days==="object")ptHistory=saved;}catch(e){}
 const ptDayKey=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
-function ptSnapshot(){const t=totals();return {sales:t.sales,units:t.units,incentive:t.incentive,m:t.m.sales,w:t.w.sales,tm:TARGETS.m,tw:TARGETS.w};}
+function ptSnapshot(){const t=totals();return {sales:t.sales,units:t.units,incentive:t.incentive,perUnit:t.perUnitIncentive,m:t.m.sales,w:t.w.sales,tm:TARGETS.m,tw:TARGETS.w,models:Object.fromEntries(data.map(x=>[x.id,{name:x.n,group:x.g,units:Number(x.q)||0,sales:(Number(x.r)||0)*(Number(x.q)||0),perUnit:(Number(x.u)||0)*(Number(x.q)||0),rate:Number(x.u)||0}]))};}
 function ptCaptureHistory(){
  const now=new Date(),key=ptDayKey(now),cur=ptSnapshot(),old=ptHistory.baseline;
  if(!old){
   // Preserve the current dashboard as an opening balance, without inventing past dates.
   ptHistory.opening={...cur,date:key};
   ptHistory.baseline={...cur,date:key};
-  ptHistory.days[key]={sales:0,units:0,incentive:0,m:0,w:0,tm:cur.tm,tw:cur.tw};
+  ptHistory.days[key]={sales:0,units:0,incentive:0,perUnit:0,m:0,w:0,tm:cur.tm,tw:cur.tw,models:{}};
  }
  else {
-  const prior=ptHistory.days[key]||{sales:0,units:0,incentive:0,m:0,w:0,tm:cur.tm,tw:cur.tw};
+  const prior=ptHistory.days[key]||{sales:0,units:0,incentive:0,perUnit:0,m:0,w:0,tm:cur.tm,tw:cur.tw,models:{}};
   // A new date must not attribute previous days' totals to today.
-  for(const field of ["sales","units","incentive","m","w"])prior[field]+=(cur[field]-(Number(old[field])||0));
+  for(const field of ["sales","units","incentive","perUnit","m","w"])prior[field]=(Number(prior[field])||0)+(Number(cur[field]||0)-Number(old[field]||0));
+  prior.models=prior.models||{};
+  // On older installs model history starts now, never attribute earlier sales to a fabricated date.
+  if(old.models)for(const id of new Set([...Object.keys(cur.models),...Object.keys(old.models)])){
+   const a=cur.models[id]||{},b=old.models[id]||{},v=prior.models[id]||{units:0,sales:0,perUnit:0};
+   for(const f of ["units","sales","perUnit"])v[f]=(Number(v[f])||0)+(Number(a[f])||0)-(Number(b[f])||0);
+   v.name=a.name||b.name||id;v.group=a.group||b.group||"m";v.rate=Number(a.rate??b.rate)||0;prior.models[id]=v;
+  }
   prior.tm=cur.tm;prior.tw=cur.tw;
   ptHistory.days[key]=prior;
   ptHistory.baseline={...cur,date:key};
@@ -1349,7 +1375,7 @@ function ptPeriodDate(mode,offset){const d=new Date();if(mode==="daily")d.setDat
 function ptPeriodKey(mode,d){return mode==="daily"?ptDayKey(d):mode==="monthly"?ptDayKey(d).slice(0,7):String(d.getFullYear());}
 function ptAggregate(mode,d){
  const prefix=ptPeriodKey(mode,d),keys=Object.keys(ptHistory.days).filter(k=>mode==="daily"?k===prefix:k.startsWith(prefix));
- const r={sales:0,units:0,incentive:0,m:0,w:0,tm:0,tw:0,days:keys.length,openingIncluded:false};
+ const r={sales:0,units:0,incentive:0,perUnit:0,m:0,w:0,tm:0,tw:0,days:keys.length,openingIncluded:false,models:{}};
  // Upgrade existing installations that already saved a baseline but no history.
  if(!ptHistory.opening&&ptHistory.baseline){
   ptHistory.opening={...ptHistory.baseline};
@@ -1358,12 +1384,15 @@ function ptAggregate(mode,d){
   try{localStorage.setItem(PT_HISTORY_KEY,JSON.stringify(ptHistory));}catch(e){}
  }
  keys.sort();
- for(const key of keys){const x=ptHistory.days[key];for(const k of ["sales","units","incentive","m","w"])r[k]+=Number(x[k])||0;r.tm=Number(x.tm)||0;r.tw=Number(x.tw)||0;}
+ for(const key of keys){const x=ptHistory.days[key];for(const k of ["sales","units","incentive","perUnit","m","w"])r[k]+=Number(x[k])||0;r.tm=Number(x.tm)||0;r.tw=Number(x.tw)||0;
+  for(const [id,v] of Object.entries(x.models||{})){const y=r.models[id]||{units:0,sales:0,perUnit:0};for(const f of ["units","sales","perUnit"])y[f]+=(Number(v[f])||0);y.name=v.name;y.group=v.group;y.rate=v.rate;r.models[id]=y;}
+ }
  // Include the existing sales only in the period containing the opening snapshot.
  // Do not misrepresent those sales as newly made on the installation day.
  const opening=ptHistory.opening;
  if(opening&&mode!=="daily"&&String(opening.date||"").startsWith(prefix)){
-  for(const k of ["sales","units","incentive","m","w"])r[k]+=Number(opening[k])||0;
+  for(const k of ["sales","units","incentive","perUnit","m","w"])r[k]+=Number(opening[k])||0;
+  for(const [id,v] of Object.entries(opening.models||{})){const y=r.models[id]||{units:0,sales:0,perUnit:0};for(const f of ["units","sales","perUnit"])y[f]+=(Number(v[f])||0);y.name=v.name;y.group=v.group;y.rate=v.rate;r.models[id]=y;}
   r.openingIncluded=true;
   r.days=Math.max(1,r.days);
  }
@@ -1374,6 +1403,12 @@ function ptAggregate(mode,d){
   const snap=ptSnapshot();r.tm=snap.tm*(mode==="yearly"?12:1);r.tw=snap.tw*(mode==="yearly"?12:1);
  }
  return r;
+}
+function ptRenderModelDetails(r){
+ const q=($("ptModelSearch").value||"").toLowerCase().trim();
+ const list=Object.entries(r.models).map(([id,v])=>({id,...v})).filter(v=>(ptModelCategory==="all"||ptModelCategory==="sold"&&v.units>0||v.group===ptModelCategory)&&v.name.toLowerCase().includes(q)).sort((a,b)=>b.units-a.units);
+ $("ptModelRows").innerHTML=list.length?list.map(v=>'<div class="pt-model-line"><strong>'+escapeHTML(v.name)+'</strong><small>'+fmt(v.units)+' units · AED '+fmt(v.sales)+' sales · AED '+(incentiveVisible?fmt(v.perUnit):"••••••")+' model contribution</small><details><summary>Model details</summary><small>Sales: AED '+fmt(v.sales)+' · Units: '+fmt(v.units)+' · Per-unit incentive contribution: '+(incentiveVisible?"AED "+fmt(v.perUnit):"Locked — unlock incentive on Home")+'</small></details></div>').join(""):'<p class="pt-history-note">No model records for this selection. Model-wise tracking begins after this update; earlier daily breakdowns cannot be reconstructed.</p>';
+ $("ptTopModels").innerHTML=Object.values(r.models).filter(v=>v.units>0).sort((a,b)=>b.units-a.units).slice(0,5).map((v,i)=>'<div class="pt-history-row"><span>'+(i+1)+'. '+escapeHTML(v.name)+'</span><strong>'+fmt(v.units)+' units</strong></div>').join("")||'<p class="pt-history-note">No model sales recorded.</p>';
 }
 function ptRenderHistory(){
  ptCaptureHistory();
@@ -1388,6 +1423,9 @@ function ptRenderHistory(){
  const achievement=r.tm+r.tw?100*r.sales/(r.tm+r.tw):0;
  $("ptHistoryFill").style.width=Math.min(100,Math.max(0,achievement))+"%";
  $("ptHistoryAchievement").textContent=r.days?achievement.toFixed(1)+"% of recorded period target"+(r.openingIncluded?" · includes opening balance":"")+" · "+r.days+" day(s) recorded":"No recorded data for this period.";
+ $("ptPerformanceDetails").textContent="Sales: AED "+fmt(r.sales)+" · Units: "+fmt(r.units)+" · Recorded target: AED "+fmt(r.tm+r.tw)+" · Achievement: "+(r.tm+r.tw?(100*r.sales/(r.tm+r.tw)).toFixed(1)+"%":"Not available");
+ $("ptIncentiveDetails").textContent=incentiveVisible?("Total earned incentive: AED "+fmt(r.incentive)+" · Model per-unit subtotal: AED "+fmt(r.perUnit)+". For current totals, achievement below 80% pays per-unit incentives; from 80%, (AED 600 + per-unit subtotal) × weighted achievement, capped at AED 10,000. Historical totals reflect recorded changes, not a recalculated monthly payroll."):"Incentive is locked. Reveal it with fingerprint on Home, then return to Analytics.";
+ ptRenderModelDetails(r);
  const cats=$("ptHistoryCategories");cats.innerHTML=r.days?[["Handset & Tablet",r.m,r.tm],["Audio & Wearables",r.w,r.tw]].map(([name,sales,target])=>'<div class="pt-history-row"><span>'+name+'</span><strong>'+fmt(sales)+' / '+fmt(target)+'</strong></div>').join(""):'<p class="pt-history-note">No category history recorded.</p>';
  const count=ptMode==="daily"?7:ptMode==="monthly"?4:12;
  let chart="";
@@ -1416,6 +1454,8 @@ function ptSetMainTab(tab){
  if(tab==="analytics")ptRenderHistory();
  window.scrollTo(0,0);
 }
+$("ptModelSearch").addEventListener("input",()=>ptRenderHistory());
+document.querySelectorAll("[data-pt-cat]").forEach(b=>b.addEventListener("click",()=>{ptModelCategory=b.dataset.ptCat;ptRenderHistory();}));
 $("ptHomeTab").addEventListener("click",()=>ptSetMainTab("home"));
 $("ptAnalyticsTab").addEventListener("click",()=>ptSetMainTab("analytics"));
 document.querySelectorAll("[data-history-mode]").forEach(b=>b.addEventListener("click",()=>{ptMode=b.dataset.historyMode;ptOffset=0;ptRenderHistory();}));
