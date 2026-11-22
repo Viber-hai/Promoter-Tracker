@@ -357,11 +357,11 @@ body.pt-overview-visible .sticky-summary{opacity:0;visibility:hidden;pointer-eve
   <button type="button" data-history-mode="yearly">Yearly</button>
  </div>
  <div class="pt-period"><button id="ptHistoryPrev" type="button" aria-label="Previous period">‹</button><strong id="ptHistoryLabel"></strong><button id="ptHistoryNext" type="button" aria-label="Next period">›</button></div>
- <div class="pt-history-card"><div class="pt-history-grid">
-  <div class="pt-history-metric"><small>Target (AED)</small><b id="ptHistoryTarget">—</b></div>
+ <div class="pt-history-card"><div class="pt-target-head"><small>COMBINED SALES TARGET</small><b id="ptMainTarget">—</b></div><div class="pt-category-targets"><div><small>Handsets & tablets</small><b id="ptMobileTarget">—</b></div><div><small>Audio & wearables</small><b id="ptWearableTarget">—</b></div></div><div class="pt-history-grid">
+  
   <div class="pt-history-metric"><small>Sales (AED)</small><b id="ptHistorySales">—</b></div>
   <div class="pt-history-metric"><small>Units sold</small><b id="ptHistoryUnits">—</b></div>
-  <div class="pt-history-metric"><small>Incentive (AED)</small><b id="ptHistoryIncentive">••••••</b></div>
+  <div class="pt-history-metric"><small>Achievement</small><b id="ptHistoryAchievementNumber">—</b></div>
  </div><div class="pt-history-progress"><i id="ptHistoryFill" style="width:0"></i></div><p id="ptHistoryAchievement" class="pt-history-note"></p></div>
  <style>
 .pt-fold{margin:12px 0;border:1px solid var(--border,#e5e3e7);border-radius:15px;overflow:hidden;background:var(--card,#fff)}
@@ -372,15 +372,35 @@ body.pt-overview-visible .sticky-summary{opacity:0;visibility:hidden;pointer-eve
 .pt-model-line{padding:12px 0;border-bottom:1px solid #9993}.pt-model-line:last-child{border:0}
 .pt-model-line strong{display:block}.pt-model-line small{display:block;opacity:.75;margin-top:4px}
 .pt-model-line details{margin-top:8px}.pt-model-line details summary{cursor:pointer;font-size:12px}
+
+.pt-fold{background:var(--glass-strong);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);color:var(--ink)}
+.pt-fold>summary{display:flex;align-items:center;gap:12px;padding:16px;color:var(--ink)}.pt-fold>summary:after{content:none}
+.pt-fold-icon{width:36px;height:36px;flex-shrink:0;border-radius:12px;background:var(--soft);color:var(--red2);display:grid;place-items:center;font-size:19px}
+.pt-fold-heading{flex:1}.pt-fold-heading b{display:block;font-size:14px}.pt-fold-heading small{display:block;font-size:11px;color:var(--muted);margin-top:4px;font-weight:400}
+.pt-fold-arrow{font-size:22px;color:var(--muted);transition:transform .25s}.pt-fold[open] .pt-fold-arrow{transform:rotate(180deg)}
+.pt-fold-content{border-top:1px solid var(--line);color:var(--ink);padding:15px}
+.pt-model-search{background:var(--field);color:var(--ink);border:1px solid var(--field-border);padding:12px;border-radius:12px}
+#ptModelFilters button{background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:8px 10px;font-size:11px}
+#ptModelFilters button.active{background:var(--red);color:white;border-color:var(--red)}
+.pt-model-line{border-bottom:1px solid var(--line)}.pt-model-line small{color:var(--muted);opacity:1}
+.pt-model-line details summary{color:var(--red2);font-weight:700}.pt-model-line details small{display:block;background:var(--soft);padding:12px;border-radius:12px}
+.pt-target-head small{display:block;color:var(--muted);font-size:11px}.pt-target-head b{display:block;color:var(--red2);font-size:30px;margin:7px 0}
+.pt-category-targets{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:15px 0}.pt-category-targets>div{background:var(--soft);border-radius:13px;padding:12px;min-width:0}.pt-category-targets small{display:block;color:var(--muted);font-size:10px}.pt-category-targets b{display:block;margin-top:7px;font-size:15px;overflow-wrap:anywhere}
+.pt-history-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.pt-history-metric{padding:10px}.pt-history-metric b{font-size:15px}
+.pt-detail-row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.pt-detail-row:last-child{border:0}.pt-detail-row span{color:var(--muted)}.pt-detail-row strong{text-align:right}
+.pt-incentive-highlight{background:var(--soft);padding:15px;border-radius:14px;margin-bottom:9px}.pt-incentive-highlight small{display:block;color:var(--muted)}.pt-incentive-highlight strong{display:block;font-size:24px;color:var(--red2);margin-top:5px}
+.pt-bottom-nav{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;right:auto;width:auto;transform:translate(-50%,0);display:flex;gap:7px;padding:6px;background:var(--glass-strong);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);opacity:1;transition:transform .42s cubic-bezier(.2,.8,.2,1),opacity .32s ease;will-change:transform,opacity}
+.pt-bottom-nav.pt-nav-hidden{transform:translate(-50%,calc(100% + 38px));opacity:0;pointer-events:none}
+.pt-bottom-nav button{min-width:110px;width:auto;border-radius:13px;padding:11px 15px;background:var(--soft);color:var(--muted)}.pt-bottom-nav button.active{background:var(--red);color:white}
 </style>
-<details class="pt-fold"><summary>📈 Performance breakdown</summary><div class="pt-fold-content" id="ptPerformanceDetails"></div></details>
-<details class="pt-fold"><summary>💰 Incentive calculation</summary><div class="pt-fold-content" id="ptIncentiveDetails"></div></details>
-<details class="pt-fold" id="ptModelFold"><summary>📱 Model-wise analytics</summary><div class="pt-fold-content">
+<details class="pt-fold"><summary><span class="pt-fold-icon">▤</span><span class="pt-fold-heading"><b>Performance breakdown</b><small>Targets, category sales and progress</small></span><span class="pt-fold-arrow">⌄</span></summary><div class="pt-fold-content" id="ptPerformanceDetails"></div></details>
+<details class="pt-fold"><summary><span class="pt-fold-icon">◇</span><span class="pt-fold-heading"><b>Incentive calculation</b><small>Threshold, multiplier and total payout</small></span><span class="pt-fold-arrow">⌄</span></summary><div class="pt-fold-content" id="ptIncentiveDetails"></div></details>
+<details class="pt-fold" id="ptModelFold"><summary><span class="pt-fold-icon">▦</span><span class="pt-fold-heading"><b>Model-wise analytics</b><small>Sales and incentive contributions</small></span><span class="pt-fold-arrow">⌄</span></summary><div class="pt-fold-content">
 <input id="ptModelSearch" class="pt-model-search" placeholder="Search models…" aria-label="Search models">
 <div id="ptModelFilters" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0">
 <button type="button" data-pt-cat="all">All</button><button type="button" data-pt-cat="m">Handsets & tablets</button><button type="button" data-pt-cat="w">Audio & wearables</button><button type="button" data-pt-cat="sold">Sold only</button></div>
 <div id="ptModelRows"></div></div></details>
-<details class="pt-fold"><summary>🏆 Top-selling models</summary><div class="pt-fold-content" id="ptTopModels"></div></details>
+<details class="pt-fold"><summary><span class="pt-fold-icon">★</span><span class="pt-fold-heading"><b>Top-selling models</b><small>Ranked by units sold</small></span><span class="pt-fold-arrow">⌄</span></summary><div class="pt-fold-content" id="ptTopModels"></div></details>
 <div class="pt-history-title">Sales vs Target</div><div class="pt-history-card"><div id="ptHistoryChart" class="pt-history-bars"></div><p class="pt-history-note">Light bars: target · Red bars: sales</p></div>
  <div class="pt-history-title">Category breakdown</div><div class="pt-history-card" id="ptHistoryCategories"></div>
  <p class="pt-history-note">Existing sales appear in the current month and year as an opening balance. Older daily sales cannot be reconstructed. New daily changes are tracked on this device; historical targets are saved automatically. This history is stored locally and is not yet included in existing backup files.</p>
@@ -1416,15 +1436,17 @@ function ptRenderHistory(){
  const label=ptMode==="daily"?d.toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"}):ptMode==="monthly"?d.toLocaleDateString(undefined,{month:"long",year:"numeric"}):String(d.getFullYear());
  $("ptHistoryLabel").textContent=label;
  document.querySelectorAll("[data-history-mode]").forEach(b=>b.classList.toggle("active",b.dataset.historyMode===ptMode));
- $("ptHistoryTarget").textContent=r.days?fmt(r.tm+r.tw):"—";
+ $("ptMainTarget").textContent=r.days?"AED "+fmt(r.tm+r.tw):"—";$("ptMobileTarget").textContent=r.days?"AED "+fmt(r.tm):"—";$("ptWearableTarget").textContent=r.days?"AED "+fmt(r.tw):"—";
  $("ptHistorySales").textContent=r.days?fmt(r.sales):"—";
  $("ptHistoryUnits").textContent=r.days?fmt(r.units):"—";
- $("ptHistoryIncentive").textContent=r.days?(incentiveVisible?fmt(r.incentive):"••••••"):"—";
+ 
  const achievement=r.tm+r.tw?100*r.sales/(r.tm+r.tw):0;
+ $("ptHistoryAchievementNumber").textContent=r.days?achievement.toFixed(1)+"%":"—";
  $("ptHistoryFill").style.width=Math.min(100,Math.max(0,achievement))+"%";
  $("ptHistoryAchievement").textContent=r.days?achievement.toFixed(1)+"% of recorded period target"+(r.openingIncluded?" · includes opening balance":"")+" · "+r.days+" day(s) recorded":"No recorded data for this period.";
- $("ptPerformanceDetails").textContent="Sales: AED "+fmt(r.sales)+" · Units: "+fmt(r.units)+" · Recorded target: AED "+fmt(r.tm+r.tw)+" · Achievement: "+(r.tm+r.tw?(100*r.sales/(r.tm+r.tw)).toFixed(1)+"%":"Not available");
- $("ptIncentiveDetails").textContent=incentiveVisible?("Total earned incentive: AED "+fmt(r.incentive)+" · Model per-unit subtotal: AED "+fmt(r.perUnit)+". For current totals, achievement below 80% pays per-unit incentives; from 80%, (AED 600 + per-unit subtotal) × weighted achievement, capped at AED 10,000. Historical totals reflect recorded changes, not a recalculated monthly payroll."):"Incentive is locked. Reveal it with fingerprint on Home, then return to Analytics.";
+ const detailRow=(name,value)=>'<div class="pt-detail-row"><span>'+escapeHTML(name)+'</span><strong>'+escapeHTML(String(value))+'</strong></div>';
+ $("ptPerformanceDetails").innerHTML=detailRow("Handsets & tablets sales","AED "+fmt(r.m))+detailRow("Handsets & tablets target","AED "+fmt(r.tm))+detailRow("Audio & wearables sales","AED "+fmt(r.w))+detailRow("Audio & wearables target","AED "+fmt(r.tw))+detailRow("Combined target","AED "+fmt(r.tm+r.tw))+detailRow("Overall achievement",achievement.toFixed(1)+"%");
+ $("ptIncentiveDetails").innerHTML=incentiveVisible?'<div class="pt-incentive-highlight"><small>RECORDED EARNED INCENTIVE</small><strong>AED '+fmt(r.incentive)+'</strong></div>'+detailRow("Recorded per-unit subtotal","AED "+fmt(r.perUnit))+detailRow("KPI package when eligible","AED 600")+detailRow("Eligibility threshold","80% weighted achievement")+detailRow("Maximum payout","AED 10,000")+'<p class="pt-history-note">Below 80%: per-unit subtotal only. At or above 80%: (AED 600 + per-unit subtotal) × weighted achievement, subject to caps. Historical amounts reflect recorded changes, not recalculated monthly payroll.</p>':'<p class="pt-history-note">Incentive locked. Unlock with fingerprint on Home to view your payout.</p>';
  ptRenderModelDetails(r);
  const cats=$("ptHistoryCategories");cats.innerHTML=r.days?[["Handset & Tablet",r.m,r.tm],["Audio & Wearables",r.w,r.tw]].map(([name,sales,target])=>'<div class="pt-history-row"><span>'+name+'</span><strong>'+fmt(sales)+' / '+fmt(target)+'</strong></div>').join(""):'<p class="pt-history-note">No category history recorded.</p>';
  const count=ptMode==="daily"?7:ptMode==="monthly"?4:12;
@@ -1443,7 +1465,11 @@ function ptRenderHistory(){
  }
  $("ptHistoryChart").innerHTML=chart;
 }
-function ptSetMainTab(tab){
+const ptFloatingNav=document.querySelector(".pt-bottom-nav");let ptNavTimer=null,ptLastScrollY=window.scrollY;
+function ptShowFloatingNav(){ptFloatingNav.classList.remove("pt-nav-hidden")}
+window.addEventListener("scroll",()=>{const y=window.scrollY;if(Math.abs(y-ptLastScrollY)>2){ptFloatingNav.classList.add("pt-nav-hidden");clearTimeout(ptNavTimer);ptNavTimer=setTimeout(ptShowFloatingNav,750)}ptLastScrollY=y},{passive:true});
+window.addEventListener("touchmove",()=>{if(window.scrollY>0)ptFloatingNav.classList.add("pt-nav-hidden")},{passive:true});
+function ptSetMainTab(tab){ptShowFloatingNav();
  ptCurrentTab=tab;
  document.body.classList.toggle("pt-analytics-active",tab==="analytics");
  document.body.classList.toggle("pt-home-active",tab==="home");
