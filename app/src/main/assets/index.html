@@ -357,13 +357,14 @@ body.pt-overview-visible .sticky-summary{opacity:0;visibility:hidden;pointer-eve
   <button type="button" data-history-mode="yearly">Yearly</button>
  </div>
  <div class="pt-period"><button id="ptHistoryPrev" type="button" aria-label="Previous period">‹</button><strong id="ptHistoryLabel"></strong><button id="ptHistoryNext" type="button" aria-label="Next period">›</button></div>
- <div class="pt-history-card"><div class="pt-target-head"><small>COMBINED SALES TARGET</small><b id="ptMainTarget">—</b></div><div class="pt-category-targets"><div><small>Handsets & tablets</small><b id="ptMobileTarget">—</b></div><div><small>Audio & wearables</small><b id="ptWearableTarget">—</b></div></div><div class="pt-history-grid">
+ <div class="pt-history-card"><div class="pt-target-head"><small>OVERALL PERFORMANCE</small><div class="pt-main-metric"><span>Total target</span><b id="ptMainTarget">—</b></div><div class="pt-main-metric"><span>Total sales achieved</span><b id="ptHistorySales">—</b></div></div><div class="pt-history-grid">
   
-  <div class="pt-history-metric"><small>Sales (AED)</small><b id="ptHistorySales">—</b></div>
+  
   <div class="pt-history-metric"><small>Units sold</small><b id="ptHistoryUnits">—</b></div>
   <div class="pt-history-metric"><small>Achievement</small><b id="ptHistoryAchievementNumber">—</b></div>
  </div><div class="pt-history-progress"><i id="ptHistoryFill" style="width:0"></i></div><p id="ptHistoryAchievement" class="pt-history-note"></p></div>
  <style>
+.pt-main-metric{padding:10px 0;border-bottom:1px solid var(--line)}.pt-main-metric:last-child{border:0}.pt-main-metric span{display:block;color:var(--muted);font-size:12px}.pt-main-metric b{display:block;margin-top:6px;font-size:24px;color:var(--ink)}.pt-main-metric:nth-child(3) b{color:var(--red2)}.pt-history-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pt-category-performance{padding:15px;background:var(--glass-strong);border:1px solid var(--line);border-radius:18px;margin:10px 0;color:var(--ink)}.pt-category-performance h3{margin:0 0 12px;font-size:15px}.pt-category-stat{padding:8px 0;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line)}.pt-category-stat small{color:var(--muted)}.pt-category-stat strong{font-size:14px;text-align:right}.pt-category-performance .pt-history-progress{margin-top:12px}
 .pt-fold{margin:12px 0;border:1px solid var(--border,#e5e3e7);border-radius:15px;overflow:hidden;background:var(--card,#fff)}
 .pt-fold>summary{list-style:none;cursor:pointer;padding:15px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
 .pt-fold>summary::-webkit-details-marker{display:none}.pt-fold>summary:after{content:"⌄";font-size:21px;opacity:.6}.pt-fold[open]>summary:after{transform:rotate(180deg)}
@@ -393,7 +394,7 @@ body.pt-overview-visible .sticky-summary{opacity:0;visibility:hidden;pointer-eve
 .pt-bottom-nav.pt-nav-hidden{transform:translate(-50%,calc(100% + 38px));opacity:0;pointer-events:none}
 .pt-bottom-nav button{min-width:110px;width:auto;border-radius:13px;padding:11px 15px;background:var(--soft);color:var(--muted)}.pt-bottom-nav button.active{background:var(--red);color:white}
 </style>
-<details class="pt-fold"><summary><span class="pt-fold-icon">▤</span><span class="pt-fold-heading"><b>Performance breakdown</b><small>Targets, category sales and progress</small></span><span class="pt-fold-arrow">⌄</span></summary><div class="pt-fold-content" id="ptPerformanceDetails"></div></details>
+
 <details class="pt-fold"><summary><span class="pt-fold-icon">◇</span><span class="pt-fold-heading"><b>Incentive calculation</b><small>Threshold, multiplier and total payout</small></span><span class="pt-fold-arrow">⌄</span></summary><div class="pt-fold-content" id="ptIncentiveDetails"></div></details>
 <details class="pt-fold" id="ptModelFold"><summary><span class="pt-fold-icon">▦</span><span class="pt-fold-heading"><b>Model-wise analytics</b><small>Sales and incentive contributions</small></span><span class="pt-fold-arrow">⌄</span></summary><div class="pt-fold-content">
 <input id="ptModelSearch" class="pt-model-search" placeholder="Search models…" aria-label="Search models">
@@ -1436,7 +1437,7 @@ function ptRenderHistory(){
  const label=ptMode==="daily"?d.toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"}):ptMode==="monthly"?d.toLocaleDateString(undefined,{month:"long",year:"numeric"}):String(d.getFullYear());
  $("ptHistoryLabel").textContent=label;
  document.querySelectorAll("[data-history-mode]").forEach(b=>b.classList.toggle("active",b.dataset.historyMode===ptMode));
- $("ptMainTarget").textContent=r.days?"AED "+fmt(r.tm+r.tw):"—";$("ptMobileTarget").textContent=r.days?"AED "+fmt(r.tm):"—";$("ptWearableTarget").textContent=r.days?"AED "+fmt(r.tw):"—";
+ $("ptMainTarget").textContent=r.days?"AED "+fmt(r.tm+r.tw):"—";
  $("ptHistorySales").textContent=r.days?fmt(r.sales):"—";
  $("ptHistoryUnits").textContent=r.days?fmt(r.units):"—";
  
@@ -1445,10 +1446,9 @@ function ptRenderHistory(){
  $("ptHistoryFill").style.width=Math.min(100,Math.max(0,achievement))+"%";
  $("ptHistoryAchievement").textContent=r.days?achievement.toFixed(1)+"% of recorded period target"+(r.openingIncluded?" · includes opening balance":"")+" · "+r.days+" day(s) recorded":"No recorded data for this period.";
  const detailRow=(name,value)=>'<div class="pt-detail-row"><span>'+escapeHTML(name)+'</span><strong>'+escapeHTML(String(value))+'</strong></div>';
- $("ptPerformanceDetails").innerHTML=detailRow("Handsets & tablets sales","AED "+fmt(r.m))+detailRow("Handsets & tablets target","AED "+fmt(r.tm))+detailRow("Audio & wearables sales","AED "+fmt(r.w))+detailRow("Audio & wearables target","AED "+fmt(r.tw))+detailRow("Combined target","AED "+fmt(r.tm+r.tw))+detailRow("Overall achievement",achievement.toFixed(1)+"%");
  $("ptIncentiveDetails").innerHTML=incentiveVisible?'<div class="pt-incentive-highlight"><small>RECORDED EARNED INCENTIVE</small><strong>AED '+fmt(r.incentive)+'</strong></div>'+detailRow("Recorded per-unit subtotal","AED "+fmt(r.perUnit))+detailRow("KPI package when eligible","AED 600")+detailRow("Eligibility threshold","80% weighted achievement")+detailRow("Maximum payout","AED 10,000")+'<p class="pt-history-note">Below 80%: per-unit subtotal only. At or above 80%: (AED 600 + per-unit subtotal) × weighted achievement, subject to caps. Historical amounts reflect recorded changes, not recalculated monthly payroll.</p>':'<p class="pt-history-note">Incentive locked. Unlock with fingerprint on Home to view your payout.</p>';
  ptRenderModelDetails(r);
- const cats=$("ptHistoryCategories");cats.innerHTML=r.days?[["Handset & Tablet",r.m,r.tm],["Audio & Wearables",r.w,r.tw]].map(([name,sales,target])=>'<div class="pt-history-row"><span>'+name+'</span><strong>'+fmt(sales)+' / '+fmt(target)+'</strong></div>').join(""):'<p class="pt-history-note">No category history recorded.</p>';
+ const cats=$("ptHistoryCategories");cats.innerHTML=r.days?[["Handsets & tablets",r.m,r.tm],["Audio & wearables",r.w,r.tw]].map(([name,sales,target])=>{const pct=target>0?100*sales/target:0;return '<div class="pt-category-performance"><h3>'+name+'</h3><div class="pt-category-stat"><small>Target</small><strong>AED '+fmt(target)+'</strong></div><div class="pt-category-stat"><small>Sales</small><strong>AED '+fmt(sales)+'</strong></div><div class="pt-category-stat"><small>Achievement</small><strong>'+(target>0?pct.toFixed(1)+'%':'—')+'</strong></div><div class="pt-history-progress"><i style="width:'+Math.min(100,Math.max(0,pct))+'%"></i></div></div>'}).join(""):'<p class="pt-history-note">No category history recorded.</p>';
  const count=ptMode==="daily"?7:ptMode==="monthly"?4:12;
  let chart="";
  for(let i=0;i<count;i++){
